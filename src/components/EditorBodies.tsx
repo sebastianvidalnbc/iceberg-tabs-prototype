@@ -1,7 +1,7 @@
 import { useStore } from "../store";
-import { Checkbox, Field, TextArea } from "./Field";
+import { Checkbox, Field, Select, TextArea } from "./Field";
 import { TreeCollection } from "./TreeCollection";
-import { featureInvalid, planInvalid, pricingInvalid } from "../validation";
+import { categoryInvalid, featureInvalid, planInvalid, pricingInvalid } from "../validation";
 import type { ListPath } from "../model";
 import type {
   PlanPickerData,
@@ -9,6 +9,7 @@ import type {
   PricingOption,
   PublishStatus,
   VariantCategory,
+  Variation,
 } from "../types";
 
 const STATUSES: PublishStatus[] = ["draft", "in-review", "published"];
@@ -18,10 +19,84 @@ const statusLabel: Record<PublishStatus, string> = {
   published: "Published",
 };
 
-export function CategoryBody({ category }: { category: VariantCategory }) {
+const ALIGNMENTS = ["Left", "Centre", "Right"];
+const VARIANTS = ["Button Variant", "Card Variant", "Compact Variant"];
+
+// A content Variation: section-level fields first, then the existing (unchanged)
+// Variant Categories tree scoped to this variation.
+export function VariationBody({ variation }: { variation: Variation }) {
   const { dispatch } = useStore();
-  const path: ListPath = { kind: "category" };
-  const planPath: ListPath = { kind: "plan", categoryId: category.id };
+  const path: ListPath = { kind: "variation" };
+  const categoryPath: ListPath = { kind: "category", variationId: variation.id };
+  const patch = (p: Record<string, unknown>) =>
+    dispatch({ type: "updateField", path, id: variation.id, patch: p });
+
+  return (
+    <>
+      <div className="section-fields">
+        <Checkbox
+          label="Include this section as a region (Accessibility)"
+          checked={variation.includeAsRegion}
+          onChange={(v) => patch({ includeAsRegion: v })}
+        />
+        <Field
+          label="Plan Picker Title (optional)"
+          value={variation.planPickerTitle}
+          onChange={(v) => patch({ planPickerTitle: v })}
+        />
+        <Field
+          label="Subtitle (optional)"
+          value={variation.subtitle}
+          onChange={(v) => patch({ subtitle: v })}
+        />
+        <Select
+          label="Title & Subtitle Alignment"
+          value={variation.titleAlignment}
+          options={ALIGNMENTS}
+          onChange={(v) => patch({ titleAlignment: v })}
+        />
+        <Checkbox
+          label="Enable Horizontal Scroll on Mobile"
+          checked={variation.enableHorizontalScroll}
+          onChange={(v) => patch({ enableHorizontalScroll: v })}
+        />
+        <Select
+          label="Pick Variant"
+          value={variation.pickVariant}
+          options={VARIANTS}
+          onChange={(v) => patch({ pickVariant: v })}
+        />
+      </div>
+      <div className="subhead">Variant Categories</div>
+      <TreeCollection
+        path={categoryPath}
+        title="Variant Categories"
+        addLabel="Add Category"
+        items={variation.categories.map((c, i) => ({
+          id: c.id,
+          label: c.categoryTitle || `Category ${i + 1}`,
+          disabled: c.disabled,
+          invalid: categoryInvalid(c),
+        }))}
+        renderBody={(vm) => {
+          const category = variation.categories.find((c) => c.id === vm.id)!;
+          return <CategoryBody variationId={variation.id} category={category} />;
+        }}
+      />
+    </>
+  );
+}
+
+export function CategoryBody({
+  variationId,
+  category,
+}: {
+  variationId: string;
+  category: VariantCategory;
+}) {
+  const { dispatch } = useStore();
+  const path: ListPath = { kind: "category", variationId };
+  const planPath: ListPath = { kind: "plan", variationId, categoryId: category.id };
   const patch = (p: Record<string, unknown>) =>
     dispatch({ type: "updateField", path, id: category.id, patch: p });
 
@@ -33,7 +108,7 @@ export function CategoryBody({ category }: { category: VariantCategory }) {
             key={s}
             className={`chip ${s}${category.publishStatus === s ? " active" : ""}`}
             onClick={() =>
-              dispatch({ type: "setPublishStatus", categoryId: category.id, status: s })
+              dispatch({ type: "setPublishStatus", variationId, categoryId: category.id, status: s })
             }
           >
             {statusLabel[s]}
@@ -63,18 +138,26 @@ export function CategoryBody({ category }: { category: VariantCategory }) {
         }))}
         renderBody={(vm) => {
           const plan = category.plans.find((p) => p.id === vm.id)!;
-          return <PlanBody category={category} plan={plan} />;
+          return <PlanBody variationId={variationId} category={category} plan={plan} />;
         }}
       />
     </>
   );
 }
 
-export function PlanBody({ category, plan }: { category: VariantCategory; plan: PlanPickerData }) {
+export function PlanBody({
+  variationId,
+  category,
+  plan,
+}: {
+  variationId: string;
+  category: VariantCategory;
+  plan: PlanPickerData;
+}) {
   const { dispatch } = useStore();
-  const path: ListPath = { kind: "plan", categoryId: category.id };
-  const featurePath: ListPath = { kind: "feature", categoryId: category.id, planId: plan.id };
-  const pricingPath: ListPath = { kind: "pricing", categoryId: category.id, planId: plan.id };
+  const path: ListPath = { kind: "plan", variationId, categoryId: category.id };
+  const featurePath: ListPath = { kind: "feature", variationId, categoryId: category.id, planId: plan.id };
+  const pricingPath: ListPath = { kind: "pricing", variationId, categoryId: category.id, planId: plan.id };
   const patch = (p: Record<string, unknown>) =>
     dispatch({ type: "updateField", path, id: plan.id, patch: p });
 
@@ -117,7 +200,14 @@ export function PlanBody({ category, plan }: { category: VariantCategory; plan: 
         }))}
         renderBody={(vm) => {
           const feature = plan.features.find((f) => f.id === vm.id)!;
-          return <FeatureBody category={category} plan={plan} feature={feature} />;
+          return (
+            <FeatureBody
+              variationId={variationId}
+              category={category}
+              plan={plan}
+              feature={feature}
+            />
+          );
         }}
       />
       <TreeCollection
@@ -132,7 +222,14 @@ export function PlanBody({ category, plan }: { category: VariantCategory; plan: 
         }))}
         renderBody={(vm) => {
           const pricing = plan.pricing.find((p) => p.id === vm.id)!;
-          return <PricingBody category={category} plan={plan} pricing={pricing} />;
+          return (
+            <PricingBody
+              variationId={variationId}
+              category={category}
+              plan={plan}
+              pricing={pricing}
+            />
+          );
         }}
       />
     </>
@@ -140,16 +237,18 @@ export function PlanBody({ category, plan }: { category: VariantCategory; plan: 
 }
 
 export function FeatureBody({
+  variationId,
   category,
   plan,
   feature,
 }: {
+  variationId: string;
   category: VariantCategory;
   plan: PlanPickerData;
   feature: ProductFeature;
 }) {
   const { dispatch } = useStore();
-  const path: ListPath = { kind: "feature", categoryId: category.id, planId: plan.id };
+  const path: ListPath = { kind: "feature", variationId, categoryId: category.id, planId: plan.id };
   const patch = (p: Record<string, unknown>) =>
     dispatch({ type: "updateField", path, id: feature.id, patch: p });
   return (
@@ -169,16 +268,18 @@ export function FeatureBody({
 }
 
 export function PricingBody({
+  variationId,
   category,
   plan,
   pricing,
 }: {
+  variationId: string;
   category: VariantCategory;
   plan: PlanPickerData;
   pricing: PricingOption;
 }) {
   const { dispatch } = useStore();
-  const path: ListPath = { kind: "pricing", categoryId: category.id, planId: plan.id };
+  const path: ListPath = { kind: "pricing", variationId, categoryId: category.id, planId: plan.id };
   const patch = (p: Record<string, unknown>) =>
     dispatch({ type: "updateField", path, id: pricing.id, patch: p });
   return (

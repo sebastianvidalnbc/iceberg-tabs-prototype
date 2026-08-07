@@ -4,7 +4,9 @@ import type {
   PricingOption,
   ProductFeature,
   PublishStatus,
+  SectionOptions,
   VariantCategory,
+  Variation,
 } from "./types";
 
 let counter = 1000;
@@ -29,7 +31,13 @@ const price = (
   ariaLabel,
 });
 
-const plan = (title: string, badge: string, description: string): PlanPickerData => ({
+const plan = (
+  title: string,
+  badge: string,
+  description: string,
+  features: ProductFeature[],
+  pricing: PricingOption[]
+): PlanPickerData => ({
   id: uid("pl"),
   productLogo: "peacock-logo",
   badgeTitle: badge,
@@ -39,42 +47,112 @@ const plan = (title: string, badge: string, description: string): PlanPickerData
   productTitle: title,
   productDescription: description,
   disclaimer: "",
-  features: [
-    feature("trophy", "Stream every match live in HD."),
-    feature("star", "The shows everyone is watching."),
-    feature("download", "Watch on the go, no signal needed."),
-  ],
-  pricing: [
-    price("Annual — $99.99/yr", "Billed once annually", "$119.99", "Select the annual plan"),
-    price("Monthly — $11.99/mo", "Billed every month", "", "Select the monthly plan"),
-  ],
+  features,
+  pricing,
 });
+
+// The three plans shown in the spec, with the realistic sample feature/pricing
+// text. Fresh ids are generated on every call so each category owns its own.
+const specPlans = (): PlanPickerData[] => [
+  plan(
+    "Premium",
+    "Best Value",
+    "Ad-supported access to all of Peacock.",
+    [
+      feature("star", "TV Favorites from NBC, Bravo & More"),
+      feature("trophy", "Live Sports"),
+      feature("download", "Downloads"),
+    ],
+    [
+      price("Annual — $99.99/yr", "Billed once annually", "$119.99", "Select the annual plan"),
+      price("Monthly — $11.99/mo", "Billed every month", "", "Select the monthly plan"),
+    ]
+  ),
+  plan(
+    "Premium Plus",
+    "Most Popular",
+    "Ad-free, with downloads and your local NBC channel.",
+    [
+      feature("star", "TV Favorites from NBC, Bravo & More"),
+      feature("trophy", "Live Sports"),
+      feature("download", "Downloads"),
+    ],
+    [
+      price("Annual — $139.99/yr", "Billed once annually", "$169.99", "Select the annual plan"),
+      price("Monthly — $16.99/mo", "Billed every month", "", "Select the monthly plan"),
+    ]
+  ),
+  plan(
+    "Sports",
+    "New",
+    "Everything in Premium Plus plus premium sports.",
+    [
+      feature("trophy", "Live Sports"),
+      feature("star", "TV Favorites from NBC, Bravo & More"),
+    ],
+    [price("Annual — $179.99/yr", "Billed once annually", "$199.99", "Select the sports plan")]
+  ),
+];
 
 const category = (
   title: string,
   query: string,
   status: PublishStatus,
-  lastModified: string
+  lastModified: string,
+  plans: PlanPickerData[]
 ): VariantCategory => ({
   id: uid("ct"),
   categoryTitle: title,
   categoryQueryParameter: query,
-  plans: [
-    plan("Premium", "Best Value", "Ad-supported access to all of Peacock."),
-    plan("Premium Plus", "Most Popular", "Ad-free, with downloads and your local NBC channel."),
-    plan("Sports", "New", "Everything in Premium Plus plus premium sports."),
-  ],
+  plans,
   publishStatus: status,
   lastModified,
 });
 
+// The Variant Categories shown in the spec: a full "Plans" category and a
+// lighter "Bundles" category.
+const specCategories = (): VariantCategory[] => [
+  category("Plans", "plans", "published", "2026-02-18 14:03", specPlans()),
+  category("Bundles", "bundles", "draft", "2026-02-16 16:55", [
+    plan(
+      "Sports Bundle",
+      "Save 20%",
+      "Peacock Premium Plus with the Sports add-on.",
+      [feature("trophy", "Live Sports")],
+      [price("Annual — $179.99/yr", "Billed once annually", "$199.99", "Select the sports bundle")]
+    ),
+  ]),
+];
+
+const variation = (name: string, categories: VariantCategory[]): Variation => ({
+  id: uid("vr"),
+  name,
+  includeAsRegion: true,
+  planPickerTitle: "Pick a Plan. Cancel Anytime.",
+  subtitle: "",
+  titleAlignment: "Centre",
+  enableHorizontalScroll: false,
+  pickVariant: "Button Variant",
+  categories,
+});
+
 export const seedJourney = (): Journey => ({
   id: uid("jn"),
-  name: "Journey",
-  categories: [
-    category("Annual Plan", "annual", "published", "2026-02-18 14:03"),
-    category("Monthly Plan", "monthly", "in-review", "2026-02-17 11:20"),
-    category("Sports Bundle", "sports", "draft", "2026-02-16 16:55"),
-    category("Student Offer", "student", "draft", "2026-02-15 08:10"),
+  name: "Premium card first test",
+  variations: [
+    variation("Predecision", []),
+    variation("Predecision", []),
+    variation("Control", specCategories()),
+    variation("Default", specCategories()),
   ],
+});
+
+export const seedSectionOptions = (): SectionOptions => ({
+  design: "Intelligent authoring",
+  variantDesign: "Plan",
+  label: "Control",
+  type: "Modules",
+  background: "Dark",
+  embedHeaders: true,
+  mobileOverflow: false,
 });

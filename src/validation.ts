@@ -4,6 +4,7 @@ import type {
   PricingOption,
   ProductFeature,
   VariantCategory,
+  Variation,
 } from "./types";
 
 export const featureInvalid = (f: ProductFeature): boolean => !f.productFeature.trim();
@@ -18,12 +19,17 @@ export const planInvalid = (p: PlanPickerData): boolean =>
 export const categoryInvalid = (c: VariantCategory): boolean =>
   !c.categoryTitle.trim() || c.plans.length === 0 || c.plans.some(planInvalid);
 
+export const variationInvalid = (v: Variation): boolean =>
+  !v.name.trim() || v.categories.some(categoryInvalid);
+
 // Dispatcher used where only the kind + item are known.
 export const itemInvalid = (
   kind: CollectionKind,
-  item: VariantCategory | PlanPickerData | ProductFeature | PricingOption
+  item: Variation | VariantCategory | PlanPickerData | ProductFeature | PricingOption
 ): boolean => {
   switch (kind) {
+    case "variation":
+      return variationInvalid(item as Variation);
     case "category":
       return categoryInvalid(item as VariantCategory);
     case "plan":

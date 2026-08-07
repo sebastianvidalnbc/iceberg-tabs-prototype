@@ -1,23 +1,38 @@
 import { createContext, useContext, useMemo, useReducer } from "react";
 import type { Dispatch, ReactNode } from "react";
-import { seedJourney } from "./data";
-import { categoryIdOf, collectionKey, getList, keyField, newItem, pathKind, regenIds } from "./model";
+import { seedJourney, seedSectionOptions } from "./data";
+import {
+  categoryIdOf,
+  collectionKey,
+  findVariation,
+  getList,
+  keyField,
+  newItem,
+  pathKind,
+  regenIds,
+  variationIdOf,
+} from "./model";
 import type { ListPath } from "./model";
-import type { Clipboard, Journey, PublishStatus } from "./types";
+import type { Clipboard, Journey, PublishStatus, SectionOptions } from "./types";
 
 export interface AppState {
   journey: Journey;
+  // Which primary top-level area is showing: Section Content or Section Options.
+  activeSection: "content" | "options";
+  sectionOptions: SectionOptions;
   // Per-collection-instance expansion: key -> id of the open item (or undefined).
   expanded: Record<string, string | undefined>;
   clipboard?: Clipboard;
 }
 
 export type Action =
+  | { type: "setActiveSection"; section: "content" | "options" }
+  | { type: "updateSectionOptions"; patch: Record<string, unknown> }
   | { type: "toggleExpand"; path: ListPath; id: string }
   | { type: "rename"; path: ListPath; id: string; name: string }
   | { type: "updateField"; path: ListPath; id: string; patch: Record<string, unknown> }
   | { type: "toggleDisabled"; path: ListPath; id: string }
-  | { type: "setPublishStatus"; categoryId: string; status: PublishStatus }
+  | { type: "setPublishStatus"; variationId: string; categoryId: string; status: PublishStatus }
   | { type: "add"; path: ListPath }
   | { type: "duplicate"; path: ListPath; id: string }
   | { type: "copy"; path: ListPath; id: string }
@@ -29,25 +44,43 @@ const stamp = (): string => new Date().toISOString().slice(0, 16).replace("T", "
 
 const initialState = (): AppState => {
   const journey = seedJourney();
-  const firstCategory = journey.categories[0];
+  // Open the first variation that has content ("Control") so the demo opens on
+  // a populated variation.
+  const firstWithContent =
+    journey.variations.find((v) => v.categories.length > 0) ?? journey.variations[0];
   return {
     journey,
-    expanded: { [collectionKey({ kind: "category" })]: firstCategory?.id },
+    activeSection: "content",
+    sectionOptions: seedSectionOptions(),
+    expanded: { [collectionKey({ kind: "variation" })]: firstWithContent?.id },
     clipboard: undefined,
   };
 };
 
-// Bump lastModified on the category that owns the mutated item. For the
-// top-level list the affected category is the item itself (id === categoryId).
+// Bump lastModified on the category that owns the mutated item. Variations have
+// no timestamp, so top-level variation mutations are a no-op here.
 const touch = (state: AppState, path: ListPath, id: string) => {
+  if (path.kind === "variation") return;
+  const variation = findVariation(state.journey, variationIdOf(path));
+  if (!variation) return;
   const categoryId = path.kind === "category" ? id : categoryIdOf(path);
-  const cat = state.journey.categories.find((c) => c.id === categoryId);
+  const cat = variation.categories.find((c) => c.id === categoryId);
   if (cat) cat.lastModified = stamp();
 };
 
 function reducer(prev: AppState, action: Action): AppState {
   const state: AppState = structuredClone(prev);
   switch (action.type) {
+    case "setActiveSection": {
+      // Only flips the active area; the `expanded` map is preserved by the
+      // structuredClone above, so switching tabs keeps prior open state.
+      state.activeSection = action.section;
+      return state;
+    }
+    case "updateSectionOptions": {
+      Object.assign(state.sectionOptions, action.patch);
+      return state;
+    }
     case "toggleExpand": {
       const key = collectionKey(action.path);
       state.expanded[key] = state.expanded[key] === action.id ? undefined : action.id;
@@ -75,7 +108,8 @@ function reducer(prev: AppState, action: Action): AppState {
       return state;
     }
     case "setPublishStatus": {
-      const cat = state.journey.categories.find((c) => c.id === action.categoryId);
+      const variation = findVariation(state.journey, action.variationId);
+      const cat = variation?.categories.find((c) => c.id === action.categoryId);
       if (cat) {
         cat.publishStatus = action.status;
         cat.lastModified = stamp();

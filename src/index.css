@@ -122,6 +122,20 @@ input, textarea { font-family: inherit; }
 .editor-actions { display: flex; gap: 6px; }
 .editor-scroll { padding: 0 20px 60px; }
 
+/* Section segmented tabs (Section Content / Section Options) */
+.section-tabs { display: inline-flex; gap: 2px; margin: 0 20px 14px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.section-tab { border: none; background: transparent; color: var(--text-2); padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.section-tab:hover { color: var(--text); }
+.section-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+
+/* Variation section-level fields + subhead divider */
+.section-fields { display: flex; flex-direction: column; gap: 12px; }
+.subhead { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; font-weight: 700; color: var(--text); }
+
+/* Section Options form */
+.options-form { display: flex; flex-direction: column; gap: 12px; }
+.options-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* Sections */
 .section { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); margin-bottom: 12px; overflow: hidden; }
 .section-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: none; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; }
