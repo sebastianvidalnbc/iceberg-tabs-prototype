@@ -1,5 +1,5 @@
 import { useStore } from "../store";
-import { Checkbox, Field, Select } from "./Field";
+import { Checkbox, Field, RadioGroup, Select } from "./Field";
 
 // The second primary top-level area. Lightweight Iceberg Section Options fields;
 // the Populate buttons are representational (non-functional) for the prototype.
@@ -15,7 +15,7 @@ export function SectionOptionsForm() {
 
   return (
     <div className="options-form">
-      <Select
+      <RadioGroup
         label="Design"
         value={o.design}
         options={DESIGNS}

@@ -83,6 +83,36 @@ export function Select({
   );
 }
 
+export function RadioGroup({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="field">
+      <span className="field-label">{label}</span>
+      <div className="radio-row">
+        {options.map((o) => (
+          <label key={o} className="radio">
+            <input
+              type="radio"
+              checked={value === o}
+              onChange={() => onChange(o)}
+            />
+            <span>{o}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Checkbox({
   label,
   checked,

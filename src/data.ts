@@ -1,10 +1,12 @@
 import type {
   Journey,
+  PageMeta,
   PlanPickerData,
   PricingOption,
   ProductFeature,
   PublishStatus,
   SectionOptions,
+  SiblingSection,
   VariantCategory,
   Variation,
 } from "./types";
@@ -155,4 +157,21 @@ export const seedSectionOptions = (): SectionOptions => ({
   background: "Dark",
   embedHeaders: true,
   mobileOverflow: false,
+});
+
+const sibling = (name: string, status: PublishStatus): SiblingSection => ({
+  id: uid("sec"),
+  name,
+  sectionId: uid("sid"),
+  status,
+});
+
+// The page that owns the sections. In the real CMS the target section sits among
+// sibling sections under a page URL; those siblings are collapsed placeholders.
+export const seedPage = (): PageMeta => ({
+  url: "/plans/all-monthly",
+  pageId: "0609",
+  status: "published",
+  siblingsBefore: [sibling("Title", "published"), sibling("See What", "draft")],
+  siblingsAfter: [sibling("FAQ", "draft")],
 });

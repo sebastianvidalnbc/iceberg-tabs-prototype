@@ -67,6 +67,26 @@ export interface Journey {
   variations: Variation[];
 }
 
+// A sibling section on the page. Only the target section is fully authored in
+// this prototype; the others are collapsed placeholders that supply the missing
+// Page > Sections context (e.g. "Title", "See What").
+export interface SiblingSection {
+  id: string;
+  name: string;
+  sectionId: string;
+  status: PublishStatus;
+}
+
+// The page that OWNS the sections. This is the top level above the redesigned
+// section editor, matching the real Iceberg URL/page context.
+export interface PageMeta {
+  url: string;
+  pageId: string;
+  status: PublishStatus;
+  siblingsBefore: SiblingSection[];
+  siblingsAfter: SiblingSection[];
+}
+
 // Lightweight Section Options fields (the second primary top-level area). These
 // mirror the real Iceberg Section Options controls; they are prototype context.
 export interface SectionOptions {

@@ -137,6 +137,27 @@ input, textarea { font-family: inherit; }
 .editor-actions { display: flex; gap: 6px; }
 .editor-scroll { padding: 0 20px 60px; }
 
+/* Page context: URL breadcrumb + list of sibling sections */
+.page-crumb { display: flex; align-items: center; gap: 10px; padding: 14px 20px 12px; border-bottom: 1px solid var(--border); }
+.page-url { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); }
+.page-meta { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.page-sections { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; }
+.page-section { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.page-section-head { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border: none; background: var(--surface); color: var(--text); font-size: 14px; text-align: left; }
+.page-section.target > .page-section-head { cursor: pointer; }
+.page-section.target > .page-section-head:hover { background: var(--surface-2); }
+.page-section.placeholder { background: var(--surface-2); opacity: 0.75; }
+.page-section.placeholder .page-section-head { cursor: default; color: var(--text-2); }
+.page-section-name { font-weight: 600; }
+.page-section-id { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.page-section-body { padding: 14px; border-top: 1px solid var(--border); background: var(--surface-2); }
+.page-section-body .section-tabs { margin-left: 0; margin-right: 0; }
+
+/* Radio group (Design control) */
+.radio-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.radio { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); }
+.radio input { accent-color: var(--blue); }
+
 /* Section segmented tabs (Section Content / Section Options) */
 .section-tabs { display: inline-flex; gap: 2px; margin: 0 20px 14px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
 .section-tab { border: none; background: transparent; color: var(--text-2); padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useReducer } from "react";
 import type { Dispatch, ReactNode } from "react";
-import { seedJourney, seedSectionOptions } from "./data";
+import { seedJourney, seedPage, seedSectionOptions } from "./data";
 import {
   categoryIdOf,
   collectionKey,
@@ -13,10 +13,14 @@ import {
   variationIdOf,
 } from "./model";
 import type { ListPath } from "./model";
-import type { Clipboard, Journey, PublishStatus, SectionOptions } from "./types";
+import type { Clipboard, Journey, PageMeta, PublishStatus, SectionOptions } from "./types";
 
 export interface AppState {
   journey: Journey;
+  // The page that owns the sections (URL/page context + sibling section rows).
+  page: PageMeta;
+  // Whether the target section (the one being redesigned) is expanded on the page.
+  sectionExpanded: boolean;
   // Which primary top-level area is showing: Section Content or Section Options.
   activeSection: "content" | "options";
   sectionOptions: SectionOptions;
@@ -26,6 +30,7 @@ export interface AppState {
 }
 
 export type Action =
+  | { type: "toggleTargetSection" }
   | { type: "setActiveSection"; section: "content" | "options" }
   | { type: "updateSectionOptions"; patch: Record<string, unknown> }
   | { type: "toggleExpand"; path: ListPath; id: string }
@@ -50,6 +55,9 @@ const initialState = (): AppState => {
     journey.variations.find((v) => v.categories.length > 0) ?? journey.variations[0];
   return {
     journey,
+    page: seedPage(),
+    // Open the target section by default so the demo lands inside the redesign.
+    sectionExpanded: true,
     activeSection: "content",
     sectionOptions: seedSectionOptions(),
     expanded: { [collectionKey({ kind: "variation" })]: firstWithContent?.id },
@@ -71,6 +79,10 @@ const touch = (state: AppState, path: ListPath, id: string) => {
 function reducer(prev: AppState, action: Action): AppState {
   const state: AppState = structuredClone(prev);
   switch (action.type) {
+    case "toggleTargetSection": {
+      state.sectionExpanded = !state.sectionExpanded;
+      return state;
+    }
     case "setActiveSection": {
       // Only flips the active area; the `expanded` map is preserved by the
       // structuredClone above, so switching tabs keeps prior open state.
