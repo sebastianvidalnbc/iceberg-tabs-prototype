@@ -274,6 +274,8 @@ input, textarea { font-family: inherit; }
 .tree-collection-head .pill { margin-left: 0; }
 .tree-add { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; border: 1px dashed var(--border-strong); background: transparent; color: var(--text-2); border-radius: var(--radius); padding: 4px 9px; font-size: 12px; font-weight: 500; }
 .tree-add:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+.tree-expand-all { display: inline-flex; align-items: center; gap: 4px; border: none; background: none; color: var(--text-2); font-size: 12px; font-weight: 500; padding: 4px 6px; border-radius: var(--radius); }
+.tree-expand-all:hover { color: var(--blue); background: var(--blue-bg); }
 .tree-collection-head .overflow { position: static; opacity: 0.6; }
 .tree-collection-head:hover .overflow { opacity: 1; }
 
@@ -295,7 +297,9 @@ input, textarea { font-family: inherit; }
 .tree-rename-input:focus { box-shadow: 0 0 0 3px var(--blue-bg); }
 
 /* Indented body — subtle hierarchy line, no heavy card boxes */
-.tree-children { margin: 4px 0 8px 11px; padding: 8px 0 6px 18px; border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+.tree-children { margin: 4px 0 8px 11px; padding: 8px 0 6px 18px; border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; animation: tree-reveal 160ms ease-out; }
+@keyframes tree-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .tree-children { animation: none; } }
 
 .checkbox { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); cursor: pointer; }
 .checkbox input { width: 15px; height: 15px; accent-color: var(--blue); }
@@ -325,3 +329,10 @@ input, textarea { font-family: inherit; }
 .pv-badge { margin-left: auto; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; background: var(--green); color: #fff; letter-spacing: 0.02em; }
 .preview-canvas { flex: 1; min-height: 0; margin: 12px; border: 1px dashed var(--border-strong); border-radius: 8px; background: #eceff3; display: grid; place-items: center; color: var(--text-3); }
 .preview-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+
+/* Toasts — non-blocking confirmations for tab actions. Click to dismiss. */
+.toast-host { position: fixed; right: 20px; bottom: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.toast { text-align: left; font-size: 13px; font-weight: 500; color: #fff; background: #1f2937; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 14px; box-shadow: var(--shadow-lg); cursor: pointer; max-width: 320px; animation: toast-in 180ms ease-out; }
+.toast:hover { background: #111827; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }

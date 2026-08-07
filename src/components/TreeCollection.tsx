@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useStore } from "../store";
+import { useToast } from "../toast";
 import { useDrag } from "../useDrag";
 import { useMenu } from "../useMenu";
 import { collectionKey, pathKind } from "../model";
@@ -23,16 +24,21 @@ export function TreeCollection({
   renderBody: (item: ItemVM) => ReactNode;
 }) {
   const { state, dispatch } = useStore();
+  const { notify } = useToast();
   const { menu, openAt, close } = useMenu();
   const drag = useDrag((from, to) => dispatch({ type: "reorder", path, from, to }));
   const key = collectionKey(path);
-  const expandedId = state.expanded[key];
+  const openIds = state.expanded[key] ?? [];
+  const allOpen = items.length > 0 && openIds.length >= items.length;
 
   const collMenu = [
     {
       label: "Paste",
       disabled: state.clipboard?.kind !== pathKind(path),
-      onClick: () => dispatch({ type: "paste", path }),
+      onClick: () => {
+        dispatch({ type: "paste", path });
+        notify(`Pasted into ${title}`);
+      },
     },
   ];
 
@@ -41,9 +47,29 @@ export function TreeCollection({
       <div className="tree-collection-head">
         <span className="tree-collection-title">{title}</span>
         <span className="pill">{items.length}</span>
-        <button className="tree-add" onClick={() => dispatch({ type: "add", path })}>
+        <button
+          className="tree-add"
+          onClick={() => {
+            dispatch({ type: "add", path });
+            notify(`Added ${addLabel.replace(/^Add\s+/i, "")}`);
+          }}
+        >
           <Icon name="plus" /> {addLabel}
         </button>
+        {items.length > 1 && (
+          <button
+            className="tree-expand-all"
+            title={allOpen ? "Collapse all" : "Expand all"}
+            onClick={() =>
+              allOpen
+                ? dispatch({ type: "collapseAll", path })
+                : dispatch({ type: "expandAll", path, ids: items.map((it) => it.id) })
+            }
+          >
+            <Icon name={allOpen ? "chevron-down" : "chevron-right"} />
+            {allOpen ? "Collapse all" : "Expand all"}
+          </button>
+        )}
         <button
           className="overflow"
           onClick={(e) => {
@@ -61,7 +87,7 @@ export function TreeCollection({
             path={path}
             item={item}
             index={i}
-            expanded={expandedId === item.id}
+            expanded={openIds.includes(item.id)}
             onToggle={() => dispatch({ type: "toggleExpand", path, id: item.id })}
             drag={drag}
             renderBody={() => renderBody(item)}

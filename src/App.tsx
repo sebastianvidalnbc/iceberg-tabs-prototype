@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StoreProvider } from "./store";
+import { ToastProvider } from "./toast";
 import { IcebergSidebar } from "./components/IcebergSidebar";
 import { ContentEditor } from "./components/ContentEditor";
 import { PreviewPane } from "./components/PreviewPane";
@@ -62,6 +63,7 @@ export default function App() {
 
   return (
     <StoreProvider>
+      <ToastProvider>
       <div className="app">
         <header className="topbar">
           <div className="brand">
@@ -86,6 +88,7 @@ export default function App() {
           <PreviewPane />
         </div>
       </div>
+      </ToastProvider>
     </StoreProvider>
   );
 }

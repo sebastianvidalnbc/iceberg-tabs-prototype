@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useStore } from "../store";
+import { useToast } from "../toast";
 import { useMenu } from "../useMenu";
 import { useDrag } from "../useDrag";
 import { pathKind } from "../model";
@@ -34,6 +35,7 @@ export function TreeItem({
   renderBody: () => ReactNode;
 }) {
   const { state, dispatch } = useStore();
+  const { notify } = useToast();
   const { menu, openAt, close } = useMenu();
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(item.label);
@@ -50,22 +52,43 @@ export function TreeItem({
 
   const rowMenu = (): MenuItem[] => [
     { label: "Rename", onClick: startRename },
-    { label: "Duplicate", onClick: () => dispatch({ type: "duplicate", path, id: item.id }) },
-    { label: "Copy", onClick: () => dispatch({ type: "copy", path, id: item.id }) },
+    {
+      label: "Duplicate",
+      onClick: () => {
+        dispatch({ type: "duplicate", path, id: item.id });
+        notify(`Duplicated “${item.label}”`);
+      },
+    },
+    {
+      label: "Copy",
+      onClick: () => {
+        dispatch({ type: "copy", path, id: item.id });
+        notify(`Copied “${item.label}”`);
+      },
+    },
     {
       label: "Paste",
       disabled: state.clipboard?.kind !== pathKind(path),
-      onClick: () => dispatch({ type: "paste", path }),
+      onClick: () => {
+        dispatch({ type: "paste", path });
+        notify("Pasted item");
+      },
     },
     {
       label: item.disabled ? "Enable" : "Disable",
-      onClick: () => dispatch({ type: "toggleDisabled", path, id: item.id }),
+      onClick: () => {
+        dispatch({ type: "toggleDisabled", path, id: item.id });
+        notify(`${item.disabled ? "Enabled" : "Disabled"} “${item.label}”`);
+      },
     },
     {
       label: "Delete",
       danger: true,
       separatorBefore: true,
-      onClick: () => dispatch({ type: "delete", path, id: item.id }),
+      onClick: () => {
+        dispatch({ type: "delete", path, id: item.id });
+        notify(`Deleted “${item.label}”`);
+      },
     },
   ];
 

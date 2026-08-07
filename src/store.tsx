@@ -24,8 +24,9 @@ export interface AppState {
   // Which primary top-level area is showing: Section Content or Section Options.
   activeSection: "content" | "options";
   sectionOptions: SectionOptions;
-  // Per-collection-instance expansion: key -> id of the open item (or undefined).
-  expanded: Record<string, string | undefined>;
+  // Per-collection-instance expansion: key -> ids of the open items. Multiple
+  // siblings can be open at once, which is what makes "expand all" meaningful.
+  expanded: Record<string, string[]>;
   clipboard?: Clipboard;
 }
 
@@ -34,6 +35,8 @@ export type Action =
   | { type: "setActiveSection"; section: "content" | "options" }
   | { type: "updateSectionOptions"; patch: Record<string, unknown> }
   | { type: "toggleExpand"; path: ListPath; id: string }
+  | { type: "expandAll"; path: ListPath; ids: string[] }
+  | { type: "collapseAll"; path: ListPath }
   | { type: "rename"; path: ListPath; id: string; name: string }
   | { type: "updateField"; path: ListPath; id: string; patch: Record<string, unknown> }
   | { type: "toggleDisabled"; path: ListPath; id: string }
@@ -60,7 +63,9 @@ const initialState = (): AppState => {
     sectionExpanded: true,
     activeSection: "content",
     sectionOptions: seedSectionOptions(),
-    expanded: { [collectionKey({ kind: "variation" })]: firstWithContent?.id },
+    expanded: firstWithContent
+      ? { [collectionKey({ kind: "variation" })]: [firstWithContent.id] }
+      : {},
     clipboard: undefined,
   };
 };
@@ -95,7 +100,18 @@ function reducer(prev: AppState, action: Action): AppState {
     }
     case "toggleExpand": {
       const key = collectionKey(action.path);
-      state.expanded[key] = state.expanded[key] === action.id ? undefined : action.id;
+      const open = state.expanded[key] ?? [];
+      state.expanded[key] = open.includes(action.id)
+        ? open.filter((id) => id !== action.id)
+        : [...open, action.id];
+      return state;
+    }
+    case "expandAll": {
+      state.expanded[collectionKey(action.path)] = [...action.ids];
+      return state;
+    }
+    case "collapseAll": {
+      state.expanded[collectionKey(action.path)] = [];
       return state;
     }
     case "rename": {
