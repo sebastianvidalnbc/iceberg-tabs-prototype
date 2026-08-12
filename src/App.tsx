@@ -4,6 +4,8 @@ import { ToastProvider } from "./toast";
 import { IcebergSidebar } from "./components/IcebergSidebar";
 import { ContentEditor } from "./components/ContentEditor";
 import { PreviewPane } from "./components/PreviewPane";
+import { useHashRoute } from "./ui/useHashRoute";
+import { DesignSystem } from "./ui/DesignSystem";
 
 // Fixed sidebar rail; the editor and preview share the remaining width. Dragging
 // the divider changes the editor width, so shrinking it gives the preview more room.
@@ -22,6 +24,8 @@ export default function App() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [editorWidth, setEditorWidth] = useState(loadEditorWidth);
   const [dragging, setDragging] = useState(false);
+  const route = useHashRoute();
+  const showDS = route.startsWith("#/design-system");
 
   // Clamp so neither the editor nor the preview collapses below its minimum.
   const clamp = useCallback((width: number) => {
@@ -70,23 +74,32 @@ export default function App() {
             <span className="logo">◭</span>
             <span className="brand-name">Iceberg</span>
           </div>
+          <div className="top-right">
+            <a className={`top-link${showDS ? " active" : ""}`} href="#/design-system">
+              Design System
+            </a>
+          </div>
         </header>
-        <div
-          className="workspace"
-          ref={workspaceRef}
-          style={{ gridTemplateColumns: `${SIDEBAR}px ${editorWidth}px 6px minmax(0, 1fr)` }}
-        >
-          <IcebergSidebar />
-          <ContentEditor />
+        {showDS ? (
+          <DesignSystem />
+        ) : (
           <div
-            className={`resizer${dragging ? " dragging" : ""}`}
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="Resize editor panel"
-            onMouseDown={() => setDragging(true)}
-          />
-          <PreviewPane />
-        </div>
+            className="workspace"
+            ref={workspaceRef}
+            style={{ gridTemplateColumns: `${SIDEBAR}px ${editorWidth}px 6px minmax(0, 1fr)` }}
+          >
+            <IcebergSidebar />
+            <ContentEditor />
+            <div
+              className={`resizer${dragging ? " dragging" : ""}`}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize editor panel"
+              onMouseDown={() => setDragging(true)}
+            />
+            <PreviewPane />
+          </div>
+        )}
       </div>
       </ToastProvider>
     </StoreProvider>

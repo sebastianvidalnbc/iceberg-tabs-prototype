@@ -37,9 +37,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ notify }}>
       {children}
-      <div className="toast-host" role="status" aria-live="polite">
+      <div className="ui-toast-host" role="status" aria-live="polite">
         {toasts.map((t) => (
-          <button key={t.id} className="toast" onClick={() => dismiss(t.id)}>
+          <button key={t.id} className="ui-toast" onClick={() => dismiss(t.id)}>
             {t.message}
           </button>
         ))}

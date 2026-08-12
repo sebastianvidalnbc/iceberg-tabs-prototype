@@ -1,27 +1,6 @@
-:root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #fbfbfc;
-  --border: #e4e7ec;
-  --border-strong: #d0d5dd;
-  --text: #1a1d23;
-  --text-2: #667085;
-  --text-3: #98a2b3;
-  --blue: #2563eb;
-  --blue-bg: #eef4ff;
-  --blue-border: #b8d0ff;
-  --green: #12855c;
-  --green-bg: #e7f6ef;
-  --amber: #b45309;
-  --amber-bg: #fef4e6;
-  --red: #d92d20;
-  --red-bg: #fdeceb;
-  --radius: 6px;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
-  --shadow-lg: 0 8px 24px rgba(16, 24, 40, 0.14);
-  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+/* Legacy custom properties (--bg, --surface, --blue, --radius, --shadow*, --sans …)
+   are supplied by the alias block in ui/tokens.css, which loads before this file.
+   Everything below resolves through the semantic tokens with identical values. */
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
@@ -114,17 +93,7 @@ input, textarea { font-family: inherit; }
 .status-dot.in-review { background: var(--amber); }
 .status-dot.published { background: var(--green); }
 
-/* Buttons */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); border-radius: var(--radius); font-weight: 500; font-size: 13px; }
-.btn:hover { background: var(--surface-2); }
-.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
-.btn.primary:hover { background: #1d4ed8; }
-.btn.ghost { border: 1px dashed var(--border-strong); background: transparent; color: var(--text-2); }
-.btn.ghost:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
-.btn.danger { color: var(--red); border-color: var(--border-strong); }
-.btn.danger:hover { background: var(--red-bg); border-color: var(--red); }
-.btn.block { width: 100%; justify-content: center; }
-.btn.add { width: 100%; justify-content: center; margin-top: 8px; }
+/* Buttons — styles now provided by .ui-btn* in ui.css (migrated). */
 
 /* Editor */
 .breadcrumb { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 2px; padding: 10px 20px; background: var(--surface-2); border-bottom: 1px solid var(--border); font-size: 12px; }
@@ -252,15 +221,7 @@ input, textarea { font-family: inherit; }
 .mono, .meta .mono { font-family: var(--mono); font-size: 11px; }
 .muted { color: var(--text-3); font-size: 12px; }
 
-/* Floating menu */
-.menu { position: fixed; z-index: 100; min-width: 168px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow-lg); padding: 4px; }
-.menu-item { display: block; width: 100%; text-align: left; border: none; background: none; padding: 7px 10px; border-radius: 5px; font-size: 13px; color: var(--text); }
-.menu-item:hover { background: var(--blue-bg); color: var(--blue); }
-.menu-item:disabled { color: var(--text-3); cursor: default; }
-.menu-item:disabled:hover { background: none; color: var(--text-3); }
-.menu-item.danger { color: var(--red); }
-.menu-item.danger:hover { background: var(--red-bg); }
-.menu-sep { height: 1px; background: var(--border); margin: 4px 0; }
+/* Floating menu — styles now provided by .ui-menu* in ui.css (migrated). */
 
 /* Empty states */
 .empty { color: var(--text-3); font-size: 13px; padding: 16px 8px; text-align: center; }
@@ -330,9 +291,4 @@ input, textarea { font-family: inherit; }
 .preview-canvas { flex: 1; min-height: 0; margin: 12px; border: 1px dashed var(--border-strong); border-radius: 8px; background: #eceff3; display: grid; place-items: center; color: var(--text-3); }
 .preview-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
 
-/* Toasts — non-blocking confirmations for tab actions. Click to dismiss. */
-.toast-host { position: fixed; right: 20px; bottom: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
-.toast { text-align: left; font-size: 13px; font-weight: 500; color: #fff; background: #1f2937; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 14px; box-shadow: var(--shadow-lg); cursor: pointer; max-width: 320px; animation: toast-in 180ms ease-out; }
-.toast:hover { background: #111827; }
-@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+/* Toasts — styles now provided by .ui-toast* in ui.css (migrated). */

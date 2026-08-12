@@ -1,7 +1,7 @@
 // Minimal inline SVG icon set (stroke-based, 16px) so the prototype has no
 // external icon dependency. Names map to the small glyphs used across the UI.
 
-type IconName =
+export type IconName =
   | "chevron-right"
   | "chevron-down"
   | "grip"

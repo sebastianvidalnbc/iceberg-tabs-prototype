@@ -1,5 +1,6 @@
 import { useStore } from "../store";
 import { Checkbox, Field, RadioGroup, Select } from "./Field";
+import { Button } from "../ui/Button";
 
 // The second primary top-level area. Lightweight Iceberg Section Options fields;
 // the Populate buttons are representational (non-functional) for the prototype.
@@ -32,12 +33,12 @@ export function SectionOptionsForm() {
 
       <div className="subhead">Populate Section with Data</div>
       <div className="options-actions">
-        <button className="btn" type="button">
+        <Button variant="secondary" size="sm">
           Populate and Retain Existing
-        </button>
-        <button className="btn" type="button">
+        </Button>
+        <Button variant="secondary" size="sm">
           Populate and Replace
-        </button>
+        </Button>
       </div>
 
       <Select
