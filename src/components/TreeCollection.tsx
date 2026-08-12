@@ -8,7 +8,7 @@ import type { ListPath } from "../model";
 import { Icon } from "./Icon";
 import { Menu } from "./Menu";
 import { TreeItem } from "./TreeItem";
-import type { ItemVM } from "./TreeItem";
+import type { ItemVM, TreeVariant } from "./TreeItem";
 
 export function TreeCollection({
   path,
@@ -16,12 +16,14 @@ export function TreeCollection({
   items,
   addLabel,
   renderBody,
+  variant = "row",
 }: {
   path: ListPath;
   title: string;
   items: ItemVM[];
   addLabel: string;
   renderBody: (item: ItemVM) => ReactNode;
+  variant?: TreeVariant;
 }) {
   const { state, dispatch } = useStore();
   const { notify } = useToast();
@@ -42,11 +44,16 @@ export function TreeCollection({
     },
   ];
 
+  // Top-level Variations render as a quiet Level-4 collection header + card list;
+  // nested collections keep the deeper, lighter tree header + row list.
+  const card = variant === "card";
+
   return (
     <div className="tree-collection">
-      <div className="tree-collection-head">
-        <span className="tree-collection-title">{title}</span>
-        <span className="pill">{items.length}</span>
+      <div className={card ? "ui-coll-head" : "tree-collection-head"}>
+        <span className={card ? "ui-coll-head__title" : "tree-collection-title"}>{title}</span>
+        <span className={card ? "ui-coll-head__count" : "pill"}>{items.length}</span>
+        {card && <span className="ui-coll-head__spacer" />}
         <button
           className="tree-add"
           onClick={() => {
@@ -80,7 +87,7 @@ export function TreeCollection({
           <Icon name="dots" />
         </button>
       </div>
-      <div className="tree-list">
+      <div className={card ? "ui-var-list" : "tree-list"}>
         {items.map((item, i) => (
           <TreeItem
             key={item.id}
@@ -90,6 +97,7 @@ export function TreeCollection({
             expanded={openIds.includes(item.id)}
             onToggle={() => dispatch({ type: "toggleExpand", path, id: item.id })}
             drag={drag}
+            variant={variant}
             renderBody={() => renderBody(item)}
           />
         ))}

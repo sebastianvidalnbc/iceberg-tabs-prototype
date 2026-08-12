@@ -1,5 +1,6 @@
 import { useStore } from "../store";
 import { Icon } from "./Icon";
+import { Badge } from "../ui/Badge";
 import { TreeCollection } from "./TreeCollection";
 import { VariationBody } from "./EditorBodies";
 import { SectionOptionsForm } from "./SectionOptionsForm";
@@ -18,16 +19,25 @@ const STATUS_LABEL: Record<PublishStatus, string> = {
   published: "Published",
 };
 
+// Map publish status to the design-system Badge tint (never color-only).
+const STATUS_VARIANT: Record<PublishStatus, "default" | "warning" | "success"> = {
+  draft: "default",
+  "in-review": "warning",
+  published: "success",
+};
+
 // A collapsed sibling section on the page — placeholder context only (not
 // authorable in this prototype).
 function SiblingRow({ section }: { section: SiblingSection }) {
   return (
-    <div className="page-section placeholder">
-      <div className="page-section-head" aria-disabled>
-        <Icon name="chevron-right" />
-        <span className="page-section-name">{section.name}</span>
-        <span className={`chip ${section.status} active`}>{STATUS_LABEL[section.status]}</span>
-        <span className="page-section-id">Section ID: {section.sectionId}</span>
+    <div className="ui-section-block ui-section-block--placeholder">
+      <div className="ui-section-head" aria-disabled="true">
+        <span className="ui-section-head__chevron">
+          <Icon name="chevron-right" />
+        </span>
+        <span className="ui-section-head__name">{section.name}</span>
+        <Badge variant={STATUS_VARIANT[section.status]}>{STATUS_LABEL[section.status]}</Badge>
+        <span className="ui-section-head__id">Section ID: {section.sectionId}</span>
       </div>
     </div>
   );
@@ -41,27 +51,31 @@ function TargetSection() {
   const variationPath: ListPath = { kind: "variation" };
 
   return (
-    <div className="page-section target">
+    <div className="ui-section-block">
       <button
-        className="page-section-head"
+        className="ui-section-head"
         aria-expanded={sectionExpanded}
         onClick={() => dispatch({ type: "toggleTargetSection" })}
       >
-        <Icon name={sectionExpanded ? "chevron-down" : "chevron-right"} />
-        <span className="page-section-name">{journey.name}</span>
-        <span className="chip published active">{STATUS_LABEL[state.page.status]}</span>
-        <span className="page-section-id">Section ID: {journey.id}</span>
+        <span className="ui-section-head__chevron">
+          <Icon name={sectionExpanded ? "chevron-down" : "chevron-right"} />
+        </span>
+        <span className="ui-section-head__name">{journey.name}</span>
+        <Badge variant={STATUS_VARIANT[state.page.status]}>
+          {STATUS_LABEL[state.page.status]}
+        </Badge>
+        <span className="ui-section-head__id">Section ID: {journey.id}</span>
       </button>
 
       {sectionExpanded && (
-        <div className="page-section-body">
-          <div className="section-tabs" role="tablist">
+        <div className="ui-section-block__body">
+          <div className="ui-section-views" role="tablist">
             {SECTIONS.map((s) => (
               <button
                 key={s.key}
                 role="tab"
                 aria-selected={activeSection === s.key}
-                className={`section-tab${activeSection === s.key ? " active" : ""}`}
+                className="ui-section-view"
                 onClick={() => dispatch({ type: "setActiveSection", section: s.key })}
               >
                 {s.label}
@@ -73,6 +87,7 @@ function TargetSection() {
               path={variationPath}
               title="Content Variations"
               addLabel="Add Variation"
+              variant="card"
               items={journey.variations.map((v, i) => ({
                 id: v.id,
                 label: v.name || `Variation ${i + 1}`,
