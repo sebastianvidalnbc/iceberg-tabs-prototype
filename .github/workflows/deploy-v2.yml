@@ -1,0 +1,61 @@
+name: Deploy V2 to GitHub Pages
+
+# V2 target: https://sebastianvidalnbc.github.io/iceberg-v2-prototype/
+# Builds dist-v2/ here, then pushes the static output to the SEPARATE repository
+# sebastianvidalnbc/iceberg-v2-prototype (gh-pages branch) using an SSH deploy
+# key that is scoped to ONLY that repo. This workflow physically cannot publish
+# to V1's site. Path-filtered so a V1-only change never triggers a V2 deploy.
+# Shared src/ui changes trigger both workflows (each publishes only its own site).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/v2/**"
+      - "src/ui/**"
+      - "v2.html"
+      - "vite.v2.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - ".github/workflows/deploy-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Distinct concurrency group from V1 so the two never cancel each other.
+concurrency:
+  group: pages-v2
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build V2
+        run: npm run build:v2
+
+      - name: Publish to iceberg-v2-prototype (gh-pages)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.V2_DEPLOY_KEY }}
+          external_repository: sebastianvidalnbc/iceberg-v2-prototype
+          publish_branch: gh-pages
+          publish_dir: ./dist-v2
+          # Wipe the branch each deploy so removed files don't linger.
+          force_orphan: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: "Deploy V2 from iceberg-tabs-prototype@${{ github.sha }}"

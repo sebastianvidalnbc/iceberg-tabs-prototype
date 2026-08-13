@@ -1,6 +1,6 @@
 import { useStore } from "../store";
-import { Icon } from "./Icon";
-import { Badge } from "../ui/Badge";
+import { Icon } from "../../ui/Icon";
+import { Badge } from "../../ui/Badge";
 import { TreeCollection } from "./TreeCollection";
 import { VariationBody } from "./EditorBodies";
 import { SectionOptionsForm } from "./SectionOptionsForm";

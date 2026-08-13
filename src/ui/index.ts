@@ -1,8 +1,8 @@
 // Iceberg UI barrel export. Import components from "@/ui" (or relative "./ui").
 
 // Icon is the single source of truth in the prototype; re-export it here.
-export { Icon } from "../components/Icon";
-export type { IconName } from "../components/Icon";
+export { Icon } from "./Icon";
+export type { IconName } from "./Icon";
 
 // Actions
 export * from "./Button";

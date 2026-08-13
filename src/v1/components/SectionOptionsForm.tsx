@@ -1,6 +1,6 @@
 import { useStore } from "../store";
 import { Checkbox, Field, RadioGroup, Select } from "./Field";
-import { Button } from "../ui/Button";
+import { Button } from "../../ui/Button";
 
 // The second primary top-level area. Lightweight Iceberg Section Options fields;
 // the Populate buttons are representational (non-functional) for the prototype.

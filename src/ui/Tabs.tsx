@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { ReactNode } from "react";
-import { Icon } from "../components/Icon";
-import type { IconName } from "../components/Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 export interface TabDef {
   id: string;

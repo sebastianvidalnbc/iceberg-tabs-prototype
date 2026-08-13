@@ -1,12 +1,12 @@
 import { useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { useStore } from "../store";
-import { useToast } from "../toast";
+import { useToast } from "../../ui/Toast";
 import { useMenu } from "../useMenu";
 import { useDrag } from "../useDrag";
 import { pathKind } from "../model";
 import type { ListPath } from "../model";
-import { Icon } from "./Icon";
+import { Icon } from "../../ui/Icon";
 import { Menu } from "./Menu";
 import type { MenuItem } from "./Menu";
 

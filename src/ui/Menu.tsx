@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Icon } from "../components/Icon";
-import type { IconName } from "../components/Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 // Back-compatible with the prototype's MenuItem; adds optional icon.
 export interface UiMenuItem {

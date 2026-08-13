@@ -1,4 +1,4 @@
-import { Icon } from "../components/Icon";
+import { Icon } from "./Icon";
 import { IconButton } from "./Button";
 
 type Size = "sm" | "md";

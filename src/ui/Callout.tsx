@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icon } from "../components/Icon";
-import type { IconName } from "../components/Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 type Variant = "info" | "success" | "warning" | "danger";
 

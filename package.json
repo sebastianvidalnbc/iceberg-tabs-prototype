@@ -5,8 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "dev:v1": "vite",
+    "dev:v2": "vite --config vite.v2.config.ts",
+    "build": "npm run build:v1",
+    "build:v1": "tsc -b && vite build",
+    "build:v2": "tsc -b && vite build --config vite.v2.config.ts",
+    "preview:v1": "vite preview",
+    "preview:v2": "vite preview --config vite.v2.config.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

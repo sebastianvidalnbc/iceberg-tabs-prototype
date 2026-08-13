@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { Icon } from "../components/Icon";
+import { Icon } from "./Icon";
 import { IconButton } from "./Button";
 import { StatusIndicator, ValidationIndicator } from "./Indicators";
 import { indentStyle } from "./Collection";

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StoreProvider } from "./store";
-import { ToastProvider } from "./toast";
+import { ToastProvider } from "../ui/Toast";
 import { IcebergSidebar } from "./components/IcebergSidebar";
 import { ContentEditor } from "./components/ContentEditor";
 import { PreviewPane } from "./components/PreviewPane";
-import { useHashRoute } from "./ui/useHashRoute";
-import { DesignSystem } from "./ui/DesignSystem";
+import { useHashRoute } from "../ui/useHashRoute";
+import { DesignSystem } from "../ui/DesignSystem";
 
 // Fixed sidebar rail; the editor and preview share the remaining width. Dragging
 // the divider changes the editor width, so shrinking it gives the preview more room.

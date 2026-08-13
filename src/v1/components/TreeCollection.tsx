@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { useStore } from "../store";
-import { useToast } from "../toast";
+import { useToast } from "../../ui/Toast";
 import { useDrag } from "../useDrag";
 import { useMenu } from "../useMenu";
 import { collectionKey, pathKind } from "../model";
 import type { ListPath } from "../model";
-import { Icon } from "./Icon";
+import { Icon } from "../../ui/Icon";
 import { Menu } from "./Menu";
 import { TreeItem } from "./TreeItem";
 import type { ItemVM, TreeVariant } from "./TreeItem";

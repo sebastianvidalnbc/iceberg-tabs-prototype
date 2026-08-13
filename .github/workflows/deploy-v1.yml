@@ -1,8 +1,21 @@
-name: Deploy to GitHub Pages
+name: Deploy V1 to GitHub Pages
 
+# V1 target: https://sebastianvidalnbc.github.io/iceberg-tabs-prototype/
+# Deploys to THIS repository's built-in Pages environment. Path-filtered so a
+# V2-only change never triggers a V1 deploy. Shared src/ui changes trigger both
+# V1 and V2 workflows (each publishes only to its own site).
 on:
   push:
     branches: [main]
+    paths:
+      - "src/v1/**"
+      - "src/ui/**"
+      - "index.html"
+      - "vite.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - ".github/workflows/deploy-v1.yml"
   workflow_dispatch:
 
 permissions:
@@ -10,8 +23,9 @@ permissions:
   pages: write
   id-token: write
 
+# V1 and V2 use distinct concurrency groups so they never cancel each other.
 concurrency:
-  group: pages
+  group: pages-v1
   cancel-in-progress: true
 
 jobs:
@@ -30,8 +44,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build V1
+        run: npm run build:v1
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

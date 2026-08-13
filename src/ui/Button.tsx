@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
-import { Icon } from "../components/Icon";
-import type { IconName } from "../components/Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 type Variant = "primary" | "secondary" | "tertiary" | "destructive";
 type Size = "sm" | "md";
