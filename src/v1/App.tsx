@@ -4,6 +4,7 @@ import { ToastProvider } from "../ui/Toast";
 import { IcebergSidebar } from "./components/IcebergSidebar";
 import { ContentEditor } from "./components/ContentEditor";
 import { PreviewPane } from "./components/PreviewPane";
+import { WidgetEditor } from "./scenarios/widget/components/WidgetEditor";
 import { useHashRoute } from "../ui/useHashRoute";
 import { DesignSystem } from "../ui/DesignSystem";
 
@@ -26,6 +27,11 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const route = useHashRoute();
   const showDS = route.startsWith("#/design-system");
+  // Second scenario: the /retention-service-config-us Widget. It is a different
+  // content type inside the SAME authoring shell — only the editor column swaps;
+  // the sidebar, resizer and persistent preview pane are identical to Pages.
+  const showWidget = route.startsWith("#/widgets");
+  const Editor = showWidget ? WidgetEditor : ContentEditor;
 
   // Clamp so neither the editor nor the preview collapses below its minimum.
   const clamp = useCallback((width: number) => {
@@ -89,7 +95,7 @@ export default function App() {
             style={{ gridTemplateColumns: `${SIDEBAR}px ${editorWidth}px 6px minmax(0, 1fr)` }}
           >
             <IcebergSidebar />
-            <ContentEditor />
+            <Editor />
             <div
               className={`resizer${dragging ? " dragging" : ""}`}
               role="separator"

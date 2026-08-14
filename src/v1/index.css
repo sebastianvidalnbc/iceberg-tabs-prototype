@@ -292,3 +292,58 @@ input, textarea { font-family: inherit; }
 .preview-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
 
 /* Toasts — styles now provided by .ui-toast* in ui.css (migrated). */
+
+/* ==========================================================================
+   Widget scenario (/retention-service-config-us). Scoped, additive styles for
+   the second V1 prototype scenario. Reuses existing tree/field/section classes;
+   only adds the widget header, Journey-Flows context and the collection search.
+   ========================================================================== */
+
+/* Make the interactive sidebar items look clickable (Pages / Widgets). */
+.side-item--link { cursor: pointer; text-decoration: none; color: inherit; }
+.side-item--link:hover { opacity: 1; background: rgba(255, 255, 255, 0.06); }
+
+/* Widget header block. */
+.wg-header { padding: 14px 0 4px; display: flex; flex-direction: column; gap: 8px; }
+.wg-header__variant {
+  font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wg-header__meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.wg-header__format { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.wg-header__type { font-size: 12px; color: var(--text-2); }
+
+/* Conditional labels inside an Offer body (IF / AND / THEN structure). */
+.wg-cond {
+  margin-top: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 700; color: var(--text-3);
+}
+.wg-and { font-size: 11px; font-weight: 600; color: var(--text-3); padding-left: 2px; }
+
+/* Spacing between the Offers and Survey Responses collections. */
+.wg-gap { height: 16px; border-top: 1px solid var(--border); margin: 16px 0 0; }
+
+/* The Offers header must stay usable inside the constrained editor pane, so it
+   wraps rather than pushing the Add button offscreen when space is tight. */
+.wg-offers-head { flex-wrap: wrap; row-gap: 6px; }
+
+/* Collection-level search/filter (rendered in the Offers header). Shrinkable so
+   it never forces horizontal overflow in the narrow editor column. */
+.wg-search {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: 8px;
+  padding: 3px 8px; border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text-3);
+  flex: 1 1 160px; min-width: 120px; max-width: 260px;
+}
+.wg-search svg { width: 13px; height: 13px; flex: none; }
+.wg-search__input {
+  border: none; background: transparent; outline: none; color: var(--text);
+  font-size: 12px; min-width: 0; flex: 1 1 auto;
+}
+.wg-search__input::placeholder { color: var(--text-3); }
+.wg-search__clear {
+  border: none; background: transparent; color: var(--text-3); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 0 2px;
+}
+.wg-search__clear:hover { color: var(--text); }
+.wg-search__count { font-size: 11px; font-weight: 600; color: var(--text-2); white-space: nowrap; }

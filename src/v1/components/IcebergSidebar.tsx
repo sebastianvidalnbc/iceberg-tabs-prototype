@@ -1,6 +1,9 @@
-// Non-interactive placeholder that mimics the real Iceberg left navigation so
-// the prototype visibly lives inside Iceberg. This bar is purely representational
-// — the prototype's actual focus is the middle editor column.
+// Mostly-decorative placeholder that mimics the real Iceberg left navigation so
+// the prototype visibly lives inside Iceberg. Two items are interactive so
+// reviewers can switch scenarios through the real IA: "Pages" (Page scenario)
+// and "Widgets" (the /retention-service-config-us Widget scenario).
+
+import { useHashRoute } from "../../ui/useHashRoute";
 
 const COLUMN_A = [
   "Pages",
@@ -15,6 +18,12 @@ const COLUMN_A = [
   "Services CMS",
   "Help",
 ];
+
+// The two nav items wired to a scenario route.
+const ROUTE_FOR: Record<string, string> = {
+  Pages: "#/",
+  Widgets: "#/widgets",
+};
 
 const COLUMN_B = [
   "Variants",
@@ -32,23 +41,40 @@ const COLUMN_B = [
 ];
 
 function SideItem({ label, active }: { label: string; active?: boolean }) {
-  return (
-    <div className={`side-item${active ? " active" : ""}`}>
+  const href = ROUTE_FOR[label];
+  const className = `side-item${active ? " active" : ""}${href ? " side-item--link" : ""}`;
+  const content = (
+    <>
       <span className="side-glyph" />
       <span className="side-label">{label}</span>
-    </div>
+    </>
   );
+  if (href) {
+    return (
+      <a className={className} href={href}>
+        {content}
+      </a>
+    );
+  }
+  return <div className={className}>{content}</div>;
 }
 
 export function IcebergSidebar() {
+  const route = useHashRoute();
+  const onWidget = route.startsWith("#/widgets");
+  // Only the interactive items reflect the active scenario; the rest stay
+  // decorative. "Variants" remains the active sub-item in column B.
+  const activeA = (label: string) =>
+    (label === "Widgets" && onWidget) || (label === "Pages" && !onWidget);
+
   return (
-    <aside className="iceberg-sidebar" aria-hidden="true">
+    <aside className="iceberg-sidebar">
       <div className="side-col">
         {COLUMN_A.map((l) => (
-          <SideItem key={l} label={l} />
+          <SideItem key={l} label={l} active={activeA(l)} />
         ))}
       </div>
-      <div className="side-col">
+      <div className="side-col" aria-hidden="true">
         {COLUMN_B.map((l) => (
           <SideItem key={l} label={l} active={l === "Variants"} />
         ))}
