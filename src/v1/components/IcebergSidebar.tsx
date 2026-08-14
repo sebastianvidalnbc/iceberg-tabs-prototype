@@ -25,6 +25,11 @@ const ROUTE_FOR: Record<string, string> = {
   Widgets: "#/widgets",
 };
 
+// The top group of the primary nav reads as "active"/available (full strength),
+// even though only the two routed items above are actually clickable. The rest
+// of the rail stays decorative/dimmed.
+const ENABLED_A = new Set(["Pages", "Content Pages", "Event Pages", "Widgets"]);
+
 const COLUMN_B = [
   "Variants",
   "Variants Quick View",
@@ -40,9 +45,19 @@ const COLUMN_B = [
   "Dock Edit",
 ];
 
-function SideItem({ label, active }: { label: string; active?: boolean }) {
+function SideItem({
+  label,
+  active,
+  enabled,
+}: {
+  label: string;
+  active?: boolean;
+  enabled?: boolean;
+}) {
   const href = ROUTE_FOR[label];
-  const className = `side-item${active ? " active" : ""}${href ? " side-item--link" : ""}`;
+  const className = `side-item${active ? " active" : ""}${
+    enabled ? " enabled" : ""
+  }${href ? " side-item--link" : ""}`;
   const content = (
     <>
       <span className="side-glyph" />
@@ -62,8 +77,8 @@ function SideItem({ label, active }: { label: string; active?: boolean }) {
 export function IcebergSidebar() {
   const route = useHashRoute();
   const onWidget = route.startsWith("#/widgets");
-  // Only the interactive items reflect the active scenario; the rest stay
-  // decorative. "Variants" remains the active sub-item in column B.
+  // The top group reads as available; the currently shown scenario (Pages or
+  // Widgets) additionally gets the active highlight. The rest stay decorative.
   const activeA = (label: string) =>
     (label === "Widgets" && onWidget) || (label === "Pages" && !onWidget);
 
@@ -71,7 +86,7 @@ export function IcebergSidebar() {
     <aside className="iceberg-sidebar">
       <div className="side-col">
         {COLUMN_A.map((l) => (
-          <SideItem key={l} label={l} active={activeA(l)} />
+          <SideItem key={l} label={l} active={activeA(l)} enabled={ENABLED_A.has(l)} />
         ))}
       </div>
       <div className="side-col" aria-hidden="true">

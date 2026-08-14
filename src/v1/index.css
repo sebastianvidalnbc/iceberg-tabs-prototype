@@ -279,6 +279,11 @@ input, textarea { font-family: inherit; }
 .side-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 6px; text-align: center; opacity: 0.72; }
 .side-glyph { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #6b8bb0; }
 .side-label { font-size: 9px; line-height: 1.15; letter-spacing: 0.01em; }
+/* Top-group items read as available/active (full strength, brighter glyph)
+   even when they aren't the currently shown scenario. */
+.side-item.enabled { opacity: 1; color: #eaf1f9; }
+.side-item.enabled .side-glyph { border-color: #9db8d6; }
+/* The currently shown scenario (Pages or Widgets) gets the teal highlight. */
 .side-item.active { background: rgba(94, 234, 212, 0.12); opacity: 1; color: #5eead4; }
 .side-item.active .side-glyph { border-color: #5eead4; background: rgba(94, 234, 212, 0.2); }
 
