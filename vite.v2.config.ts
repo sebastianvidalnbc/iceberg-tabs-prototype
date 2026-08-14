@@ -27,6 +27,13 @@ function emitIndexHtml() {
 export default defineConfig({
   base: "/iceberg-v2-prototype/",
   plugins: [react(), emitIndexHtml()],
+  // During dev, V1's index.html and V2's v2.html both live at the repo root, so
+  // Vite would serve V1 at the base root. Auto-open v2.html so `npm run dev:v2`
+  // lands on the V2 shell. (The build renames v2.html -> index.html, so the
+  // deployed site still serves V2 at the base root.)
+  server: {
+    open: "/iceberg-v2-prototype/v2.html",
+  },
   build: {
     outDir: V2_OUT_DIR,
     rollupOptions: {

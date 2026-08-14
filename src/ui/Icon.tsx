@@ -16,7 +16,15 @@ export type IconName =
   | "warning"
   | "info"
   | "ban"
-  | "trash";
+  | "trash"
+  | "file"
+  | "doc-text"
+  | "calendar"
+  | "sliders"
+  | "clipboard-check"
+  | "clock"
+  | "redirect"
+  | "server";
 
 const paths: Record<IconName, string> = {
   "chevron-right": "M6 4l4 4-4 4",
@@ -34,6 +42,15 @@ const paths: Record<IconName, string> = {
   info: "M8 2a6 6 0 100 12A6 6 0 008 2zM8 7v4M8 5h.01",
   ban: "M8 2a6 6 0 100 12A6 6 0 008 2zM3.8 3.8l8.4 8.4",
   trash: "M3 5h10M6.5 5V3.5h3V5M4.5 5l.7 8.5h5.6L11.5 5",
+  // Nav destinations.
+  file: "M4 2h5l3 3v9H4V2zM9 2v3h3",
+  "doc-text": "M4 2h5l3 3v9H4V2zM9 2v3h3M6 8h4M6 10.5h4",
+  calendar: "M3 4h10v9H3V4zM3 6.5h10M6 2.5v3M10 2.5v3",
+  sliders: "M4 3v4M4 11v2M4 7a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM12 3v2M12 9v4M12 5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z",
+  "clipboard-check": "M6 3H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V4a1 1 0 00-1-1h-1M6 3a1 1 0 011-1h2a1 1 0 011 1v1H6V3zM6.5 9l1.5 1.5L11 7",
+  clock: "M8 2a6 6 0 100 12A6 6 0 008 2zM8 5v3.5L10 10",
+  redirect: "M3 6h6a3 3 0 013 3v1M10.5 3.5L13 6l-2.5 2.5",
+  server: "M3 3h10v4H3V3zM3 9h10v4H3V9zM5.5 5h.01M5.5 11h.01",
 };
 
 export function Icon({
