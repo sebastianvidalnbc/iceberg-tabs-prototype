@@ -10,6 +10,8 @@ import { Button } from "../../ui/Button";
 import { Badge } from "../../ui/Badge";
 import {
   resolvePropertiesFor,
+  resolveWidgetPropertiesFor,
+  type AuthoringContext,
   type PropertyField,
   type PropertyGroup,
   type ObjectProperties,
@@ -20,11 +22,14 @@ import {
 } from "../data";
 
 interface PropertiesProps {
-  // The active Variant (null when a Page \u2014 not a Variant \u2014 is selected).
+  // The active authoring context; selects which Properties resolver is used.
+  context: AuthoringContext;
+  // The active experience: Variant (Page) or Widget config (Widget). Null when
+  // a route \u2014 not an experience \u2014 is selected.
   variant: VariantWorkspace | null;
-  // The selected Page route id (used only for the empty-state message).
-  selectedPageId: string | null;
-  // The selected STRUCTURE object id within the active Variant.
+  // The selected route id (used only for the empty-state message).
+  selectedRouteId: string | null;
+  // The selected STRUCTURE object id within the active experience.
   selectedStructureNodeId: string | null;
 }
 
@@ -195,13 +200,15 @@ function ObjectHeader({
 
 // Fixed-width right panel for the SELECTED object's properties. This is where
 // the forms that V1 showed inline now live. Scrolls internally. Always belongs
-// to the active Variant; shows a contextual empty state when a Page (not a
-// Variant) is selected or when no Structure object is active.
+// to the active experience; shows a contextual empty state when a route (not an
+// experience) is selected or when no Structure object is active.
 export function Properties({
+  context,
   variant,
-  selectedPageId,
+  selectedRouteId,
   selectedStructureNodeId,
 }: PropertiesProps) {
+  const experienceNoun = context === "widget" ? "widget config" : "variant";
   return (
     <aside className="ui-ws__region ui-ws-props" aria-label="Properties">
       <div className="ui-ws-head">
@@ -210,13 +217,14 @@ export function Properties({
       <div className="ui-ws-props__scroll">
         {variant && selectedStructureNodeId ? (
           <PropertiesBody
+            context={context}
             variantId={variant.id}
             nodeId={selectedStructureNodeId}
           />
         ) : (
           <p className="ui-ws-props__empty">
-            {selectedPageId
-              ? "Select a variant, then an object in its structure to edit its properties."
+            {selectedRouteId
+              ? `Select a ${experienceNoun}, then an object in its structure to edit its properties.`
               : "Select an object in the structure to edit its properties."}
           </p>
         )}
@@ -225,16 +233,23 @@ export function Properties({
   );
 }
 
-// Renders the resolved Properties for the active Variant's selected object.
-// Switches on the resolved kind so every selectable node is meaningful.
+// Renders the resolved Properties for the active experience's selected object.
+// Switches on the resolved kind so every selectable node is meaningful. The
+// resolver is chosen by context: Page uses the full Variant resolver, Widget
+// uses the placeholder Widget-area resolver.
 function PropertiesBody({
+  context,
   variantId,
   nodeId,
 }: {
+  context: AuthoringContext;
   variantId: string;
   nodeId: string;
 }) {
-  const resolved = resolvePropertiesFor(variantId, nodeId);
+  const resolved =
+    context === "widget"
+      ? resolveWidgetPropertiesFor(variantId, nodeId)
+      : resolvePropertiesFor(variantId, nodeId);
   if (resolved.kind === "collection") return <CollectionBody data={resolved.data} />;
   if (resolved.kind === "metadata") return <MetadataBody data={resolved.data} />;
   if (resolved.kind === "notice") return <NoticeBody data={resolved.data} />;

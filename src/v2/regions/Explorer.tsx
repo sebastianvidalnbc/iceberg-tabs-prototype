@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Icon } from "../../ui/Icon";
 import { SearchInput } from "../../ui/TextInput";
 import {
-  PAGES_TREE,
+  type AuthoringContext,
   type TreeNode,
   type StructureNode,
   type VariantWorkspace,
+  WIDGET_OFFERS_NODE_ID,
+  WIDGET_OFFER_FILTER_INDEX,
 } from "../data";
 
 // Row primitive shared by both trees. Chevron controls expansion only; the row
@@ -60,16 +62,21 @@ function TreeRow({
   );
 }
 
-// PAGES tree — mixes Page rows and Variant rows. Expansion is local (routes
-// are static). Clicking routes to onSelectPage/onSelectVariant by node type.
-function PagesTree({
+// Collection tree — mixes route rows and experience rows (Variants in Page
+// context, Widget configs in Widget context). Expansion is local (routes are
+// static). Clicking routes to onSelectRoute/onSelectExperience by node type.
+// Remounted per context (via a React key) so its local expansion resets when
+// the dataset changes.
+function CollectionTree({
+  tree,
   selectedId,
-  onSelectPage,
-  onSelectVariant,
+  onSelectRoute,
+  onSelectExperience,
 }: {
+  tree: TreeNode[];
   selectedId: string | null;
-  onSelectPage: (id: string) => void;
-  onSelectVariant: (id: string) => void;
+  onSelectRoute: (id: string) => void;
+  onSelectExperience: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     const acc = new Set<string>();
@@ -79,7 +86,7 @@ function PagesTree({
         if (nd.children) walk(nd.children);
       }
     };
-    walk(PAGES_TREE);
+    walk(tree);
     return acc;
   });
 
@@ -103,7 +110,9 @@ function PagesTree({
             hasChildren={hasChildren}
             selected={node.id === selectedId}
             onSelect={() =>
-              node.type === "variant" ? onSelectVariant(node.id) : onSelectPage(node.id)
+              node.type === "variant"
+                ? onSelectExperience(node.id)
+                : onSelectRoute(node.id)
             }
             onToggle={() => toggle(node.id)}
           />
@@ -114,13 +123,16 @@ function PagesTree({
 
   return (
     <div className="ui-tree" role="tree">
-      {render(PAGES_TREE, 0)}
+      {render(tree, 0)}
     </div>
   );
 }
 
 // STRUCTURE tree — fully controlled by the shell so expansion + selection are
-// scoped per active Variant.
+// scoped per active Variant. The Widget Offers collection (80+ children) gets a
+// local search/filter affordance: when that node is expanded, a compact search
+// row filters its children by label / segment name / voucher code / product id
+// without mutating underlying order. Clearing restores the full list.
 function StructureTree({
   nodes,
   selectedId,
@@ -134,10 +146,27 @@ function StructureTree({
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
 }) {
+  const [offerQuery, setOfferQuery] = useState("");
+  const q = offerQuery.trim().toLowerCase();
+
+  // Filters an Offers node's children against the search query. Non-Offers
+  // nodes are returned unchanged. Order is preserved.
+  const visibleChildren = (node: StructureNode): StructureNode[] => {
+    const children = node.children ?? [];
+    if (node.id !== WIDGET_OFFERS_NODE_ID || !q) return children;
+    return children.filter((c) => {
+      const idx = WIDGET_OFFER_FILTER_INDEX[c.id];
+      if (!idx) return c.label.toLowerCase().includes(q);
+      return idx.label.toLowerCase().includes(q) || idx.keys.includes(q);
+    });
+  };
+
   const render = (list: StructureNode[], depth: number) =>
     list.map((node) => {
+      const isOffers = node.id === WIDGET_OFFERS_NODE_ID;
       const hasChildren = !!node.children && node.children.length > 0;
       const isOpen = expanded.has(node.id);
+      const kids = visibleChildren(node);
       return (
         <div key={node.id}>
           <TreeRow
@@ -149,7 +178,24 @@ function StructureTree({
             onSelect={() => onSelect(node.id)}
             onToggle={() => onToggle(node.id)}
           />
-          {hasChildren && isOpen && render(node.children!, depth + 1)}
+          {isOffers && isOpen && (
+            <div
+              style={{
+                paddingLeft: `calc(var(--space-2) + ${depth + 1} * var(--indent-1))`,
+                paddingRight: "var(--space-2)",
+                paddingBlock: "var(--space-1)",
+              }}
+            >
+              <SearchInput
+                size="sm"
+                value={offerQuery}
+                onChange={setOfferQuery}
+                onClear={() => setOfferQuery("")}
+                placeholder="Search offers…"
+              />
+            </div>
+          )}
+          {hasChildren && isOpen && render(kids, depth + 1)}
         </div>
       );
     });
@@ -161,9 +207,9 @@ function StructureTree({
   );
 }
 
-// Finds a node's label anywhere in the PAGES tree (for the Structure empty
-// state header when a Page is selected).
-function findPageLabel(id: string | null): string | null {
+// Finds a node's label anywhere in the given collection tree (for the Structure
+// empty-state header when a route — not an experience — is selected).
+function findRouteLabel(tree: TreeNode[], id: string | null): string | null {
   if (!id) return null;
   let result: string | null = null;
   const walk = (nodes: TreeNode[]) => {
@@ -172,60 +218,70 @@ function findPageLabel(id: string | null): string | null {
       if (nd.children) walk(nd.children);
     }
   };
-  walk(PAGES_TREE);
+  walk(tree);
   return result;
 }
 
 interface ExplorerProps {
-  selectedPageId: string | null;
-  selectedVariantId: string | null;
-  activeVariant: VariantWorkspace | null;
+  context: AuthoringContext;
+  collectionTree: TreeNode[];
+  collectionHeader: string; // plural collection name (PAGES / WIDGETS)
+  selectedRouteId: string | null;
+  selectedExperienceId: string | null;
+  activeExperience: VariantWorkspace | null;
   selectedStructureNodeId: string | null;
   expanded: Set<string>;
-  onSelectPage: (id: string) => void;
-  onSelectVariant: (id: string) => void;
+  onSelectRoute: (id: string) => void;
+  onSelectExperience: (id: string) => void;
   onSelectStructureNode: (id: string) => void;
   onToggleExpand: (id: string) => void;
 }
 
-// Explorer region: two persistent panes (PAGES / STRUCTURE) that scroll
+// Explorer region: two persistent panes (collection / STRUCTURE) that scroll
 // independently. Navigation only — no editable fields. Expanding a node
-// reveals children; selecting a Variant loads its Structure; selecting a
-// Structure row drives Properties.
+// reveals children; selecting an experience loads its Structure; selecting a
+// Structure row drives Properties. The collection pane's dataset and header
+// follow the active AuthoringContext.
 export function Explorer({
-  selectedPageId,
-  selectedVariantId,
-  activeVariant,
+  context,
+  collectionTree,
+  collectionHeader,
+  selectedRouteId,
+  selectedExperienceId,
+  activeExperience,
   selectedStructureNodeId,
   expanded,
-  onSelectPage,
-  onSelectVariant,
+  onSelectRoute,
+  onSelectExperience,
   onSelectStructureNode,
   onToggleExpand,
 }: ExplorerProps) {
-  const [pageQuery, setPageQuery] = useState("");
-  // The highlighted PAGES row is whichever of page/variant is active.
-  const pagesSelectedId = selectedVariantId ?? selectedPageId;
-  const pageLabel = findPageLabel(selectedPageId);
+  const [collectionQuery, setCollectionQuery] = useState("");
+  // The highlighted collection row is whichever of route/experience is active.
+  const collectionSelectedId = selectedExperienceId ?? selectedRouteId;
+  const routeLabel = findRouteLabel(collectionTree, selectedRouteId);
+  const structureEmptyNoun = context === "widget" ? "widget config" : "variant";
 
   return (
     <section className="ui-ws__region ui-ws-explorer" aria-label="Explorer">
       <div className="ui-ws-explorer__pane ui-ws-explorer__pane--pages">
         <div className="ui-ws-head ui-ws-head--stacked">
-          <span className="ui-ws-head__eyebrow">Pages</span>
+          <span className="ui-ws-head__eyebrow">{collectionHeader}</span>
           <SearchInput
             size="sm"
-            value={pageQuery}
-            onChange={setPageQuery}
-            onClear={() => setPageQuery("")}
+            value={collectionQuery}
+            onChange={setCollectionQuery}
+            onClear={() => setCollectionQuery("")}
             placeholder="Search…"
           />
         </div>
         <div className="ui-ws-explorer__scroll">
-          <PagesTree
-            selectedId={pagesSelectedId}
-            onSelectPage={onSelectPage}
-            onSelectVariant={onSelectVariant}
+          <CollectionTree
+            key={context}
+            tree={collectionTree}
+            selectedId={collectionSelectedId}
+            onSelectRoute={onSelectRoute}
+            onSelectExperience={onSelectExperience}
           />
         </div>
       </div>
@@ -233,13 +289,13 @@ export function Explorer({
         <div className="ui-ws-head ui-ws-head--stacked">
           <span className="ui-ws-head__eyebrow">Structure</span>
           <span className="ui-ws-head__sub">
-            {activeVariant ? activeVariant.name : pageLabel ?? "—"}
+            {activeExperience ? activeExperience.name : routeLabel ?? "—"}
           </span>
         </div>
         <div className="ui-ws-explorer__scroll">
-          {activeVariant ? (
+          {activeExperience ? (
             <StructureTree
-              nodes={activeVariant.structure}
+              nodes={activeExperience.structure}
               selectedId={selectedStructureNodeId}
               expanded={expanded}
               onSelect={onSelectStructureNode}
@@ -247,7 +303,7 @@ export function Explorer({
             />
           ) : (
             <p className="ui-ws-explorer__empty">
-              Select a variant to view its structure.
+              Select a {structureEmptyNoun} to view its structure.
             </p>
           )}
         </div>
