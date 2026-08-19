@@ -4,6 +4,7 @@
 // the prototype demonstrates that different Variants have different structures.
 import type {
   SectionDesign,
+  SectionRole,
   StructureNode,
   StructureObjectType,
   VariantWorkspace,
@@ -33,6 +34,7 @@ const nt = (
     expanded?: boolean;
     sectionId?: string;
     design?: SectionDesign;
+    role?: SectionRole;
   } = {}
 ): StructureNode => ({
   id,
@@ -40,6 +42,7 @@ const nt = (
   objectType,
   ...(opts.sectionId ? { sectionId: opts.sectionId } : {}),
   ...(opts.design ? { design: opts.design } : {}),
+  ...(opts.role ? { role: opts.role } : {}),
   ...(opts.children
     ? { children: opts.children, defaultExpanded: opts.expanded ?? true }
     : {}),
@@ -90,14 +93,18 @@ const annualStructure: StructureNode[] = [
   n("as-legal", "Legal"),
 ];
 
-// --- 0609 premium card test 2 (the richest sample) --------------------------
-// The canonical Variant. Title & See What are Custom sections (Desktop/Mobile
-// Content areas + Section Options + Behaviours). "Premium card first test" is
-// an Intelligent-authoring section whose Section Content holds the Predecision
-// and Control variations.
+// --- 0609 premium card test 2 (the canonical, architect-aligned sample) -----
+// Three top-level Sections carrying explicit ROLES (Page Title / Plan Picker /
+// Footer) distinct from their authored labels. Real Iceberg authoring wrappers
+// are preserved: the Plan Picker section's Section Content holds the
+// Predecision & Control variations; Control owns the content hierarchy
+// Categories → Category → Products → Product → (Product Features / Price
+// Cadence). Page Title & Footer are Custom sections with Content Areas +
+// Section Options + Behaviours.
 const premiumCardStructure: StructureNode[] = [
   nt("pc-title", "Title", "page-section", {
     sectionId: "section-1",
+    role: "Page Title",
     design: "Custom",
     children: [
       nt("pc-title-desktop", "Desktop Content", "content-area"),
@@ -108,20 +115,9 @@ const premiumCardStructure: StructureNode[] = [
       nt("pc-title-behaviours", "Behaviours", "behaviours"),
     ],
   }),
-  nt("pc-see-what", "See What", "page-section", {
-    sectionId: "section-2",
-    design: "Custom",
-    children: [
-      nt("pc-see-what-desktop", "Desktop Content", "content-area"),
-      nt("pc-see-what-mobile", "Mobile Content", "content-area"),
-      nt("pc-see-what-section-options", "Section Options", "section-options", {
-        design: "Custom",
-      }),
-      nt("pc-see-what-behaviours", "Behaviours", "behaviours"),
-    ],
-  }),
   nt("pc-card", "Premium card first test", "page-section", {
-    sectionId: "section-3",
+    sectionId: "section-2",
+    role: "Plan Picker",
     design: "Intelligent authoring",
     children: [
       nt("pc-section-content", "Section Content", "section-content", {
@@ -129,31 +125,31 @@ const premiumCardStructure: StructureNode[] = [
           nt("pc-predecision", "Predecision", "variation"),
           nt("pc-control", "Control", "variation", {
             children: [
-              nt("pc-variant-categories", "Variant Categories", "variant-categories", {
+              nt("pc-categories", "Categories", "categories", {
                 children: [
                   nt("pc-plans", "Plans", "category", {
                     children: [
-                      nt("pc-plan-picker-data", "Plan Picker Data", "plan-picker-data", {
+                      nt("pc-products", "Products", "products", {
                         children: [
-                          nt("pc-premium", "Premium", "plan", {
+                          nt("pc-select", "Select", "product"),
+                          nt("pc-premium", "Premium", "product", {
                             children: [
-                              nt("pc-product-features-list", "Product Features List", "product-features-list", {
+                              nt("pc-product-features", "Product Features", "product-features-list", {
                                 children: [
                                   nt("pc-feat-tv", "TV Favorites from NBC, Bravo & More", "feature"),
                                   nt("pc-feat-sports", "Live Sports", "feature"),
                                   nt("pc-feat-downloads", "Downloads", "feature"),
                                 ],
                               }),
-                              nt("pc-pricing", "Pricing", "pricing", {
+                              nt("pc-price-cadence", "Price Cadence", "price-cadence", {
                                 children: [
-                                  nt("pc-price-annual", "Annual — $139.99/yr", "pricing-option"),
-                                  nt("pc-price-monthly", "Monthly — $16.99/mo", "pricing-option"),
+                                  nt("pc-cad-annual", "Annual", "cadence"),
+                                  nt("pc-cad-monthly", "Monthly", "cadence"),
                                 ],
                               }),
                             ],
                           }),
-                          nt("pc-premium-plus", "Premium Plus", "plan"),
-                          nt("pc-sports", "Sports", "plan"),
+                          nt("pc-premium-plus", "Premium Plus", "product"),
                         ],
                       }),
                     ],
@@ -170,8 +166,19 @@ const premiumCardStructure: StructureNode[] = [
       }),
     ],
   }),
-  n("pc-faq", "FAQ"),
-  n("pc-legal", "Legal"),
+  nt("pc-footer", "Footer", "page-section", {
+    sectionId: "section-3",
+    role: "Footer",
+    design: "Custom",
+    children: [
+      nt("pc-footer-desktop", "Desktop Content", "content-area"),
+      nt("pc-footer-mobile", "Mobile Content", "content-area"),
+      nt("pc-footer-section-options", "Section Options", "section-options", {
+        design: "Custom",
+      }),
+      nt("pc-footer-behaviours", "Behaviours", "behaviours"),
+    ],
+  }),
 ];
 
 // --- Premium_Test__2 --------------------------------------------------------

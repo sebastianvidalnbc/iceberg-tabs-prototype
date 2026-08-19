@@ -32,7 +32,7 @@ export const VARIANT_PREVIEWS: Record<string, PreviewData> = {
     title: "0609 premium card test 2",
     subtitle: "Plan Picker — 3 plans",
     tone: "plans",
-    body: "Premium (Best Value), Premium Plus, and Sports with feature lists and pricing.",
+    body: "Select, Premium (Best Value), and Premium Plus with feature lists and pricing.",
   },
   "pg-premium-test-2": {
     title: "Premium_Test__2",
@@ -200,76 +200,129 @@ export function categorySchema(label: string): ObjectProperties {
   };
 }
 
-// Plan (Plan Picker Data). Real fields grouped into PRODUCT / CTA / LEGAL,
-// matching §17. Icon fields use the asset-picker control.
-export function planSchema(label: string): ObjectProperties {
+// Authored values for a Product. Every field is optional; unset fields render
+// empty. This is DATA supplied by the selected object — the editor SCHEMA
+// (productSchema) is identical for every Product regardless of these values.
+export interface ProductValues {
+  badge: boolean;
+  badgeText: string;
+  eyebrow: string;
+  productLogo: string;
+  productTitle: string;
+  productDescription: string;
+  primaryCta: string;
+  primaryCtaText: string;
+  primaryCtaHref: string;
+  voucherErrorText: string;
+  productId: string;
+  voucherId: string;
+  removeProductId: boolean;
+  removeVoucherId: boolean;
+  maintainQueryParams: boolean;
+  legal: string;
+  legalDescription: string;
+}
+
+// Product editor. Schema-driven and identical for Select / Premium / Premium
+// Plus — the object supplies VALUES, the `product` type supplies this SCHEMA.
+// Groups: CONTENT / CTA / COMMERCE·CONFIGURATION / LEGAL. Product Features and
+// Price Cadence are NOT inlined here — they are child collections in Structure.
+export function productSchema(
+  label: string,
+  values: Partial<ProductValues> = {}
+): ObjectProperties {
+  const v = values;
+  const bool = (x?: boolean) => (x ? "true" : "false");
   return {
-    eyebrow: "PLAN PICKER DATA",
+    eyebrow: "PRODUCT",
     name: label,
     groups: [
       {
-        header: "PRODUCT",
+        header: "CONTENT",
         fields: [
-          { label: "Product Logo", value: "peacock-logo", kind: "asset" },
-          { label: "Badge Title", value: "" },
-          { label: "Lower Case Badge Title", value: "false", kind: "checkbox" },
-          { label: "Eyebrow", value: "" },
-          { label: "Product Title Icon", value: "", kind: "asset" },
-          { label: "Product Title", value: label, required: true },
-          { label: "Product Description", value: "", kind: "textarea" },
+          {
+            label: "Badge",
+            value: bool(v.badge),
+            kind: "checkbox",
+            helper: "Show a badge on this product.",
+          },
+          { label: "Badge Text", value: v.badgeText ?? "" },
+          { label: "Eyebrow", value: v.eyebrow ?? "" },
+          { label: "Product Logo", value: v.productLogo ?? "", kind: "asset" },
+          { label: "Product Title", value: v.productTitle ?? label, required: true },
+          {
+            label: "Product Description",
+            value: v.productDescription ?? "",
+            kind: "textarea",
+          },
         ],
       },
       {
         header: "CTA",
         fields: [
           {
-            label: "Choose a Primary CTA",
-            value: "None",
+            label: "Primary CTA",
+            value: v.primaryCta ?? "None",
             kind: "select",
             options: CTA_CHOICES,
           },
-          { label: "Primary CTA Text", value: "" },
-          { label: "Primary CTA HREF", value: "" },
-          { label: "Voucher error text", value: "", kind: "textarea" },
-          { label: "Product ID", value: "" },
-          { label: "Voucher ID", value: "" },
-          { label: "Remove Product ID", value: "false", kind: "checkbox" },
-          { label: "Remove Voucher ID", value: "false", kind: "checkbox" },
-          { label: "Maintain query parameters", value: "false", kind: "checkbox" },
+          { label: "Primary CTA Text", value: v.primaryCtaText ?? "" },
+          { label: "Primary CTA HREF", value: v.primaryCtaHref ?? "" },
+        ],
+      },
+      {
+        header: "COMMERCE / CONFIGURATION",
+        fields: [
+          {
+            label: "Voucher Error Text",
+            value: v.voucherErrorText ?? "",
+            kind: "textarea",
+          },
+          { label: "Product ID", value: v.productId ?? "" },
+          { label: "Voucher ID", value: v.voucherId ?? "" },
+          { label: "Remove Product ID", value: bool(v.removeProductId), kind: "checkbox" },
+          { label: "Remove Voucher ID", value: bool(v.removeVoucherId), kind: "checkbox" },
+          {
+            label: "Maintain Query Parameters",
+            value: bool(v.maintainQueryParams),
+            kind: "checkbox",
+          },
         ],
       },
       {
         header: "LEGAL",
         fields: [
           {
-            label: "Choose a Legal Description type",
-            value: "None",
+            label: "Legal",
+            value: v.legal ?? "None",
             kind: "select",
             options: LEGAL_TYPES,
           },
-          { label: "Description - Legal", value: "", kind: "textarea" },
+          { label: "Legal Description", value: v.legalDescription ?? "", kind: "textarea" },
         ],
       },
     ],
   };
 }
 
+// Product Feature. Architect field names: Feature Icon + Feature Description.
 export function featureSchema(label: string): ObjectProperties {
   return {
     eyebrow: "PRODUCT FEATURE",
     name: label,
     fields: [
-      { label: "Product Feature Icon", value: "check", kind: "asset" },
-      { label: "Product Feature", value: label, kind: "textarea", required: true },
+      { label: "Feature Icon", value: "check", kind: "asset" },
+      { label: "Feature Description", value: label, kind: "textarea", required: true },
     ],
   };
 }
 
-// Pricing Option. Full §21 target list (extends V1's 4-field model with the
-// additional pricing fields called for by the spec — clearly prototype).
-export function pricingSchema(label: string): ObjectProperties {
+// Cadence (a single Price Cadence item). Real V1 PricingOption fields
+// (offerDetail, buttonDescription, previousPrice→Strikethrough Price, ariaLabel)
+// plus the prototype's Offer Price and a per-cadence CTA group.
+export function cadenceSchema(label: string): ObjectProperties {
   return {
-    eyebrow: "PRICING OPTION",
+    eyebrow: "PRICE CADENCE",
     name: label,
     groups: [
       {
@@ -277,9 +330,8 @@ export function pricingSchema(label: string): ObjectProperties {
         fields: [
           { label: "Offer Detail", value: "" },
           { label: "Button Description", value: "", kind: "textarea" },
-          { label: "Previous Price", value: "" },
+          { label: "Strikethrough Price", value: "" },
           { label: "Offer Price", value: "" },
-          { label: "Price Cadence and Subtext", value: "", kind: "textarea" },
           { label: "Aria Label", value: label, required: true },
         ],
       },
@@ -287,7 +339,7 @@ export function pricingSchema(label: string): ObjectProperties {
         header: "CTA",
         fields: [
           {
-            label: "Choose a Primary CTA",
+            label: "Primary CTA",
             value: "None",
             kind: "select",
             options: CTA_CHOICES,
@@ -355,26 +407,16 @@ export function behavioursState(sectionName: string): ResolvedProperties {
 // Keyed by structure node id. Only objects with authored fields appear here;
 // everything else falls back to a name-only panel (see data.ts).
 export const OBJECT_PROPERTIES: Record<string, ObjectProperties> = {
-  // 0609 premium card test 2 → Premium
-  "pc-premium": {
-    eyebrow: "PLAN PICKER DATA",
-    name: "Premium",
-    fields: [
-      { label: "Product Logo", value: "peacock-logo" },
-      { label: "Badge Title", value: "Best Value" },
-      { label: "Lower Case Badge Title", value: "false", kind: "checkbox" },
-      { label: "Eyebrow", value: "" },
-      { label: "Product Title Icon", value: "" },
-      { label: "Product Title", value: "Premium", required: true },
-      {
-        label: "Product Description",
-        value:
-          "Stream hit movies, bingeworthy shows, and live sports — plus new series the day after they air.",
-        kind: "textarea",
-      },
-      { label: "Disclaimer", value: "", kind: "textarea" },
-    ],
-  },
+  // 0609 premium card test 2 → Premium. Uses the SAME productSchema as every
+  // other Product; only the VALUES are authored here (badge, description, …).
+  "pc-premium": productSchema("Premium", {
+    badge: true,
+    badgeText: "Best Value",
+    productLogo: "peacock-logo",
+    productTitle: "Premium",
+    productDescription:
+      "Stream hit movies, bingeworthy shows, and live sports — plus new series the day after they air.",
+  }),
   // Spanish voucher error message → Voucher Error
   "sv-voucher-error": {
     eyebrow: "ERROR MESSAGE",

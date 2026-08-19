@@ -14,33 +14,43 @@ import {
   controlSchema,
   sectionOptionsSchema,
   categorySchema,
-  planSchema,
+  productSchema,
   featureSchema,
-  pricingSchema,
+  cadenceSchema,
   contentAreaSchema,
   behavioursState,
 } from "./previews";
 
 // Classifies a Structure object so Properties resolution and (later) drag/paste
 // rules are type-aware rather than relying only on label string matching.
+// Domain (architect) terminology is preferred; the older *-alias members are
+// retained so the non-canonical sample Variants keep resolving unchanged.
 export type StructureObjectType =
-  | "page-section" // Title / See What / Premium card first test
+  | "page-section" // a Section (Page Title / Plan Picker / Footer / …)
   | "content-area" // Desktop Content / Mobile Content
   | "behaviours" // Behaviours authoring area
   | "section-options" // Section Options (Custom or Intelligent)
   | "section-content" // Section Content collection
   | "variation" // Predecision / Control / Default
-  | "variant-categories" // Variant Categories collection
+  | "categories" // Categories collection (architect)
+  | "variant-categories" // alias: Variant Categories collection
   | "category" // Plans / Bundles
-  | "plan-picker-data" // Plan Picker Data collection
-  | "plan" // Premium / Premium Plus / Sports
-  | "product-features-list" // Product Features List collection
+  | "products" // Products collection (architect)
+  | "plan-picker-data" // alias: Plan Picker Data collection
+  | "product" // a Product (Select / Premium / Premium Plus)
+  | "plan" // alias: a Product
+  | "product-features-list" // Product Features collection
   | "feature" // a single feature item
-  | "pricing" // Pricing collection
-  | "pricing-option"; // Annual / Monthly
+  | "price-cadence" // Price Cadence collection (architect)
+  | "pricing" // alias: Pricing collection
+  | "cadence" // a single cadence (Annual / Monthly)
+  | "pricing-option"; // alias: a single cadence
 
-// The section-level authoring mode shown on Page Sections.
+// The section-level authoring mode shown on Sections.
 export type SectionDesign = "Custom" | "Legacy layout" | "Intelligent authoring";
+
+// The system/domain ROLE of a Section, distinct from its authored label.
+export type SectionRole = "Page Title" | "Plan Picker" | "Footer" | (string & {});
 
 // Generic tree node reused by both the PAGES tree and Variant Structure trees.
 export interface TreeNode {
@@ -55,8 +65,9 @@ export interface TreeNode {
   defaultExpanded?: boolean;
   // --- Structure-object metadata (optional; drives Properties + type rules) --
   objectType?: StructureObjectType;
-  sectionId?: string; // Page Sections only (e.g. "section-1")
-  design?: SectionDesign; // Page Sections only
+  sectionId?: string; // Sections only (e.g. "section-1")
+  design?: SectionDesign; // Sections only
+  role?: SectionRole; // Sections only — system/domain role vs authored label
   // Authored Properties payload for canonical nodes. When present it is used
   // verbatim instead of a label-derived template.
   props?: ResolvedProperties;
@@ -180,8 +191,9 @@ export interface CollectionProperties {
 // mode radio (Custom / Legacy layout / Intelligent authoring). Intelligent
 // authoring surfaces an extra affordance (matching real Iceberg).
 export interface SectionMetadata {
-  eyebrow: "PAGE SECTION";
-  name: string;
+  eyebrow: string; // "SECTION"
+  name: string; // authored label
+  role?: SectionRole; // system/domain role (Page Title / Plan Picker / Footer)
   sectionId?: string;
   design?: SectionDesign;
   designOptions?: SectionDesign[];
@@ -269,9 +281,12 @@ const SECTION_STATUS: Record<string, string> = {
 // Item noun per collection object type (for "+ Add {noun}" / "Paste {noun}").
 const COLLECTION_NOUNS: Partial<Record<StructureObjectType, string>> = {
   "section-content": "Variation",
+  categories: "Category",
   "variant-categories": "Category",
+  products: "Product",
   "plan-picker-data": "Plan",
   "product-features-list": "Feature",
+  "price-cadence": "Cadence",
   pricing: "Pricing Option",
 };
 
@@ -285,8 +300,9 @@ function metadataFor(node: TreeNode): ResolvedProperties {
   return {
     kind: "metadata",
     data: {
-      eyebrow: "PAGE SECTION",
+      eyebrow: "SECTION",
       name: node.label,
+      role: node.role,
       sectionId: node.sectionId ?? node.id,
       design,
       designOptions: ["Custom", "Legacy layout", "Intelligent authoring"],
@@ -331,9 +347,12 @@ export function classifyNode(
       case "page-section":
         return metadataFor(node);
       case "section-content":
+      case "categories":
       case "variant-categories":
+      case "products":
       case "plan-picker-data":
       case "product-features-list":
+      case "price-cadence":
       case "pricing":
         return collectionFor(node, t);
       case "section-options":
@@ -358,12 +377,14 @@ export function classifyNode(
         return { kind: "fields", data: controlSchema(node.label) };
       case "category":
         return { kind: "fields", data: categorySchema(node.label) };
+      case "product":
       case "plan":
-        return { kind: "fields", data: planSchema(node.label) };
+        return { kind: "fields", data: productSchema(node.label) };
       case "feature":
         return { kind: "fields", data: featureSchema(node.label) };
+      case "cadence":
       case "pricing-option":
-        return { kind: "fields", data: pricingSchema(node.label) };
+        return { kind: "fields", data: cadenceSchema(node.label) };
       case "content-area":
         return contentAreaSchema(node.label);
       case "behaviours":
@@ -374,9 +395,13 @@ export function classifyNode(
   // --- label fallback (non-canonical sample Variants) ----------------------
   const collections: Partial<Record<string, StructureObjectType>> = {
     "section content": "section-content",
+    categories: "categories",
     "variant categories": "variant-categories",
+    products: "products",
     "plan picker data": "plan-picker-data",
+    "product features": "product-features-list",
     "product features list": "product-features-list",
+    "price cadence": "price-cadence",
     "pricing options": "pricing",
     pricing: "pricing",
   };
@@ -391,16 +416,20 @@ export function classifyNode(
   if (label === "plans" || label === "bundles") {
     return { kind: "fields", data: categorySchema(node.label) };
   }
-  if (parentLabel === "plan picker data") {
-    return { kind: "fields", data: planSchema(node.label) };
+  if (parentLabel === "products" || parentLabel === "plan picker data") {
+    return { kind: "fields", data: productSchema(node.label) };
   }
-  if (parentLabel === "product features list") {
+  if (parentLabel === "product features" || parentLabel === "product features list") {
     return { kind: "fields", data: featureSchema(node.label) };
   }
-  if (parentLabel === "pricing options" || parentLabel === "pricing") {
-    return { kind: "fields", data: pricingSchema(node.label) };
+  if (
+    parentLabel === "price cadence" ||
+    parentLabel === "pricing options" ||
+    parentLabel === "pricing"
+  ) {
+    return { kind: "fields", data: cadenceSchema(node.label) };
   }
-  if (parentLabel === "variant categories") {
+  if (parentLabel === "categories" || parentLabel === "variant categories") {
     return { kind: "fields", data: categorySchema(node.label) };
   }
 
@@ -434,7 +463,7 @@ export function resolvePropertiesFor(
   return {
     kind: "metadata",
     data: {
-      eyebrow: "PAGE SECTION",
+      eyebrow: "SECTION",
       name: nodeId,
       status: "draft",
       sectionId: nodeId,

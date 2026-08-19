@@ -297,7 +297,7 @@ function CollectionBody({ data }: { data: CollectionProperties }) {
 // Page section: PAGE SECTION eyebrow + name, status badge, Section ID, a Design
 // mode radio, an Intelligent-authoring affordance, and no-op Duplicate / Delete.
 function MetadataBody({ data }: { data: SectionMetadata }) {
-  const { eyebrow, name, status, sectionId, note, design, designOptions } = data;
+  const { eyebrow, name, role, status, sectionId, note, design, designOptions } = data;
   const badgeVariant =
     status === "published" ? "success" : status === "in-review" ? "warning" : "default";
   return (
@@ -308,6 +308,14 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
       <div className="ui-ws-props__groups">
         <section className="ui-ws-props__group">
           <div className="ui-ws-props__rows">
+            {role && (
+              <div className="ui-ws-props__row">
+                <span className="ui-ws-props__row-label">Type / Role</span>
+                <div className="ui-ws-props__row-control">
+                  <Badge variant="info">{role}</Badge>
+                </div>
+              </div>
+            )}
             <div className="ui-ws-props__row">
               <span className="ui-ws-props__row-label">Section ID</span>
               <div className="ui-ws-props__row-control">
