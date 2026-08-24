@@ -18,6 +18,8 @@ export function FormSection() {
   const [on, setOn] = useState(false);
   const [date, setDate] = useState("");
   const [email, setEmail] = useState("");
+  const noop = (_: string) => {};
+  const noopBool = (_: boolean) => {};
 
   return (
     <section id="form-controls">
@@ -72,6 +74,20 @@ export function FormSection() {
 
         <Checkbox label="Embed headers" checked={check} onChange={setCheck} />
         <Switch label="Enable mobile overflow" checked={on} onChange={setOn} />
+      </div>
+
+      <h3>Disabled</h3>
+      <div className="ui-ds__stack">
+        <Field label="Full name">
+          {({ id }) => <TextInput id={id} value="Jane Doe" onChange={noop} disabled />}
+        </Field>
+        <Field label="Variant">
+          {({ id }) => (
+            <Select id={id} value="plan" onChange={noop} disabled options={[{ label: "Plan", value: "plan" }]} />
+          )}
+        </Field>
+        <Checkbox label="Embed headers" checked disabled onChange={noopBool} />
+        <Switch label="Enable mobile overflow" checked={false} disabled onChange={noopBool} />
       </div>
     </section>
   );

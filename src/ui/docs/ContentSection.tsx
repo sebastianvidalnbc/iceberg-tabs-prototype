@@ -41,7 +41,7 @@ export function ContentSection() {
               <TreeRow level={1} label="Plan" hasChildren expanded={expanded.plan} onToggle={() => toggle("plan")} status={{ status: "success", label: "Published" }} dragHandleProps={{}} onOverflow={noop} />
               {expanded.plan && (
                 <>
-                  <TreeRow level={2} label="Feature: Storage" dragHandleProps={{}} onOverflow={noop} />
+                  <TreeRow level={2} label="Feature: Storage" selected dragHandleProps={{}} onOverflow={noop} />
                   <TreeRow level={2} label="Feature: Support" validation="Missing description" dragHandleProps={{}} onOverflow={noop} />
                 </>
               )}

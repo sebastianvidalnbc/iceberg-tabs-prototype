@@ -8,6 +8,7 @@
   --color-bg-surface: #ffffff;
   --color-bg-subtle: #fbfbfc;
   --color-bg-selected: #eef4ff;
+  --color-bg-preview-canvas: #eceff3;
   /* Color: text */
   --color-text-primary: #1a1d23;
   --color-text-secondary: #667085;
@@ -94,8 +95,11 @@
   --indent-4: 64px;
 }
 
-/* Legacy alias block — old names resolve through semantic tokens (identical
-   values), so index.css computed styles stay byte-for-byte equivalent. */
+/* LEGACY COMPATIBILITY ALIASES — do not use for new shared UI development.
+   These old variable names (used by V1's index.css) resolve through the
+   semantic tokens above with identical values, so V1 computed styles stay
+   byte-for-byte equivalent. New shared UI must use the semantic token names
+   (e.g. --color-action-primary, not --blue). */
 :root {
   --bg: var(--color-bg-canvas);
   --surface: var(--color-bg-surface);

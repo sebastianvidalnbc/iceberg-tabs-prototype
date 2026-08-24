@@ -471,17 +471,21 @@
 .ui-ws-explorer__pane--structure { flex: 1 1 58%; border-top: var(--border-width) solid var(--color-border-strong); }
 .ui-ws-explorer__scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2) var(--space-1) var(--space-3); }
 
-/* Explorer tree rows — lightweight, disclosure + label + optional leading path. */
-.ui-tree { display: flex; flex-direction: column; }
-.ui-tree__row { display: flex; align-items: center; gap: var(--space-1); width: 100%; min-height: 28px; padding: 2px var(--space-2); border: 0; background: none; border-radius: var(--radius-sm); color: var(--color-text-secondary); font: inherit; font-size: var(--text-md); text-align: left; cursor: pointer; }
-.ui-tree__row:hover { background: var(--color-bg-subtle); color: var(--color-text-primary); }
-.ui-tree__row--selected { background: var(--color-bg-selected); color: var(--color-action-primary); font-weight: var(--fw-semibold); }
-.ui-tree__row--selected:hover { background: var(--color-bg-selected); }
-.ui-tree__disc { width: 16px; height: 16px; display: inline-grid; place-items: center; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; flex: none; padding: 0; }
-.ui-tree__disc:hover { color: var(--color-text-primary); }
-.ui-tree__spacer { width: 16px; flex: none; }
-.ui-tree__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-tree__label--path { font-family: var(--font-mono); font-size: var(--text-sm); }
+/* V2 Explorer tree rows — lightweight (disclosure + label + optional leading
+   path), V2-local, used only by the V2 Explorer's own TreeRow. Namespaced
+   `.ui-ws-tree__*` (part of V2's `.ui-ws-*` workspace family) to avoid confusion
+   with the shared, feature-rich `.ui-tree-row` primitive above (which carries
+   drag handles, status/validation indicators, and an overflow menu). */
+.ui-ws-tree { display: flex; flex-direction: column; }
+.ui-ws-tree__row { display: flex; align-items: center; gap: var(--space-1); width: 100%; min-height: 28px; padding: 2px var(--space-2); border: 0; background: none; border-radius: var(--radius-sm); color: var(--color-text-secondary); font: inherit; font-size: var(--text-md); text-align: left; cursor: pointer; }
+.ui-ws-tree__row:hover { background: var(--color-bg-subtle); color: var(--color-text-primary); }
+.ui-ws-tree__row--selected { background: var(--color-bg-selected); color: var(--color-action-primary); font-weight: var(--fw-semibold); }
+.ui-ws-tree__row--selected:hover { background: var(--color-bg-selected); }
+.ui-ws-tree__disc { width: 16px; height: 16px; display: inline-grid; place-items: center; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; flex: none; padding: 0; }
+.ui-ws-tree__disc:hover { color: var(--color-text-primary); }
+.ui-ws-tree__spacer { width: 16px; flex: none; }
+.ui-ws-tree__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-ws-tree__label--path { font-family: var(--font-mono); font-size: var(--text-sm); }
 
 /* Structure empty state (shown when a Page — not a Variant — is selected). */
 .ui-ws-explorer__empty { margin: var(--space-2) var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.5; }
@@ -496,7 +500,7 @@
 .ui-preview__gear { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-action-primary); flex: none; }
 .ui-preview__field { display: inline-flex; align-items: center; }
 .ui-preview__status { margin-left: auto; display: inline-flex; align-items: center; }
-.ui-preview__canvas { flex: 1; min-height: 0; margin: var(--space-3); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: #eceff3; display: grid; place-items: center; color: var(--color-text-muted); }
+.ui-preview__canvas { flex: 1; min-height: 0; margin: var(--space-3); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-bg-preview-canvas); display: grid; place-items: center; color: var(--color-text-muted); }
 .ui-preview__label { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.08em; font-weight: var(--fw-semibold); }
 
 /* Per-Variant preview state — visibly changes as Variants are switched. */

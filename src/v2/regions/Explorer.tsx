@@ -31,7 +31,7 @@ function TreeRow({
 }) {
   return (
     <div
-      className={`ui-tree__row${selected ? " ui-tree__row--selected" : ""}`}
+      className={`ui-ws-tree__row${selected ? " ui-ws-tree__row--selected" : ""}`}
       style={{ paddingLeft: `calc(var(--space-2) + ${depth} * var(--indent-1))` }}
       onClick={onSelect}
       role="treeitem"
@@ -41,7 +41,7 @@ function TreeRow({
       {hasChildren ? (
         <button
           type="button"
-          className="ui-tree__disc"
+          className="ui-ws-tree__disc"
           aria-label={isOpen ? "Collapse" : "Expand"}
           onClick={(e) => {
             e.stopPropagation();
@@ -51,10 +51,10 @@ function TreeRow({
           <Icon name={isOpen ? "chevron-down" : "chevron-right"} size={12} />
         </button>
       ) : (
-        <span className="ui-tree__spacer" aria-hidden="true" />
+        <span className="ui-ws-tree__spacer" aria-hidden="true" />
       )}
       <span
-        className={`ui-tree__label${node.kind === "path" ? " ui-tree__label--path" : ""}`}
+        className={`ui-ws-tree__label${node.kind === "path" ? " ui-ws-tree__label--path" : ""}`}
       >
         {node.label}
       </span>
@@ -122,7 +122,7 @@ function CollectionTree({
     });
 
   return (
-    <div className="ui-tree" role="tree">
+    <div className="ui-ws-tree" role="tree">
       {render(tree, 0)}
     </div>
   );
@@ -201,7 +201,7 @@ function StructureTree({
     });
 
   return (
-    <div className="ui-tree" role="tree">
+    <div className="ui-ws-tree" role="tree">
       {render(nodes, 0)}
     </div>
   );
