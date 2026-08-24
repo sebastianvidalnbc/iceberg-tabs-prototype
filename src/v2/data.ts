@@ -102,42 +102,34 @@ export interface VariantWorkspace {
 }
 
 // --- App Navigation (existing Iceberg IA; do not redesign) ------------------
-export const APP_NAV: string[] = [
-  "Pages",
-  "Content Pages",
-  "Event Pages",
-  "Widgets",
-  "Central Mgmt",
-  "QA Queue",
-  "Optimizely",
-  "Scheduled Pages",
-  "Redirects",
-  "Services CMS",
-  "Help",
-];
-
 // The active major authoring context. Selecting it in App Nav swaps the dataset
 // loaded into Explorer / Structure / Live Preview / Properties. The four-region
 // architecture itself never changes.
 export type AuthoringContext = "page" | "widget";
 
 // V2-local App Nav model. The first two items are actionable and bound to an
-// AuthoringContext; the remaining items mirror the Iceberg IA (APP_NAV) but stay
-// inert for now. V2 shows SINGULAR labels (Page / Widget) while the shared
-// APP_NAV list (plural, used elsewhere) is left untouched.
+// AuthoringContext (Pages / Widgets); the remaining items mirror the Iceberg IA
+// but stay inert for now. Labels use Iceberg's plural terminology; longer labels
+// wrap to two lines in the rail. Pages and Widgets lead because they are the two
+// functional V2 authoring contexts.
 export interface AppNavItem {
   id: string;
-  label: string; // tooltip / aria-label
+  label: string; // tooltip / aria-label / visible rail label
   context?: AuthoringContext; // present ⇒ actionable
 }
 
 export const V2_APP_NAV: AppNavItem[] = [
-  { id: "nav-page", label: "Page", context: "page" },
-  { id: "nav-widget", label: "Widget", context: "widget" },
-  ...APP_NAV.filter((l) => l !== "Pages" && l !== "Widgets").map((label) => ({
-    id: `nav-${label.toLowerCase().replace(/\s+/g, "-")}`,
-    label,
-  })),
+  { id: "nav-pages", label: "Pages", context: "page" },
+  { id: "nav-widgets", label: "Widgets", context: "widget" },
+  { id: "nav-content-pages", label: "Content Pages" },
+  { id: "nav-event-pages", label: "Event Pages" },
+  { id: "nav-central-mgmt", label: "Central Mgmt" },
+  { id: "nav-qa-queue", label: "QA Queue" },
+  { id: "nav-optimizely", label: "Optimizely" },
+  { id: "nav-scheduled-pages", label: "Scheduled Pages" },
+  { id: "nav-redirects", label: "Redirects" },
+  { id: "nav-services-cms", label: "Services CMS" },
+  { id: "nav-help", label: "Help" },
 ];
 
 // --- Explorer: PAGES --------------------------------------------------------

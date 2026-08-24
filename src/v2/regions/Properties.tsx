@@ -8,6 +8,7 @@ import { Select } from "../../ui/Select";
 import { RadioGroup } from "../../ui/Radio";
 import { Button } from "../../ui/Button";
 import { Badge } from "../../ui/Badge";
+import { FieldLabel } from "../../ui/Field";
 import {
   resolvePropertiesFor,
   resolveWidgetPropertiesFor,
@@ -136,15 +137,9 @@ function PropertyRow({ field }: { field: PropertyField }) {
         stacked ? "ui-ws-props__row ui-ws-props__row--stacked" : "ui-ws-props__row"
       }
     >
-      <label className="ui-ws-props__row-label" htmlFor={id}>
-        {field.label}
-        {field.required && (
-          <span className="ui-field__req" aria-hidden="true">
-            {" "}
-            *
-          </span>
-        )}
-      </label>
+      <FieldLabel htmlFor={id} required={field.required}>
+        <span className="ui-ws-props__row-label-text">{field.label}</span>
+      </FieldLabel>
       <div className="ui-ws-props__row-control">
         <PropertyControl
           field={field}

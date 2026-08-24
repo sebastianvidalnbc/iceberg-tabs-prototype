@@ -4,17 +4,17 @@ import { Icon, type IconName } from "../../ui/Icon";
 // Distinct icon per nav destination, keyed by the V2 nav label. Any unmapped
 // item falls back to its initial letter (see lookup in the render).
 const NAV_ICONS: Record<string, IconName> = {
-  Page: "file",
-  Widget: "grip",
+  Pages: "file",
+  Widgets: "blocks",
   "Content Pages": "doc-text",
   "Event Pages": "calendar",
-  "Central Mgmt": "sliders",
+  "Central Mgmt": "cube",
   "QA Queue": "clipboard-check",
-  Optimizely: "sparkles",
-  "Scheduled Pages": "clock",
+  Optimizely: "flask",
+  "Scheduled Pages": "calendar-clock",
   Redirects: "redirect",
   "Services CMS": "server",
-  Help: "info",
+  Help: "help",
 };
 
 interface AppNavProps {
@@ -24,11 +24,12 @@ interface AppNavProps {
   onSelectContext: (context: AuthoringContext) => void;
 }
 
-// Narrow, subordinate left rail rendered as a column of square icon tiles.
-// Labels are visually hidden but exposed via aria-label + native tooltip, so
-// the compact rail stays identifiable and accessible. The first two items
-// (Page / Widget) are actionable and bound to an AuthoringContext; the rest
-// mirror the Iceberg IA but stay inert for now.
+// Narrow, subordinate left rail rendered as a scrolling column of icon+label
+// tiles. Each item stacks a semantic icon above a compact, centered label so
+// the rail stays identifiable while remaining narrow. The first two items
+// (Pages / Widgets) are actionable and bound to an AuthoringContext; the rest
+// mirror the Iceberg IA but stay inert for now. Inactive items keep the standard
+// nav appearance (they are not disabled — just non-navigating).
 export function AppNav({ context, onSelectContext }: AppNavProps) {
   return (
     <nav className="ui-ws__region ui-ws-nav" aria-label="Primary">
@@ -46,19 +47,21 @@ export function AppNav({ context, onSelectContext }: AppNavProps) {
               type="button"
               className={`ui-ws-nav__item${active ? " ui-ws-nav__item--active" : ""}`}
               aria-current={active ? "page" : undefined}
-              aria-label={item.label}
               title={item.label}
               onClick={
                 actionable ? () => onSelectContext(item.context!) : undefined
               }
             >
-              {icon ? (
-                <Icon name={icon} size={18} />
-              ) : (
-                <span className="ui-ws-nav__initial" aria-hidden="true">
-                  {item.label.charAt(0)}
-                </span>
-              )}
+              <span className="ui-ws-nav__icon" aria-hidden="true">
+                {icon ? (
+                  <Icon name={icon} size={20} />
+                ) : (
+                  <span className="ui-ws-nav__initial">
+                    {item.label.charAt(0)}
+                  </span>
+                )}
+              </span>
+              <span className="ui-ws-nav__label">{item.label}</span>
             </button>
           );
         })}

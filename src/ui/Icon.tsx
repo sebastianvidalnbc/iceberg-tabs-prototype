@@ -24,7 +24,12 @@ export type IconName =
   | "clipboard-check"
   | "clock"
   | "redirect"
-  | "server";
+  | "server"
+  | "blocks"
+  | "cube"
+  | "flask"
+  | "calendar-clock"
+  | "help";
 
 const paths: Record<IconName, string> = {
   "chevron-right": "M6 4l4 4-4 4",
@@ -51,6 +56,11 @@ const paths: Record<IconName, string> = {
   clock: "M8 2a6 6 0 100 12A6 6 0 008 2zM8 5v3.5L10 10",
   redirect: "M3 6h6a3 3 0 013 3v1M10.5 3.5L13 6l-2.5 2.5",
   server: "M3 3h10v4H3V3zM3 9h10v4H3V9zM5.5 5h.01M5.5 11h.01",
+  blocks: "M2.5 2.5h5v5h-5zM8.5 8.5h5v5h-5zM8.5 2.5h5v5h-5zM2.5 8.5h5v5h-5z",
+  cube: "M8 2l5 2.8v6.4L8 14l-5-2.8V4.8L8 2zM3 4.8L8 7.6l5-2.8M8 7.6V14",
+  flask: "M6.5 2v4L3.5 12a1 1 0 001 1.5h5a1 1 0 001-1.5L7.5 6V2M6 2h3M5 9h6",
+  "calendar-clock": "M13 7V4H3v9h5M3 6.5h10M6 2.5v3M10 2.5v3M11 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM11 11v1.2l.9.6",
+  help: "M8 2a6 6 0 100 12A6 6 0 008 2zM6.4 6.2a1.6 1.6 0 013.1.5c0 1.1-1.5 1.4-1.5 2.3M8 11.5h.01",
 };
 
 export function Icon({

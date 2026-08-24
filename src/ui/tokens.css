@@ -30,6 +30,13 @@
   --color-status-danger-bg: #fdeceb;
   --color-status-info: #2563eb;
   --color-status-info-bg: #eef4ff;
+  /* Nav chrome (dark rail — consumed by the V2 workspace App Nav) */
+  --color-nav-chrome-bg: #264053;
+  --color-nav-chrome-fg: rgba(255, 255, 255, 0.72);
+  --color-nav-chrome-fg-strong: #ffffff;
+  --color-nav-chrome-hover-bg: rgba(255, 255, 255, 0.1);
+  --color-nav-chrome-active-bg: rgba(255, 255, 255, 0.16);
+  --color-nav-chrome-border: rgba(255, 255, 255, 0.12);
   /* Focus */
   --color-focus-ring: var(--color-action-primary);
   --focus-ring-width: 3px;

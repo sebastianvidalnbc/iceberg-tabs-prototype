@@ -1,4 +1,7 @@
 import type { AuthoringContext, VariantWorkspace } from "../data";
+import { Button } from "../../ui/Button";
+import { Select } from "../../ui/Select";
+import { Badge } from "../../ui/Badge";
 
 interface LivePreviewProps {
   // The active experience. When null (a route \u2014 not an experience \u2014 is
@@ -24,11 +27,33 @@ export function LivePreview({ variant, context, selectedObjectLabel }: LivePrevi
         <div className="ui-preview">
           <div className="ui-preview__toolbar">
             <span className="ui-preview__gear" aria-hidden="true" />
-            <span className="ui-preview__btn">Preview In Tab</span>
-            <span className="ui-preview__btn">Pick Section</span>
-            <span className="ui-preview__select">Default</span>
-            <span className="ui-preview__select">Full Size</span>
-            <span className="ui-preview__badge">LIVE</span>
+            <Button variant="tertiary" size="sm" onClick={() => {}}>
+              Preview In Tab
+            </Button>
+            <Button variant="tertiary" size="sm" onClick={() => {}}>
+              Pick Section
+            </Button>
+            <label className="ui-preview__field">
+              <span className="ui-visually-hidden">Audience</span>
+              <Select
+                size="sm"
+                value="default"
+                onChange={() => {}}
+                options={[{ label: "Default", value: "default" }]}
+              />
+            </label>
+            <label className="ui-preview__field">
+              <span className="ui-visually-hidden">Preview size</span>
+              <Select
+                size="sm"
+                value="full"
+                onChange={() => {}}
+                options={[{ label: "Full Size", value: "full" }]}
+              />
+            </label>
+            <span className="ui-preview__status">
+              <Badge variant="success">LIVE</Badge>
+            </span>
           </div>
           <div className="ui-preview__canvas">
             {preview ? (

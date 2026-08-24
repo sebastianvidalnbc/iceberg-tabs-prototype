@@ -416,7 +416,7 @@
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-columns: 64px 280px minmax(0, 1fr) 380px;
+  grid-template-columns: 76px 280px minmax(0, 1fr) 380px;
   background: var(--color-bg-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
@@ -428,23 +428,34 @@
 /* App Nav — narrow, subordinate rail. Dark navy chrome (matches real Iceberg).
    Colors are V2-local (scoped to .ui-ws-nav) so shared tokens/V1 are untouched. */
 .ui-ws-nav {
-  --nav-bg: #264053;
-  --nav-fg: rgba(255, 255, 255, 0.72);
-  --nav-fg-strong: #ffffff;
-  --nav-hover-bg: rgba(255, 255, 255, 0.1);
-  --nav-active-bg: rgba(255, 255, 255, 0.16);
-  --nav-border: rgba(255, 255, 255, 0.12);
+  --nav-bg: var(--color-nav-chrome-bg);
+  --nav-fg: var(--color-nav-chrome-fg);
+  --nav-fg-strong: var(--color-nav-chrome-fg-strong);
+  --nav-hover-bg: var(--color-nav-chrome-hover-bg);
+  --nav-active-bg: var(--color-nav-chrome-active-bg);
+  --nav-border: var(--color-nav-chrome-border);
   background: var(--nav-bg);
   align-items: center;
 }
 .ui-ws-nav + .ui-ws__region { border-left: 0; }
 .ui-ws-nav__brand { display: flex; align-items: center; justify-content: center; width: 100%; padding: var(--space-3) 0; border-bottom: var(--border-width) solid var(--nav-border); }
 .ui-ws-nav__mark { width: 22px; height: 22px; border-radius: var(--radius-sm); background: var(--nav-fg-strong); flex: none; }
-.ui-ws-nav__list { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2) 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); }
-.ui-ws-nav__item { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 0; background: none; border-radius: var(--radius-md); color: var(--nav-fg); font: inherit; cursor: pointer; }
+.ui-ws-nav__list { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2) var(--space-1); display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); }
+/* Each item stacks a semantic icon above a compact centered label. Full tile is
+   the hit target and is keyboard-focusable (shared focus-ring token). */
+.ui-ws-nav__item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-1); width: 100%; min-height: 64px; padding: var(--space-2) 2px;
+  border: 0; background: none; border-radius: var(--radius-md); color: var(--nav-fg);
+  font: inherit; cursor: pointer; text-align: center;
+}
 .ui-ws-nav__item:hover { background: var(--nav-hover-bg); color: var(--nav-fg-strong); }
+.ui-ws-nav__item:focus-visible { outline: none; box-shadow: var(--focus-ring); color: var(--nav-fg-strong); }
 .ui-ws-nav__item--active { background: var(--nav-active-bg); color: var(--nav-fg-strong); }
+.ui-ws-nav__icon { display: inline-grid; place-items: center; }
 .ui-ws-nav__initial { font-size: var(--text-md); font-weight: var(--fw-semibold); line-height: 1; }
+.ui-ws-nav__label { font-size: var(--text-xs); line-height: var(--lh-tight); font-weight: var(--fw-medium); }
+.ui-ws-nav__item--active .ui-ws-nav__label { font-weight: var(--fw-semibold); }
 
 /* Region header — shared quiet section label used by Explorer/Properties. */
 .ui-ws-head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: var(--border-width) solid var(--color-border-default); flex: none; }
@@ -483,15 +494,14 @@
 .ui-preview { display: flex; flex-direction: column; min-height: 0; flex: 1; user-select: none; }
 .ui-preview__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); }
 .ui-preview__gear { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-action-primary); flex: none; }
-.ui-preview__btn { font-size: var(--text-xs); padding: var(--space-1) var(--space-2); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-sm); color: var(--color-text-secondary); }
-.ui-preview__select { font-size: var(--text-xs); padding: var(--space-1) var(--space-3); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-sm); color: var(--color-text-secondary); background: var(--color-bg-subtle); }
-.ui-preview__badge { margin-left: auto; font-size: var(--text-xs); font-weight: var(--fw-bold); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--color-status-success); color: var(--color-text-inverse); letter-spacing: 0.02em; }
+.ui-preview__field { display: inline-flex; align-items: center; }
+.ui-preview__status { margin-left: auto; display: inline-flex; align-items: center; }
 .ui-preview__canvas { flex: 1; min-height: 0; margin: var(--space-3); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: #eceff3; display: grid; place-items: center; color: var(--color-text-muted); }
 .ui-preview__label { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.08em; font-weight: var(--fw-semibold); }
 
 /* Per-Variant preview state — visibly changes as Variants are switched. */
 .ui-preview__state { display: flex; flex-direction: column; gap: var(--space-2); max-width: 42ch; padding: var(--space-5); text-align: center; color: var(--color-text-secondary); }
-.ui-preview__state--error { color: var(--color-status-danger, #b3261e); }
+.ui-preview__state--error { color: var(--color-status-danger); }
 .ui-preview__eyebrow { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; font-weight: var(--fw-semibold); color: var(--color-text-muted); }
 .ui-preview__title { font-size: var(--text-xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; color: var(--color-text-primary); }
 .ui-preview__body { font-size: var(--text-md); line-height: 1.5; margin: 0; }
@@ -526,8 +536,10 @@
 .ui-ws-props__rows { display: flex; flex-direction: column; gap: var(--space-3); }
 .ui-ws-props__row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: var(--space-3); align-items: start; }
 .ui-ws-props__row--stacked { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
-.ui-ws-props__row-label { min-width: 0; overflow-wrap: break-word; font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--color-text-secondary); padding-top: 6px; line-height: 1.35; }
-.ui-ws-props__row--stacked .ui-ws-props__row-label { padding-top: 0; }
+.ui-ws-props__row-label,
+.ui-ws-props__row > .ui-field__label { min-width: 0; overflow-wrap: break-word; font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--color-text-secondary); padding-top: 6px; line-height: 1.35; }
+.ui-ws-props__row--stacked .ui-ws-props__row-label,
+.ui-ws-props__row--stacked > .ui-field__label { padding-top: 0; }
 .ui-ws-props__row-control { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .ui-ws-props__row-help { margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.4; }
 .ui-ws-props__code { font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-bg-subtle); border: var(--border-width) solid var(--color-border-default); border-radius: var(--radius-sm); padding: 2px var(--space-2); }
