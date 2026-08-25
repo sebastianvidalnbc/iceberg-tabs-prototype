@@ -84,7 +84,7 @@ function qaBadge(qa: VariantRow["qaStatus"]) {
 }
 
 function VariantRowItem({ row }: { row: VariantRow }) {
-  const open = () => navigate(routes.editor(row.id));
+  const open = () => navigate(routes.editor("page", row.id));
   return (
     <div className="ui-ws-browse__row" role="row">
       <span role="cell">

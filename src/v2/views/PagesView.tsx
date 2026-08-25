@@ -87,8 +87,18 @@ export function PagesView() {
 }
 
 function PageRow({ row, expanded, onToggle }: { row: SlugRow; expanded: boolean; onToggle: () => void }) {
-  const clickable = row.variantCount > 0;
-  const open = () => clickable && navigate(routes.variants(row.id));
+  // A slug is clickable when it is an editable experience: either it owns
+  // Variants (→ Variants list) or it is a leaf route with no sub-pages
+  // (→ straight to the editor). Parent slugs that own sub-pages stay
+  // expand-only — opening one would just repeat its children in the editor's
+  // Structure tree, which is redundant.
+  const ownsVariants = row.variantCount > 0;
+  const isLeaf = !row.hasChildren;
+  const clickable = ownsVariants || isLeaf;
+  const open = () => {
+    if (!clickable) return;
+    navigate(ownsVariants ? routes.variants(row.id) : routes.editor("page", row.id));
+  };
   return (
     <div className="ui-ws-browse__row" role="row">
       <span className="ui-ws-browse__slug" role="cell" style={{ paddingLeft: `calc(${row.depth} * var(--space-5))` }}>
@@ -106,7 +116,9 @@ function PageRow({ row, expanded, onToggle }: { row: SlugRow; expanded: boolean;
         {clickable ? (
           <button type="button" className="ui-ws-browse__slug-link" onClick={open}>
             {row.slug}
-            <span className="ui-ws-browse__slug-count">{row.variantCount} variants</span>
+            {ownsVariants && (
+              <span className="ui-ws-browse__slug-count">{row.variantCount} variants</span>
+            )}
           </button>
         ) : (
           <span className="ui-ws-browse__slug-text">{row.slug}</span>
