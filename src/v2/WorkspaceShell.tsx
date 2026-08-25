@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { AppNav } from "./regions/AppNav";
+import { AppShell } from "./AppShell";
 import { Explorer } from "./regions/Explorer";
 import { LivePreview } from "./regions/LivePreview";
 import { Properties } from "./regions/Properties";
@@ -211,39 +211,44 @@ export function WorkspaceShell({ initialVariantId }: { initialVariantId?: string
     { label: activeName },
   ];
 
+  // The persistent rail is provided by AppShell (shared across all V2 levels).
+  // In the editor the rail keeps its original behaviour: clicking Pages/Widgets
+  // swaps the in-editor dataset via handleSelectContext rather than navigating
+  // away. Below the rail sits the breadcrumb bar and the three editing regions.
   return (
-    <div className="ui-ws-editor">
-      <div className="ui-ws-editor__bar">
-        <Breadcrumb items={crumbs} />
+    <AppShell activeContext={context} onSelectContext={handleSelectContext}>
+      <div className="ui-ws-editor">
+        <div className="ui-ws-editor__bar">
+          <Breadcrumb items={crumbs} />
+        </div>
+        <div className="ui-ws">
+          <Explorer
+            context={context}
+            collectionTree={collectionTree}
+            collectionHeader={collectionHeader}
+            selectedRouteId={selectedRouteId}
+            selectedExperienceId={selectedExperienceId}
+            activeExperience={activeExperience}
+            selectedStructureNodeId={selectedStructureNodeId}
+            expanded={expanded}
+            onSelectRoute={handleSelectRoute}
+            onSelectExperience={handleSelectExperience}
+            onSelectStructureNode={handleSelectStructureNode}
+            onToggleExpand={handleToggleExpand}
+          />
+          <LivePreview
+            variant={activeExperience}
+            context={context}
+            selectedObject={selectedObject}
+          />
+          <Properties
+            context={context}
+            variant={activeExperience}
+            selectedRouteId={selectedRouteId}
+            selectedStructureNodeId={selectedStructureNodeId}
+          />
+        </div>
       </div>
-      <div className="ui-ws">
-      <AppNav context={context} onSelectContext={handleSelectContext} />
-      <Explorer
-        context={context}
-        collectionTree={collectionTree}
-        collectionHeader={collectionHeader}
-        selectedRouteId={selectedRouteId}
-        selectedExperienceId={selectedExperienceId}
-        activeExperience={activeExperience}
-        selectedStructureNodeId={selectedStructureNodeId}
-        expanded={expanded}
-        onSelectRoute={handleSelectRoute}
-        onSelectExperience={handleSelectExperience}
-        onSelectStructureNode={handleSelectStructureNode}
-        onToggleExpand={handleToggleExpand}
-      />
-      <LivePreview
-        variant={activeExperience}
-        context={context}
-        selectedObject={selectedObject}
-      />
-      <Properties
-        context={context}
-        variant={activeExperience}
-        selectedRouteId={selectedRouteId}
-        selectedStructureNodeId={selectedStructureNodeId}
-      />
-      </div>
-    </div>
+    </AppShell>
   );
 }

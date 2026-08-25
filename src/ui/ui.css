@@ -412,17 +412,29 @@
    as one document; each region owns its own scroll. Token-driven; reuses the
    shared Iceberg design system (no separate V2 visual language).
    ============================================================================ */
-/* Editor shell: a full-viewport column with a breadcrumb bar above the
-   four-region grid. The grid itself (.ui-ws) fills the remaining height. */
-.ui-ws-editor {
+/* Persistent app shell: a full-viewport row with the navigation rail pinned on
+   the left and the current level (Pages list / Variants list / editor) filling
+   the rest. The rail is global chrome — identical and always visible on every
+   V2 level — so authors keep a stable way to move between major areas. */
+.ui-ws-shell {
   position: fixed;
   inset: 0;
   display: flex;
-  flex-direction: column;
   background: var(--color-bg-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-base);
+}
+.ui-ws-shell__main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Editor level: a column with a breadcrumb bar above the three-region grid.
+   It now fills the shell's main area (no longer a fixed overlay of its own). */
+.ui-ws-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-canvas);
 }
 .ui-ws-editor__bar {
   flex: none;
@@ -436,7 +448,7 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 76px 280px minmax(0, 1fr) 380px;
+  grid-template-columns: 280px minmax(0, 1fr) 380px;
   background: var(--color-bg-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
@@ -446,7 +458,9 @@
 .ui-ws__region + .ui-ws__region { border-left: var(--border-width) solid var(--color-border-default); }
 
 /* App Nav — narrow, subordinate rail. Dark navy chrome (matches real Iceberg).
-   Colors are V2-local (scoped to .ui-ws-nav) so shared tokens/V1 are untouched. */
+   Now a flex child of the shell (its own fixed-width column) rather than a grid
+   cell. Colors are V2-local (scoped to .ui-ws-nav) so shared tokens/V1 are
+   untouched. */
 .ui-ws-nav {
   --nav-bg: var(--color-nav-chrome-bg);
   --nav-fg: var(--color-nav-chrome-fg);
@@ -454,6 +468,8 @@
   --nav-hover-bg: var(--color-nav-chrome-hover-bg);
   --nav-active-bg: var(--color-nav-chrome-active-bg);
   --nav-border: var(--color-nav-chrome-border);
+  flex: none;
+  width: 76px;
   background: var(--nav-bg);
   align-items: center;
 }
@@ -618,7 +634,7 @@
    width table views mirroring real Iceberg's browse screens. Token-driven,
    scoped under .ui-ws-browse so V1 is unaffected.
    ============================================================================ */
-.ui-ws-browse { min-height: 100vh; background: var(--color-bg-surface); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
+.ui-ws-browse { flex: 1; min-height: 0; overflow-y: auto; background: var(--color-bg-surface); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
 .ui-ws-browse .ui-breadcrumb { margin-bottom: var(--space-1); }
 .ui-ws-browse__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
 .ui-ws-browse__title { display: flex; align-items: center; gap: var(--space-3); }

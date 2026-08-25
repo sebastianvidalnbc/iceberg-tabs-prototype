@@ -20,7 +20,9 @@ const NAV_ICONS: Record<string, IconName> = {
 interface AppNavProps {
   // The active authoring context; the bound nav item is shown as current.
   context: AuthoringContext;
-  // Invoked when an actionable (context-bound) nav item is clicked.
+  // Invoked when an actionable (context-bound) nav item is clicked. The shell
+  // decides what this means: in the editor it swaps the in-editor dataset; in
+  // the browse levels it navigates to that context's list via a hash route.
   onSelectContext: (context: AuthoringContext) => void;
 }
 
@@ -30,6 +32,9 @@ interface AppNavProps {
 // (Pages / Widgets) are actionable and bound to an AuthoringContext; the rest
 // mirror the Iceberg IA but stay inert for now. Inactive items keep the standard
 // nav appearance (they are not disabled — just non-navigating).
+//
+// The rail is persistent global chrome: it is rendered by AppShell across every
+// V2 level (Pages list, Variants list, editor), not only inside the editor.
 export function AppNav({ context, onSelectContext }: AppNavProps) {
   return (
     <nav className="ui-ws__region ui-ws-nav" aria-label="Primary">
