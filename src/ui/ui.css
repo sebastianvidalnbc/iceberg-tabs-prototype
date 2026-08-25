@@ -412,9 +412,29 @@
    as one document; each region owns its own scroll. Token-driven; reuses the
    shared Iceberg design system (no separate V2 visual language).
    ============================================================================ */
-.ui-ws {
+/* Editor shell: a full-viewport column with a breadcrumb bar above the
+   four-region grid. The grid itself (.ui-ws) fills the remaining height. */
+.ui-ws-editor {
   position: fixed;
   inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+}
+.ui-ws-editor__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+.ui-ws {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 76px 280px minmax(0, 1fr) 380px;
   background: var(--color-bg-canvas);
@@ -509,6 +529,16 @@
 .ui-preview__eyebrow { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; font-weight: var(--fw-semibold); color: var(--color-text-muted); }
 .ui-preview__title { font-size: var(--text-xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; color: var(--color-text-primary); }
 .ui-preview__body { font-size: var(--text-md); line-height: 1.5; margin: 0; }
+.ui-preview__audience { margin: var(--space-1) 0 0; }
+
+/* V2 preview frame: wraps the preview state so the toolbar's size control can
+   reframe the viewport (desktop / tablet / mobile). Additive — V1's PreviewPane
+   renders .ui-preview__state directly in the canvas, so it is unaffected. */
+.ui-preview__frame { width: 100%; display: grid; place-items: center; transition: max-width var(--motion-normal) var(--ease-standard); }
+.ui-preview__frame--full { max-width: 100%; }
+.ui-preview__frame--tablet { max-width: 640px; }
+.ui-preview__frame--mobile { max-width: 360px; }
+@media (prefers-reduced-motion: reduce) { .ui-preview__frame { transition: none; } }
 
 /* Properties — fixed-width right panel that scrolls internally. */
 .ui-ws-props { background: var(--color-bg-surface); }
@@ -534,9 +564,15 @@
 .ui-ws-props { width: 460px; max-width: 100%; }
 .ui-ws-props__object { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); }
 .ui-ws-props__object .ui-ws-props__eyebrow { flex-basis: 100%; }
-.ui-ws-props__groups { display: flex; flex-direction: column; gap: var(--space-5); }
+.ui-ws-props__groups { display: flex; flex-direction: column; gap: var(--space-3); }
 .ui-ws-props__group { display: flex; flex-direction: column; gap: var(--space-3); }
 .ui-ws-props__group-header { margin: 0; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); color: var(--color-text-muted); padding-bottom: var(--space-1); border-bottom: var(--border-width) solid var(--color-border-default); }
+/* Expand all / Collapse all control above the collapsible property groups. */
+.ui-ws-props__collapse-all { display: flex; justify-content: flex-end; margin-bottom: var(--space-2); }
+/* Collapsible property groups reuse the shared .ui-section card. Scope a compact
+   header treatment so it reads as a property group (uppercase eyebrow) rather
+   than a bold content section, without altering .ui-section elsewhere. */
+.ui-ws-props__groups .ui-section__head { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); }
 .ui-ws-props__rows { display: flex; flex-direction: column; gap: var(--space-3); }
 .ui-ws-props__row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: var(--space-3); align-items: start; }
 .ui-ws-props__row--stacked { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
@@ -553,9 +589,62 @@
 .ui-ws-props__notice { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); border: var(--border-width) dashed var(--color-border-default); border-radius: var(--radius-sm); background: var(--color-bg-subtle); }
 .ui-ws-props__notice-title { margin: 0; font-size: var(--text-sm); font-weight: var(--fw-medium); }
 .ui-ws-props__notice-detail { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.5; }
+
+/* Inline template gallery (Build 4). Expands in the Properties panel; cards are
+   grouped by Modules / Widget to mirror the real Section Options type choice. */
+.ui-ws-gallery { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-2); padding: var(--space-3); border: var(--border-width) solid var(--color-border-default); border-radius: var(--radius-md); background: var(--color-bg-subtle); }
+.ui-ws-gallery__group { display: flex; flex-direction: column; gap: var(--space-2); }
+.ui-ws-gallery__group-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); color: var(--color-text-muted); }
+.ui-ws-gallery__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.ui-ws-gallery__card { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: var(--space-2); row-gap: 2px; text-align: left; padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border-default); border-radius: var(--radius-sm); background: var(--color-bg-surface); color: var(--color-text-primary); cursor: pointer; transition: border-color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard); }
+.ui-ws-gallery__card:hover { border-color: var(--color-border-strong); background: var(--color-bg-subtle); }
+.ui-ws-gallery__card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-ws-gallery__thumb { grid-row: 1 / span 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--color-bg-subtle); color: var(--color-text-secondary); }
+.ui-ws-gallery__name { font-size: var(--text-sm); font-weight: var(--fw-semibold); }
+.ui-ws-gallery__desc { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.4; }
+.ui-ws-gallery__foot { display: flex; justify-content: flex-end; }
+@media (prefers-reduced-motion: reduce) { .ui-ws-gallery__card { transition: none; } }
+@media (max-width: 520px) { .ui-ws-gallery__grid { grid-template-columns: minmax(0, 1fr); } }
+
 /* Stack the label column on narrow viewports. */
 @media (max-width: 900px) {
   .ui-ws-props { width: 100%; }
   .ui-ws-props__row { grid-template-columns: 1fr; gap: var(--space-1); }
   .ui-ws-props__row-label { padding-top: 0; }
+}
+
+/* ============================================================================
+   V2 Browse levels — Pages list and Variants list (above the editor). Full-
+   width table views mirroring real Iceberg's browse screens. Token-driven,
+   scoped under .ui-ws-browse so V1 is unaffected.
+   ============================================================================ */
+.ui-ws-browse { min-height: 100vh; background: var(--color-bg-surface); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
+.ui-ws-browse .ui-breadcrumb { margin-bottom: var(--space-1); }
+.ui-ws-browse__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.ui-ws-browse__title { display: flex; align-items: center; gap: var(--space-3); }
+.ui-ws-browse__h1 { margin: 0; font-size: var(--text-xl); font-weight: var(--fw-bold); letter-spacing: -0.01em; }
+.ui-ws-browse__count { font-size: var(--text-sm); color: var(--color-text-muted); }
+.ui-ws-browse__tools { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Table: a CSS grid with a shared column template on head + body rows. */
+.ui-ws-browse__table { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border-default); border-radius: var(--radius-md); overflow: hidden; }
+.ui-ws-browse__row { display: grid; grid-template-columns: minmax(0, 2.4fr) 1fr 1fr 1fr 1fr auto; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); font-size: var(--text-sm); }
+.ui-ws-browse__table--variants .ui-ws-browse__row { grid-template-columns: minmax(0, 2.4fr) 0.9fr 1fr 1fr 1fr 1.2fr auto; }
+.ui-ws-browse__row:last-child { border-bottom: 0; }
+.ui-ws-browse__row--head { position: sticky; top: 0; background: var(--color-bg-subtle); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); color: var(--color-text-muted); }
+.ui-ws-browse__row:not(.ui-ws-browse__row--head):hover { background: var(--color-bg-subtle); }
+.ui-ws-browse__slug { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.ui-ws-browse__chevron-spacer { width: 28px; flex: none; }
+.ui-ws-browse__slug-link { display: inline-flex; align-items: baseline; gap: var(--space-2); border: 0; background: none; padding: 0; font: inherit; color: var(--color-action-primary); font-weight: var(--fw-semibold); cursor: pointer; text-align: left; min-width: 0; }
+.ui-ws-browse__slug-link:hover { text-decoration: underline; }
+.ui-ws-browse__slug-link:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+.ui-ws-browse__slug-text { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-text-secondary); }
+.ui-ws-browse__slug-count { font-size: var(--text-xs); color: var(--color-text-muted); font-weight: 400; }
+.ui-ws-browse__muted { color: var(--color-text-muted); }
+.ui-ws-browse__actions { display: flex; align-items: center; gap: 2px; justify-content: flex-end; }
+@media (max-width: 900px) {
+  .ui-ws-browse { padding: var(--space-4) var(--space-3); }
+  .ui-ws-browse__row { grid-template-columns: minmax(0, 1fr) auto; }
+  .ui-ws-browse__row > *:nth-child(n+2):not(.ui-ws-browse__actions) { display: none; }
+  .ui-ws-browse__row--head { display: none; }
 }

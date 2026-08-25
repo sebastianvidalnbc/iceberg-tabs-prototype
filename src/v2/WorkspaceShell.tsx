@@ -3,11 +3,13 @@ import { AppNav } from "./regions/AppNav";
 import { Explorer } from "./regions/Explorer";
 import { LivePreview } from "./regions/LivePreview";
 import { Properties } from "./regions/Properties";
+import { Breadcrumb } from "../ui/Breadcrumb";
 import {
   getVariant,
   seedExpandedFor,
   VARIANTS,
   DEFAULT_VARIANT_ID,
+  isVariantId,
   getWidgetConfig,
   seedWidgetExpandedFor,
   WIDGET_CONFIGS,
@@ -17,6 +19,7 @@ import {
   findNode,
   type AuthoringContext,
 } from "./data";
+import { findPageForVariant, routes, navigate } from "./browse";
 
 // Per-experience Explorer memory: which Structure nodes are expanded and which
 // object is selected. Keeping this keyed by experience (Variant or Widget
@@ -53,16 +56,24 @@ function seedWidgetMemory(configId: string): ExperienceMemory {
 //   selected route id      — a route row in the collection tree
 //   selected experience id — the active Variant / Widget config (drives regions)
 //   selectedStructureNodeId — the selected object within the active experience
-export function WorkspaceShell() {
+// `initialVariantId` comes from the #/editor/:variantId route so a deep link
+// opens straight into that variant. Unknown ids fall back to the default so the
+// editor always renders a populated workspace.
+export function WorkspaceShell({ initialVariantId }: { initialVariantId?: string }) {
+  const openVariantId =
+    initialVariantId && isVariantId(initialVariantId)
+      ? initialVariantId
+      : DEFAULT_VARIANT_ID;
+
   const [context, setContext] = useState<AuthoringContext>("page");
 
   // --- Page context state (unchanged behaviour) ---------------------------
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
-    DEFAULT_VARIANT_ID
+    openVariantId
   );
   const [pageMemory, setPageMemory] = useState<Record<string, ExperienceMemory>>(
-    () => ({ [DEFAULT_VARIANT_ID]: seedMemory(DEFAULT_VARIANT_ID) })
+    () => ({ [openVariantId]: seedMemory(openVariantId) })
   );
 
   // --- Widget context state (independent) ---------------------------------
@@ -89,12 +100,22 @@ export function WorkspaceShell() {
   const selectedStructureNodeId = active?.selectedNodeId ?? null;
   const expanded = active?.expanded ?? new Set<string>();
 
-  // Label of the currently selected Structure object (drives the Widget preview
-  // summary). Resolved from the active experience's structure.
-  const selectedObjectLabel =
+  // The currently selected Structure object, resolved once from the active
+  // experience's structure. Drives the Live Preview so the canvas reflects which
+  // object (and, for Sections, which page role) the author is editing — the
+  // workshop's "which section does this field control?" ask. Null when a route
+  // (not an experience) is selected or nothing is selected.
+  const selectedNode =
     activeExperience && selectedStructureNodeId
-      ? findNode(activeExperience.structure, selectedStructureNodeId)?.label ?? null
+      ? findNode(activeExperience.structure, selectedStructureNodeId)
       : null;
+  const selectedObject = selectedNode
+    ? {
+        label: selectedNode.label,
+        role: selectedNode.role ?? null,
+        objectType: selectedNode.objectType ?? null,
+      }
+    : null;
 
   // Switch the major authoring context. Each context preserves its own prior
   // selection because we never touch the other context's state here.
@@ -171,8 +192,31 @@ export function WorkspaceShell() {
     [isPage, selectedExperienceId]
   );
 
+  // Breadcrumb keeps the author oriented ("Where am I?"): Pages / /slug / Variant.
+  // Crumbs navigate back up the browse flow via hash routes. Only meaningful in
+  // the Page context (Widgets have their own flat browse); shown for pages here.
+  const ownerPage = isPage ? findPageForVariant(openVariantId) : null;
+  const activeName = activeExperience?.name ?? openVariantId;
+  const crumbs = [
+    { label: "Pages", href: routes.pages(), onClick: () => navigate(routes.pages()) },
+    ...(ownerPage
+      ? [
+          {
+            label: ownerPage.label,
+            href: routes.variants(ownerPage.id),
+            onClick: () => navigate(routes.variants(ownerPage.id)),
+          },
+        ]
+      : []),
+    { label: activeName },
+  ];
+
   return (
-    <div className="ui-ws">
+    <div className="ui-ws-editor">
+      <div className="ui-ws-editor__bar">
+        <Breadcrumb items={crumbs} />
+      </div>
+      <div className="ui-ws">
       <AppNav context={context} onSelectContext={handleSelectContext} />
       <Explorer
         context={context}
@@ -191,7 +235,7 @@ export function WorkspaceShell() {
       <LivePreview
         variant={activeExperience}
         context={context}
-        selectedObjectLabel={selectedObjectLabel}
+        selectedObject={selectedObject}
       />
       <Properties
         context={context}
@@ -199,6 +243,7 @@ export function WorkspaceShell() {
         selectedRouteId={selectedRouteId}
         selectedStructureNodeId={selectedStructureNodeId}
       />
+      </div>
     </div>
   );
 }
