@@ -23,13 +23,13 @@ interface AppShellProps {
 }
 
 export function AppShell({ activeContext, onSelectContext, children }: AppShellProps) {
-  // Default rail behaviour (browse levels): navigate to the context's list.
-  // Widgets currently has no dedicated browse list, so it also lands on Pages
-  // for now — kept inert-but-safe rather than routing somewhere that 404s.
+  // Default rail behaviour (browse levels): navigate to the context's own top
+  // list. Pages → #/pages, Widgets → #/widgets. Both collections have the same
+  // two top levels (list → variants), so each rail item lands somewhere real.
   const handleSelectContext =
     onSelectContext ??
     ((next: AuthoringContext) => {
-      navigate(next === "widget" ? routes.pages() : routes.pages());
+      navigate(next === "widget" ? routes.widgets() : routes.pages());
     });
 
   // V2's default visual theme is dark. The theme is opted into here — on the
