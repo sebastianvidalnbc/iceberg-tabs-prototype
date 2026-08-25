@@ -1,13 +1,43 @@
 /* Iceberg UI — semantic design tokens.
-   Values map 1:1 to the prototype's existing raw values (zero visual drift).
-   A legacy alias block below redefines the old variable names to point at
-   these tokens so index.css keeps working while resolving through tokens. */
-:root {
-  /* Color: background */
-  --color-bg-canvas: #f6f7f9;
-  --color-bg-surface: #ffffff;
-  --color-bg-subtle: #fbfbfc;
-  --color-bg-selected: #eef4ff;
+
+   THEMING ARCHITECTURE
+   --------------------
+   The `--color-*` tokens are *semantic roles* (surface / panel / text / border /
+   action / status), not raw values. Components reference the roles only, so a
+   theme is just a different set of values assigned to those roles — components
+   never change to re-theme.
+
+   - `:root` holds the LIGHT theme. These values map 1:1 to the prototype's
+     original raw values, so V1 (which reads `:root` and the legacy aliases
+     below) is byte-for-byte unchanged. Light is the default theme.
+   - `[data-theme="dark"]` (further down) overrides the same roles with dark
+     values. V2 opts in by setting that attribute on its shell; V1 never sets it,
+     so V1 stays light. A future additional theme is added the same way — a new
+     scoped block reassigning roles — with no component edits.
+
+   Rules: never hardcode a raw color in a component; add/adjust roles here. Never
+   change a `:root` value without auditing V1 (it consumes these + the aliases).
+   A legacy alias block below redefines the old variable names to point at these
+   tokens so index.css keeps working while resolving through tokens.
+
+   `[data-theme="light"]` is bound to the SAME light values here so a light
+   island can be nested inside a dark ancestor (e.g. the Live Preview, which
+   shows real Peacock output and must not inherit the CMS dark theme). It carries
+   the full light palette so it fully overrides an enclosing dark scope. */
+:root,
+[data-theme="light"] {
+  /* Color: background / surfaces (tonal steps, lightest → most recessed).
+     panel/elevated/hover/control are explicit surface roles; in the light theme
+     they intentionally resolve to existing values (zero visual drift) but exist
+     as distinct roles so the dark theme can give each its own tone. */
+  --color-bg-canvas: #f6f7f9;      /* app / chrome background */
+  --color-bg-surface: #ffffff;     /* primary surface (panels' base) */
+  --color-bg-panel: var(--color-bg-surface);   /* Explorer / Properties panels */
+  --color-bg-subtle: #fbfbfc;      /* subtle / recessed surface */
+  --color-bg-elevated: #ffffff;    /* elevated surface: menus / popovers / dialogs */
+  --color-bg-hover: var(--color-bg-subtle);     /* hover surface */
+  --color-bg-selected: #eef4ff;    /* selected surface */
+  --color-bg-control: var(--color-bg-surface);  /* form control background */
   --color-bg-preview-canvas: #eceff3;
   /* Color: text */
   --color-text-primary: #1a1d23;
@@ -31,6 +61,10 @@
   --color-status-danger-bg: #fdeceb;
   --color-status-info: #2563eb;
   --color-status-info-bg: #eef4ff;
+  /* Toast surface (a deliberately dark chip even in the light theme). Tokenized
+     so the dark theme can retune it and no component carries a raw hex. */
+  --color-toast-bg: #1f2937;
+  --color-toast-bg-hover: #111827;
   /* Nav chrome (dark rail — consumed by the V2 workspace App Nav) */
   --color-nav-chrome-bg: #264053;
   --color-nav-chrome-fg: rgba(255, 255, 255, 0.72);
@@ -123,4 +157,82 @@
   --shadow-lg: var(--elevation-2);
   --mono: var(--font-mono);
   --sans: var(--font-sans);
+}
+
+/* ============================================================================
+   DARK THEME — V2's default. Overrides only the color ROLES defined above;
+   spacing, type, radius, motion, z-index and indentation are theme-agnostic and
+   stay shared. Opt in by setting `data-theme="dark"` on a container (V2 sets it
+   on its shell). V1 never sets it, so V1 keeps the light `:root` values.
+
+   Design intent — a modern professional authoring tool:
+   • dark rail / Explorer / Structure / Properties with SUBTLE tonal steps
+     between surfaces (tone, not heavy borders) — canvas < panel < subtle <
+     elevated, each a small lift so hierarchy reads without hard lines;
+   • restrained accent (a slightly brighter blue) used only for selection and
+     primary actions; selected surfaces are a low-chroma blue-tinted fill;
+   • elevated dark menus/popovers/dialogs sit above panels with a real shadow;
+   • high readability WITHOUT pure-white body text (primary is a soft off-white,
+     secondary/muted step down) to reduce glare;
+   • strong, clearly visible focus ring on the dark ground.
+   The legacy aliases resolve THROUGH these roles, so any shared component that
+   still uses an alias also themes correctly. Only V1 (never dark) reads them.
+   ============================================================================ */
+[data-theme="dark"] {
+  /* Backgrounds / surfaces — subtle tonal ladder (darkest chrome → elevated). */
+  --color-bg-canvas: #0f1419;      /* app / chrome background (behind panels) */
+  --color-bg-surface: #171d25;     /* primary surface (panel base) */
+  --color-bg-panel: #1a212b;       /* Explorer / Properties panels (a step up) */
+  --color-bg-subtle: #12181f;      /* recessed surface (below the base tone) */
+  --color-bg-elevated: #232c38;    /* menus / popovers / dialogs / tooltips */
+  --color-bg-hover: #222b36;       /* hover surface */
+  --color-bg-selected: #1c2c44;    /* low-chroma blue-tinted selected fill */
+  --color-bg-control: #1f2731;     /* compact form-control background */
+  --color-bg-preview-canvas: #0c0f13;   /* neutral matte behind the preview */
+
+  /* Text — soft off-white primary (never #fff), stepped secondary/muted. */
+  --color-text-primary: #e6ebf2;
+  --color-text-secondary: #9aa7b8;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #0f1419;   /* text on light/accent fills */
+
+  /* Borders — quiet; hierarchy comes from surface tone, not heavy lines. */
+  --color-border-default: #29323d;
+  --color-border-strong: #3a4552;
+
+  /* Action / accent — a touch brighter so it reads on the dark ground. */
+  --color-action-primary: #4d8dff;
+  --color-action-primary-hover: #6ba1ff;
+  --color-action-primary-bg: #16233a;
+  --color-action-primary-border: #2f4568;
+
+  /* Status — brightened foregrounds + low-chroma tinted backgrounds for dark. */
+  --color-status-success: #34d399;
+  --color-status-success-bg: #10241d;
+  --color-status-warning: #fbbf24;
+  --color-status-warning-bg: #2a2113;
+  --color-status-danger: #f87171;
+  --color-status-danger-bg: #2c1618;
+  --color-status-info: #4d8dff;
+  --color-status-info-bg: #16233a;
+
+  /* Toast — align to the elevated dark surface. */
+  --color-toast-bg: #232c38;
+  --color-toast-bg-hover: #2b3644;
+
+  /* App-nav chrome — the rail is part of the dark shell (slightly distinct). */
+  --color-nav-chrome-bg: #12171e;
+  --color-nav-chrome-fg: rgba(230, 235, 242, 0.68);
+  --color-nav-chrome-fg-strong: #e6ebf2;
+  --color-nav-chrome-hover-bg: rgba(255, 255, 255, 0.06);
+  --color-nav-chrome-active-bg: rgba(77, 141, 255, 0.18);
+  --color-nav-chrome-border: rgba(255, 255, 255, 0.08);
+
+  /* Focus — strong, visible on dark; matches the brighter accent. */
+  --color-focus-ring: var(--color-action-primary);
+  --focus-ring: 0 0 0 var(--focus-ring-width) rgba(77, 141, 255, 0.45);
+
+  /* Elevation — deeper, darker shadows read on the dark ground. */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --elevation-2: 0 12px 32px rgba(0, 0, 0, 0.55);
 }

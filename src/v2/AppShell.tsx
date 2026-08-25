@@ -32,8 +32,13 @@ export function AppShell({ activeContext, onSelectContext, children }: AppShellP
       navigate(next === "widget" ? routes.pages() : routes.pages());
     });
 
+  // V2's default visual theme is dark. The theme is opted into here — on the
+  // shell that wraps every V2 level — via `data-theme`, which flips the semantic
+  // color roles in tokens.css to their dark values. V1 never sets this attribute
+  // (and mounts in a separate build), so V1 stays on the light `:root` theme.
+  // Kept as a single attribute so a future theme switch is a one-line change.
   return (
-    <div className="ui-ws-shell">
+    <div className="ui-ws-shell" data-theme="dark">
       <AppNav context={activeContext} onSelectContext={handleSelectContext} />
       <main className="ui-ws-shell__main">{children}</main>
     </div>

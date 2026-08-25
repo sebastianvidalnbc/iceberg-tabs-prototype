@@ -56,7 +56,7 @@
   height: var(--control-height-md); padding: 0 var(--control-pad-x);
   border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-sm);
   font: var(--fw-medium) var(--text-base) / var(--lh-normal) var(--font-sans);
-  color: var(--color-text-primary); background: var(--color-bg-surface); outline: none;
+  color: var(--color-text-primary); background: var(--color-bg-control); outline: none;
   transition: border-color var(--motion-fast) var(--ease-standard),
     box-shadow var(--motion-fast) var(--ease-standard);
 }
@@ -216,11 +216,11 @@
 .ui-toast-host { position: fixed; right: 20px; bottom: 20px; z-index: var(--z-overlay); display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-end; }
 .ui-toast {
   text-align: left; font-size: var(--text-md); font-weight: var(--fw-medium); color: var(--color-text-inverse);
-  background: #1f2937; border: var(--border-width) solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md);
+  background: var(--color-toast-bg); border: var(--border-width) solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4); box-shadow: var(--elevation-2); cursor: pointer; max-width: 320px;
   animation: ui-toast-in var(--motion-normal) var(--ease-standard);
 }
-.ui-toast:hover { background: #111827; }
+.ui-toast:hover { background: var(--color-toast-bg-hover); }
 @keyframes ui-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .ui-toast { animation: none; } }
 
@@ -253,8 +253,11 @@
 .ui-empty__title { font-weight: var(--fw-semibold); color: var(--color-text-primary); }
 .ui-empty__desc { font-size: var(--text-md); color: var(--color-text-secondary); max-width: 320px; line-height: var(--lh-normal); }
 
-/* ---------- Overlays ---------- */
-.ui-menu { position: fixed; z-index: var(--z-dropdown); min-width: 168px; background: var(--color-bg-surface); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-1); }
+/* ---------- Overlays ----------
+   Elevated surfaces (menu / popover / dialog) use the dedicated
+   --color-bg-elevated role so they lift above panels in the dark theme. In the
+   light theme this role equals --color-bg-surface, so V1 is unchanged. */
+.ui-menu { position: fixed; z-index: var(--z-dropdown); min-width: 168px; background: var(--color-bg-elevated); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-1); }
 .ui-menu__item {
   display: flex; align-items: center; gap: var(--space-2); width: 100%; text-align: left;
   border: 0; background: none; padding: var(--space-2) var(--space-3); border-radius: 5px;
@@ -270,10 +273,10 @@
 
 .ui-tooltip { position: fixed; z-index: var(--z-overlay); background: var(--color-text-primary); color: var(--color-text-inverse); font-size: var(--text-sm); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); box-shadow: var(--elevation-1); max-width: 240px; }
 .ui-tooltip-wrap { position: relative; display: inline-flex; }
-.ui-popover { position: fixed; z-index: var(--z-dropdown); background: var(--color-bg-surface); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-3); min-width: 200px; }
+.ui-popover { position: fixed; z-index: var(--z-dropdown); background: var(--color-bg-elevated); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-3); min-width: 200px; }
 
 .ui-dialog__backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); background: rgba(16, 24, 40, 0.4); display: grid; place-items: center; padding: var(--space-4); }
-.ui-dialog { background: var(--color-bg-surface); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-5); max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: var(--space-3); }
+.ui-dialog { background: var(--color-bg-elevated); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-5); max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: var(--space-3); }
 .ui-dialog__title { margin: 0; font-size: var(--text-lg); font-weight: var(--fw-semibold); color: var(--color-text-primary); }
 .ui-dialog__desc { margin: 0; font-size: var(--text-md); color: var(--color-text-secondary); line-height: var(--lh-normal); }
 .ui-dialog__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
@@ -500,8 +503,10 @@
 .ui-ws-head__sub { font-size: var(--text-md); font-weight: var(--fw-semibold); color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ui-ws-head__title { font-size: var(--text-md); font-weight: var(--fw-semibold); color: var(--color-text-primary); }
 
-/* Explorer — two persistent, independently scrolling regions (PAGES / STRUCTURE). */
-.ui-ws-explorer { background: var(--color-bg-surface); }
+/* Explorer — two persistent, independently scrolling regions (PAGES / STRUCTURE).
+   Panels use the --color-bg-panel role: in dark it is a distinct tonal step from
+   the canvas/preview; in light it equals the surface (V1 unaffected). */
+.ui-ws-explorer { background: var(--color-bg-panel); }
 .ui-ws-explorer__pane { display: flex; flex-direction: column; min-height: 0; }
 .ui-ws-explorer__pane--pages { flex: 0 1 42%; }
 .ui-ws-explorer__pane--structure { flex: 1 1 58%; border-top: var(--border-width) solid var(--color-border-strong); }
@@ -514,7 +519,7 @@
    drag handles, status/validation indicators, and an overflow menu). */
 .ui-ws-tree { display: flex; flex-direction: column; }
 .ui-ws-tree__row { display: flex; align-items: center; gap: var(--space-1); width: 100%; min-height: 28px; padding: 2px var(--space-2); border: 0; background: none; border-radius: var(--radius-sm); color: var(--color-text-secondary); font: inherit; font-size: var(--text-md); text-align: left; cursor: pointer; }
-.ui-ws-tree__row:hover { background: var(--color-bg-subtle); color: var(--color-text-primary); }
+.ui-ws-tree__row:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
 .ui-ws-tree__row--selected { background: var(--color-bg-selected); color: var(--color-action-primary); font-weight: var(--fw-semibold); }
 .ui-ws-tree__row--selected:hover { background: var(--color-bg-selected); }
 .ui-ws-tree__disc { width: 16px; height: 16px; display: inline-grid; place-items: center; border: 0; background: none; color: var(--color-text-muted); cursor: pointer; flex: none; padding: 0; }
@@ -557,7 +562,7 @@
 @media (prefers-reduced-motion: reduce) { .ui-preview__frame { transition: none; } }
 
 /* Properties — fixed-width right panel that scrolls internally. */
-.ui-ws-props { background: var(--color-bg-surface); }
+.ui-ws-props { background: var(--color-bg-panel); }
 .ui-ws-props__scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
 /* Controls are width:100%; ensure padding/border are inside the track so the
    two-column grid never overflows horizontally. */
@@ -634,7 +639,7 @@
    width table views mirroring real Iceberg's browse screens. Token-driven,
    scoped under .ui-ws-browse so V1 is unaffected.
    ============================================================================ */
-.ui-ws-browse { flex: 1; min-height: 0; overflow-y: auto; background: var(--color-bg-surface); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
+.ui-ws-browse { flex: 1; min-height: 0; overflow-y: auto; background: var(--color-bg-panel); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
 .ui-ws-browse .ui-breadcrumb { margin-bottom: var(--space-1); }
 .ui-ws-browse__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
 .ui-ws-browse__title { display: flex; align-items: center; gap: var(--space-3); }
@@ -648,7 +653,7 @@
 .ui-ws-browse__table--variants .ui-ws-browse__row { grid-template-columns: minmax(0, 2.4fr) 0.9fr 1fr 1fr 1fr 1.2fr auto; }
 .ui-ws-browse__row:last-child { border-bottom: 0; }
 .ui-ws-browse__row--head { position: sticky; top: 0; background: var(--color-bg-subtle); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); color: var(--color-text-muted); }
-.ui-ws-browse__row:not(.ui-ws-browse__row--head):hover { background: var(--color-bg-subtle); }
+.ui-ws-browse__row:not(.ui-ws-browse__row--head):hover { background: var(--color-bg-hover); }
 .ui-ws-browse__slug { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
 .ui-ws-browse__chevron-spacer { width: 28px; flex: none; }
 .ui-ws-browse__slug-link { display: inline-flex; align-items: baseline; gap: var(--space-2); border: 0; background: none; padding: 0; font: inherit; color: var(--color-action-primary); font-weight: var(--fw-semibold); cursor: pointer; text-align: left; min-width: 0; }

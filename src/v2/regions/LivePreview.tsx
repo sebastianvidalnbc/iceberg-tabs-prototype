@@ -93,7 +93,12 @@ export function LivePreview({ variant, context, selectedObject }: LivePreviewPro
               <Badge variant="success">LIVE</Badge>
             </span>
           </div>
-          <div className="ui-preview__canvas">
+          {/* The canvas shows real Peacock output, so it is a LIGHT island even
+              though the surrounding V2 workspace is dark: data-theme="light"
+              re-asserts the light color roles here, overriding the shell's dark
+              scope. The toolbar above stays dark (it is CMS authoring chrome,
+              not preview output). */}
+          <div className="ui-preview__canvas" data-theme="light">
             {preview ? (
               <div
                 className={`ui-preview__frame ui-preview__frame--${size}`}
