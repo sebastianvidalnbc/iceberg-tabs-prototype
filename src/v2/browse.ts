@@ -5,7 +5,17 @@
 // data-model changes: the extra columns real Iceberg shows (status, dates, QA,
 // publish, last-modified-by) are SAMPLE metadata generated deterministically
 // from each node id, so the tables look realistic without inventing a schema.
-import { PAGES_TREE, VARIANTS, type TreeNode } from "./data";
+import { PAGES_TREE, WIDGETS_TREE, VARIANTS, type TreeNode } from "./data";
+
+// The browse layer serves two parallel collection contexts that share identical
+// table machinery: Pages (PAGES_TREE) and Widgets (WIDGETS_TREE). A single
+// BrowseContext discriminator selects the source tree, the route base, and the
+// list titles so PagesView/VariantsView render either without duplication.
+export type BrowseContext = "page" | "widget";
+
+function treeFor(context: BrowseContext): TreeNode[] {
+  return context === "widget" ? WIDGETS_TREE : PAGES_TREE;
+}
 
 // --- Deterministic sample-metadata helpers ---------------------------------
 // A stable hash so the same id always yields the same sample values (no random
@@ -87,9 +97,10 @@ function toSlugRow(node: TreeNode, depth: number): SlugRow {
   };
 }
 
-// Flattens PAGES_TREE into ordered slug rows. Only page nodes become rows;
-// variant nodes are summarised via variantCount on their parent page row.
-export function buildSlugRows(): SlugRow[] {
+// Flattens a collection tree into ordered slug rows. Only page nodes become
+// rows; variant nodes are summarised via variantCount on their parent page row.
+// Defaults to the Pages tree so existing callers are unaffected.
+export function buildSlugRows(context: BrowseContext = "page"): SlugRow[] {
   const rows: SlugRow[] = [];
   const walk = (nodes: TreeNode[], depth: number) => {
     for (const node of nodes) {
@@ -98,12 +109,15 @@ export function buildSlugRows(): SlugRow[] {
       if (node.children) walk(node.children, depth + 1);
     }
   };
-  walk(PAGES_TREE, 0);
+  walk(treeFor(context), 0);
   return rows;
 }
 
-// Look up a single page node (for the Variants view header + breadcrumb).
-export function findPageNode(id: string): TreeNode | null {
+// Look up a single page/widget node (for the Variants view header + breadcrumb).
+export function findPageNode(
+  id: string,
+  context: BrowseContext = "page"
+): TreeNode | null {
   let found: TreeNode | null = null;
   const walk = (nodes: TreeNode[]) => {
     for (const node of nodes) {
@@ -111,7 +125,7 @@ export function findPageNode(id: string): TreeNode | null {
       if (node.children) walk(node.children);
     }
   };
-  walk(PAGES_TREE);
+  walk(treeFor(context));
   return found;
 }
 
@@ -146,18 +160,70 @@ function toVariantRow(node: TreeNode): VariantRow {
   };
 }
 
-// All variant rows owned by a given page node.
-export function buildVariantRows(pageId: string): VariantRow[] {
-  const page = findPageNode(pageId);
+// All variant rows owned by a given page/widget node.
+export function buildVariantRows(
+  pageId: string,
+  context: BrowseContext = "page"
+): VariantRow[] {
+  const page = findPageNode(pageId, context);
   if (!page) return [];
   return (page.children ?? [])
     .filter((c) => c.type === "variant")
     .map(toVariantRow);
 }
 
-// Find the page node that owns a given variant id (for breadcrumbs + deep links
-// straight to the editor).
-export function findPageForVariant(variantId: string): TreeNode | null {
+// --- Widget rows (single inline-expandable list) ---------------------------
+// Real Iceberg's Widgets screen is ONE list: each widget slug expands inline to
+// reveal the entries it owns (rendered under a "Pages:" label), rather than
+// navigating to a separate page. We mirror that UX here by surfacing each
+// widget slug together with its existing config children (reusing the current
+// data — no new "pages-under-widget" relationship). Clicking a child opens the
+// editor.
+export interface WidgetChildRow {
+  id: string;
+  name: string;
+  status: PageStatus;
+}
+
+export interface WidgetRow {
+  id: string;
+  slug: string;
+  status: PageStatus;
+  created: string;
+  modified: string;
+  children: WidgetChildRow[];
+}
+
+// Top-level widget slugs with their inline-expandable children. Only top-level
+// page nodes of WIDGETS_TREE become widget rows; their `variant` children map
+// to the expandable child rows.
+export function buildWidgetRows(): WidgetRow[] {
+  return WIDGETS_TREE.filter((n) => n.type !== "variant").map((node) => {
+    const h = hash(node.id);
+    const children: WidgetChildRow[] = (node.children ?? [])
+      .filter((c) => c.type === "variant")
+      .map((c) => ({
+        id: c.id,
+        name: c.label,
+        status: hash(c.id) % 4 === 0 ? "Published" : "Draft",
+      }));
+    return {
+      id: node.id,
+      slug: node.label,
+      status: h % 3 === 0 ? "Draft" : "Published",
+      created: sampleDate(node.id, 1),
+      modified: sampleModified(node.id),
+      children,
+    };
+  });
+}
+
+// Find the page/widget node that owns a given variant id, searching the given
+// context's tree (for breadcrumbs + deep links straight to the editor).
+export function findPageForVariant(
+  variantId: string,
+  context: BrowseContext = "page"
+): TreeNode | null {
   let found: TreeNode | null = null;
   const walk = (nodes: TreeNode[]) => {
     for (const node of nodes) {
@@ -167,33 +233,50 @@ export function findPageForVariant(variantId: string): TreeNode | null {
       if (node.children) walk(node.children);
     }
   };
-  walk(PAGES_TREE);
+  walk(treeFor(context));
   return found;
 }
 
 // --- Routes ----------------------------------------------------------------
-// The V2 app has three views expressed as hash routes so navigation is
-// linkable and the browser back button works:
-//   #/pages              → Pages list (default)
-//   #/pages/:pageId      → Variants list for that page
-//   #/editor/:variantId  → the editor workspace
+// The V2 app expresses navigation as linkable hash routes so the browser back
+// button works. Pages use a two-level browse-then-edit flow; Widgets are a
+// single inline-expandable list (matching real Iceberg's Widgets screen):
+//   #/pages                    → Pages list (default)
+//   #/pages/:pageId             → Variants list for that page
+//   #/widgets                   → Widgets list (rows expand inline; no sub-route)
+//   #/editor/:context/:id       → the editor workspace, opened in a specific
+//                                 authoring context ("page" | "widget") so the
+//                                 breadcrumb + Structure tree reflect where the
+//                                 author came from. A legacy 2-segment form
+//                                 (#/editor/:id) is still parsed as page context.
 export type V2Route =
   | { view: "pages" }
   | { view: "variants"; pageId: string }
-  | { view: "editor"; variantId: string };
+  | { view: "widgets" }
+  | { view: "editor"; context: BrowseContext; variantId: string };
 
 export const routes = {
   pages: () => "#/pages",
   variants: (pageId: string) => `#/pages/${pageId}`,
-  editor: (variantId: string) => `#/editor/${variantId}`,
+  widgets: () => "#/widgets",
+  editor: (context: BrowseContext, variantId: string) =>
+    `#/editor/${context}/${variantId}`,
 };
 
 // Parse a location.hash into a V2Route. Unknown/empty → the Pages list.
 export function parseRoute(hash: string): V2Route {
   const clean = hash.replace(/^#\/?/, "");
-  const [head, tail] = clean.split("/");
-  if (head === "editor" && tail) return { view: "editor", variantId: tail };
-  if (head === "pages" && tail) return { view: "variants", pageId: tail };
+  const [head, seg1, seg2] = clean.split("/");
+  if (head === "editor" && seg1) {
+    // #/editor/:context/:id when the first segment is a known context;
+    // otherwise treat the legacy #/editor/:id form as page context.
+    if ((seg1 === "page" || seg1 === "widget") && seg2) {
+      return { view: "editor", context: seg1, variantId: seg2 };
+    }
+    return { view: "editor", context: "page", variantId: seg1 };
+  }
+  if (head === "widgets") return { view: "widgets" };
+  if (head === "pages" && seg1) return { view: "variants", pageId: seg1 };
   return { view: "pages" };
 }
 

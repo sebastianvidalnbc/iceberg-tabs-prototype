@@ -3,13 +3,16 @@ import { WorkspaceShell } from "./WorkspaceShell";
 import { AppShell } from "./AppShell";
 import { PagesView } from "./views/PagesView";
 import { VariantsView } from "./views/VariantsView";
+import { WidgetsView } from "./views/WidgetsView";
 import { parseRoute } from "./browse";
 
-// V2 entry point + top-level router. The prototype now mirrors real Iceberg's
-// three navigation levels, each a linkable hash route:
-//   #/pages              → Pages list (browse slugs)
-//   #/pages/:pageId      → Variants list for a slug
-//   #/editor/:variantId  → the four-region editor workspace
+// V2 entry point + top-level router. Pages use a two-level browse-then-edit
+// flow; Widgets are a single inline-expandable list (matching real Iceberg's
+// Widgets screen). Each level is a linkable hash route:
+//   #/pages               → Pages list (browse slugs)
+//   #/pages/:pageId        → Variants list for a page slug
+//   #/widgets              → Widgets list (rows expand inline; no sub-route)
+//   #/editor/:variantId    → the four-region editor workspace
 // The persistent left navigation rail (AppShell) is global chrome shown on every
 // level. Browse levels are wrapped here; the editor renders its own AppShell so
 // the rail can drive its in-place context switch. Unknown/empty hash falls back
@@ -21,7 +24,21 @@ export default function App() {
   if (route.view === "editor") {
     // WorkspaceShell owns the rail here so clicking Pages/Widgets swaps the
     // in-editor dataset (its existing behaviour) rather than leaving the editor.
-    return <WorkspaceShell initialVariantId={route.variantId} />;
+    // The route carries the authoring context so a widget deep link boots the
+    // editor in widget mode (widget breadcrumb + tree), not the Pages default.
+    return (
+      <WorkspaceShell
+        initialContext={route.context}
+        initialVariantId={route.variantId}
+      />
+    );
+  }
+  if (route.view === "widgets") {
+    return (
+      <AppShell activeContext="widget">
+        <WidgetsView />
+      </AppShell>
+    );
   }
   if (route.view === "variants") {
     return (

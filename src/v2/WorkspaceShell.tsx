@@ -11,6 +11,7 @@ import {
   DEFAULT_VARIANT_ID,
   isVariantId,
   getWidgetConfig,
+  isWidgetConfigId,
   seedWidgetExpandedFor,
   WIDGET_CONFIGS,
   DEFAULT_WIDGET_CONFIG_ID,
@@ -56,16 +57,32 @@ function seedWidgetMemory(configId: string): ExperienceMemory {
 //   selected route id      — a route row in the collection tree
 //   selected experience id — the active Variant / Widget config (drives regions)
 //   selectedStructureNodeId — the selected object within the active experience
-// `initialVariantId` comes from the #/editor/:variantId route so a deep link
-// opens straight into that variant. Unknown ids fall back to the default so the
-// editor always renders a populated workspace.
-export function WorkspaceShell({ initialVariantId }: { initialVariantId?: string }) {
+// `initialContext` + `initialVariantId` come from the
+// #/editor/:context/:id route so a deep link opens straight into the right
+// authoring context AND experience — this is what makes the editor "dynamic":
+// opening a Widget boots the shell in widget context (Widgets breadcrumb +
+// widget Structure tree), opening a Page boots it in page context. Unknown ids
+// fall back to that context's default so the editor always renders a populated
+// workspace of the CORRECT kind.
+export function WorkspaceShell({
+  initialContext = "page",
+  initialVariantId,
+}: {
+  initialContext?: AuthoringContext;
+  initialVariantId?: string;
+}) {
   const openVariantId =
     initialVariantId && isVariantId(initialVariantId)
       ? initialVariantId
       : DEFAULT_VARIANT_ID;
+  // Widget deep-link target: use the id when it's a real widget config,
+  // otherwise the default widget config (so the widget tree still renders).
+  const openWidgetConfigId =
+    initialVariantId && isWidgetConfigId(initialVariantId)
+      ? initialVariantId
+      : DEFAULT_WIDGET_CONFIG_ID;
 
-  const [context, setContext] = useState<AuthoringContext>("page");
+  const [context, setContext] = useState<AuthoringContext>(initialContext);
 
   // --- Page context state (unchanged behaviour) ---------------------------
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
@@ -80,10 +97,10 @@ export function WorkspaceShell({ initialVariantId }: { initialVariantId?: string
   const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null);
   const [selectedWidgetConfigId, setSelectedWidgetConfigId] = useState<
     string | null
-  >(DEFAULT_WIDGET_CONFIG_ID);
+  >(openWidgetConfigId);
   const [widgetMemory, setWidgetMemory] = useState<
     Record<string, ExperienceMemory>
-  >(() => ({ [DEFAULT_WIDGET_CONFIG_ID]: seedWidgetMemory(DEFAULT_WIDGET_CONFIG_ID) }));
+  >(() => ({ [openWidgetConfigId]: seedWidgetMemory(openWidgetConfigId) }));
 
   const isPage = context === "page";
 
@@ -192,19 +209,32 @@ export function WorkspaceShell({ initialVariantId }: { initialVariantId?: string
     [isPage, selectedExperienceId]
   );
 
-  // Breadcrumb keeps the author oriented ("Where am I?"): Pages / /slug / Variant.
-  // Crumbs navigate back up the browse flow via hash routes. Only meaningful in
-  // the Page context (Widgets have their own flat browse); shown for pages here.
-  const ownerPage = isPage ? findPageForVariant(openVariantId) : null;
-  const activeName = activeExperience?.name ?? openVariantId;
+  // Breadcrumb keeps the author oriented ("Where am I?"): <Collection> / /slug /
+  // <experience>. Crumbs navigate back up the browse flow via hash routes, and
+  // are context-aware. Pages have a per-slug Variants level; Widgets are a single
+  // inline-expandable list, so a widget's owner crumb points back to that list.
+  const activeExperienceId =
+    selectedExperienceId ?? (isPage ? openVariantId : openWidgetConfigId);
+  const ownerPage = findPageForVariant(activeExperienceId, context);
+  const activeName = activeExperience?.name ?? activeExperienceId;
+  const rootCrumb = isPage
+    ? { label: "Pages", href: routes.pages() }
+    : { label: "Widgets", href: routes.widgets() };
+  // For Pages the owner slug links to its Variants list; for Widgets there is no
+  // sub-page, so the owner slug links back to the single Widgets list.
+  const ownerHref = ownerPage
+    ? isPage
+      ? routes.variants(ownerPage.id)
+      : routes.widgets()
+    : "";
   const crumbs = [
-    { label: "Pages", href: routes.pages(), onClick: () => navigate(routes.pages()) },
+    { label: rootCrumb.label, href: rootCrumb.href, onClick: () => navigate(rootCrumb.href) },
     ...(ownerPage
       ? [
           {
             label: ownerPage.label,
-            href: routes.variants(ownerPage.id),
-            onClick: () => navigate(routes.variants(ownerPage.id)),
+            href: ownerHref,
+            onClick: () => navigate(ownerHref),
           },
         ]
       : []),
