@@ -1,17 +1,24 @@
 import { useId, useMemo, useState } from "react";
-import type { ReactNode } from "react";
-import { TextInput } from "../../ui/TextInput";
-import { Textarea } from "../../ui/Textarea";
-import { Checkbox } from "../../ui/Checkbox";
-import { Switch } from "../../ui/Switch";
-import { Select } from "../../ui/Select";
-import { RadioGroup } from "../../ui/Radio";
-import { Button } from "../../ui/Button";
-import { Badge } from "../../ui/Badge";
-import { FieldLabel } from "../../ui/Field";
-import { CollapsibleSection } from "../../ui/Section";
-import { Icon } from "../../ui/Icon";
-import type { IconName } from "../../ui/Icon";
+import { Plus, Star, Blocks, HelpCircle, FileText, Box } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Button } from "@/v2/ui/button";
+import { Badge } from "@/v2/ui/badge";
+import { Separator } from "@/v2/ui/separator";
+import { ScrollArea } from "@/v2/ui/scroll-area";
+import {
+  TextField,
+  TextAreaField,
+  CheckboxField,
+  SwitchField,
+  SelectField,
+  RadioField,
+} from "@/v2/ui/form-controls";
+import {
+  ObjectHeader,
+  PropertyRow as PropRow,
+  PropertyRows,
+  PropertySection as PropSection,
+} from "@/v2/ui/property";
 import {
   resolvePropertiesFor,
   resolveWidgetPropertiesFor,
@@ -52,17 +59,17 @@ function PropertyControl({
   invalid: boolean;
 }) {
   if (field.kind === "checkbox") {
-    return <Checkbox checked={field.value === "true"} onChange={() => {}} />;
+    return <CheckboxField checked={field.value === "true"} />;
   }
   if (field.kind === "switch") {
-    return <Switch checked={field.value === "true"} onChange={() => {}} />;
+    return <SwitchField checked={field.value === "true"} />;
   }
   if (field.kind === "asset") {
     return <AssetPicker value={field.value} />;
   }
   if (field.kind === "textarea") {
     return (
-      <Textarea
+      <TextAreaField
         id={id}
         value={field.value}
         onChange={() => {}}
@@ -73,28 +80,25 @@ function PropertyControl({
   }
   if (field.kind === "select") {
     return (
-      <Select
+      <SelectField
         id={id}
         value={field.value}
-        onChange={() => {}}
         options={field.options ?? []}
-        aria-describedby={describedBy}
         invalid={invalid}
       />
     );
   }
   if (field.kind === "radio") {
     return (
-      <RadioGroup
+      <RadioField
         name={id}
         value={field.value}
-        onChange={() => {}}
         options={field.options ?? []}
       />
     );
   }
   return (
-    <TextInput
+    <TextField
       id={id}
       value={field.value}
       onChange={() => {}}
@@ -113,12 +117,15 @@ function PropertyControl({
 function AssetPicker({ value }: { value: string }) {
   const empty = value.trim() === "";
   return (
-    <div className="ui-ws-props__asset">
-      <span className="ui-ws-props__asset-preview" aria-hidden="true" />
-      <span className="ui-ws-props__asset-name">
+    <div className="flex items-center gap-2 rounded-sm border border-border bg-[var(--color-bg-control)] p-1.5">
+      <span
+        aria-hidden
+        className="size-8 shrink-0 rounded-sm bg-[var(--color-bg-subtle)]"
+      />
+      <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
         {empty ? "No asset selected" : value}
       </span>
-      <Button variant="tertiary" size="sm" onClick={() => {}}>
+      <Button variant="ghost" size="sm" onClick={() => {}}>
         {empty ? "Choose…" : "Remove"}
       </Button>
     </div>
@@ -135,7 +142,7 @@ interface TemplateCard {
   id: string;
   name: string;
   description: string;
-  icon: IconName;
+  icon: LucideIcon;
 }
 interface TemplateGroup {
   label: string;
@@ -145,32 +152,42 @@ interface TemplateGroup {
 const MODULE_TEMPLATES: TemplateGroup = {
   label: "Modules",
   cards: [
-    { id: "hero", name: "Hero", description: "Title, description, image and CTA.", icon: "star" },
-    { id: "carousel", name: "Carousel", description: "Recommendations row from a collection.", icon: "blocks" },
-    { id: "faq", name: "FAQ", description: "Dynamic questions and answers.", icon: "help" },
-    { id: "text", name: "Text block", description: "Rich copy with headings.", icon: "doc-text" },
+    { id: "hero", name: "Hero", description: "Title, description, image and CTA.", icon: Star },
+    { id: "carousel", name: "Carousel", description: "Recommendations row from a collection.", icon: Blocks },
+    { id: "faq", name: "FAQ", description: "Dynamic questions and answers.", icon: HelpCircle },
+    { id: "text", name: "Text block", description: "Rich copy with headings.", icon: FileText },
   ],
 };
 
 const WIDGET_TEMPLATES: TemplateGroup = {
   label: "Widget",
   cards: [
-    { id: "what-is", name: "what-is-peacock", description: "Published “What is” widget.", icon: "cube" },
-    { id: "seo-footer", name: "seo-footer", description: "Footer navigation widget.", icon: "cube" },
-    { id: "sticky-banner", name: "sticky-banner-widget-data", description: "Sticky banner widget.", icon: "cube" },
+    { id: "what-is", name: "what-is-peacock", description: "Published “What is” widget.", icon: Box },
+    { id: "seo-footer", name: "seo-footer", description: "Footer navigation widget.", icon: Box },
+    { id: "sticky-banner", name: "sticky-banner-widget-data", description: "Sticky banner widget.", icon: Box },
   ],
 };
 
 // One selectable template card: thumbnail glyph + name + description. A real
 // <button> so it is keyboard-focusable and gets the shared focus ring.
 function TemplateCardButton({ card, onSelect }: { card: TemplateCard; onSelect: () => void }) {
+  const Glyph = card.icon;
   return (
-    <button type="button" className="ui-ws-gallery__card" onClick={onSelect}>
-      <span className="ui-ws-gallery__thumb" aria-hidden="true">
-        <Icon name={card.icon} size={20} />
+    <button
+      type="button"
+      onClick={onSelect}
+      className="group grid grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-2 gap-y-0.5 rounded-sm border border-border bg-[var(--color-bg-surface)] p-2 text-left transition-colors hover:border-[var(--color-border-strong)] hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+    >
+      <span
+        aria-hidden
+        className="row-span-2 grid size-9 place-items-center rounded-sm bg-[var(--color-bg-subtle)] text-muted-foreground"
+      >
+        <Glyph className="size-5" />
       </span>
-      <span className="ui-ws-gallery__name">{card.name}</span>
-      <span className="ui-ws-gallery__desc">{card.description}</span>
+      <span className="text-[13px] font-semibold text-foreground">{card.name}</span>
+      <span className="text-[11px] leading-snug text-muted-foreground">
+        {card.description}
+      </span>
     </button>
   );
 }
@@ -187,19 +204,25 @@ function TemplateGallery({
   onCancel: () => void;
 }) {
   return (
-    <div className="ui-ws-gallery" role="group" aria-label="Choose a template">
+    <div
+      role="group"
+      aria-label="Choose a template"
+      className="mt-2 flex flex-col gap-4 rounded-md border border-border bg-[var(--color-bg-subtle)] p-3"
+    >
       {groups.map((group) => (
-        <div key={group.label} className="ui-ws-gallery__group">
-          <span className="ui-ws-gallery__group-label">{group.label}</span>
-          <div className="ui-ws-gallery__grid">
+        <div key={group.label} className="flex flex-col gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            {group.label}
+          </span>
+          <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
             {group.cards.map((card) => (
               <TemplateCardButton key={card.id} card={card} onSelect={() => onSelect(card)} />
             ))}
           </div>
         </div>
       ))}
-      <div className="ui-ws-gallery__foot">
-        <Button variant="tertiary" size="sm" onClick={onCancel}>
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
       </div>
@@ -207,9 +230,9 @@ function TemplateGallery({
   );
 }
 
-// One label/control row. Full-width controls (textarea/radio/asset) drop the
-// label column and stack, matching real Iceberg's denser property forms.
-function PropertyRow({ field }: { field: PropertyField }) {
+// One label/control row, delegating to the V2-local PropertyRow composition.
+// Full-width controls (textarea/radio/asset) stack.
+function PropertyFieldRow({ field }: { field: PropertyField }) {
   const id = useId();
   const helpId = field.helper ? `${id}-help` : undefined;
   const stacked =
@@ -217,47 +240,31 @@ function PropertyRow({ field }: { field: PropertyField }) {
     field.kind === "radio" ||
     field.kind === "asset";
   return (
-    <div
-      className={
-        stacked ? "ui-ws-props__row ui-ws-props__row--stacked" : "ui-ws-props__row"
-      }
+    <PropRow
+      label={field.label}
+      htmlFor={id}
+      required={field.required}
+      stacked={stacked}
+      help={field.helper ? <span id={helpId}>{field.helper}</span> : undefined}
     >
-      <FieldLabel htmlFor={id} required={field.required}>
-        <span className="ui-ws-props__row-label-text">{field.label}</span>
-      </FieldLabel>
-      <div className="ui-ws-props__row-control">
-        <PropertyControl
-          field={field}
-          id={id}
-          describedBy={helpId}
-          invalid={false}
-        />
-        {field.helper && (
-          <p id={helpId} className="ui-ws-props__row-help">
-            {field.helper}
-          </p>
-        )}
-      </div>
-    </div>
+      <PropertyControl field={field} id={id} describedBy={helpId} invalid={false} />
+    </PropRow>
   );
 }
 
-// The rows of a group, shared by the collapsible and flush variants.
-function PropertyRows({ group }: { group: PropertyGroup }) {
+// The rows of a group.
+function GroupRows({ group }: { group: PropertyGroup }) {
   return (
-    <div className="ui-ws-props__rows">
+    <PropertyRows>
       {group.fields.map((field) => (
-        <PropertyRow key={field.label} field={field} />
+        <PropertyFieldRow key={field.label} field={field} />
       ))}
-    </div>
+    </PropertyRows>
   );
 }
 
-// A titled group of rows (PRODUCT / CTA / LEGAL, LAYOUT, …). Headed groups are
-// collapsible via the shared CollapsibleSection so long forms can be minimized
-// (a top workshop ask). Anonymous groups (a single ungrouped list) stay flush
-// and are never collapsible.
-function PropertySection({
+// A titled group of rows (PRODUCT / CTA / LEGAL …). Headed groups collapse.
+function GroupSection({
   group,
   expanded,
   onToggle,
@@ -266,36 +273,10 @@ function PropertySection({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  if (!group.header) {
-    return (
-      <section className="ui-ws-props__group">
-        <PropertyRows group={group} />
-      </section>
-    );
-  }
   return (
-    <CollapsibleSection title={group.header} expanded={expanded} onToggle={onToggle}>
-      <PropertyRows group={group} />
-    </CollapsibleSection>
-  );
-}
-
-// Object header (eyebrow + name), shared by every body renderer.
-function ObjectHeader({
-  eyebrow,
-  name,
-  children,
-}: {
-  eyebrow: string;
-  name: string;
-  children?: ReactNode;
-}) {
-  return (
-    <div className="ui-ws-props__object">
-      <span className="ui-ws-props__eyebrow">{eyebrow}</span>
-      <span className="ui-ws-props__name">{name}</span>
-      {children}
-    </div>
+    <PropSection header={group.header} expanded={expanded} onToggle={onToggle}>
+      <GroupRows group={group} />
+    </PropSection>
   );
 }
 
@@ -311,25 +292,34 @@ export function Properties({
 }: PropertiesProps) {
   const experienceNoun = context === "widget" ? "widget config" : "variant";
   return (
-    <aside className="ui-ws__region ui-ws-props" aria-label="Properties">
-      <div className="ui-ws-head">
-        <span className="ui-ws-head__title">Properties</span>
+    // Keep the shell grid contract (.ui-ws__region) + fixed width; internals are
+    // shadcn/Tailwind. Dark panel surface.
+    <aside
+      aria-label="Properties"
+      className="ui-ws__region w-[460px] max-w-full bg-[var(--color-bg-panel)] text-foreground max-[900px]:w-full"
+    >
+      <div className="flex shrink-0 items-center border-b border-border px-4 py-2">
+        <span className="text-[13px] font-semibold text-foreground">
+          Properties
+        </span>
       </div>
-      <div className="ui-ws-props__scroll">
-        {variant && selectedStructureNodeId ? (
-          <PropertiesBody
-            context={context}
-            variantId={variant.id}
-            nodeId={selectedStructureNodeId}
-          />
-        ) : (
-          <p className="ui-ws-props__empty">
-            {selectedRouteId
-              ? `Select a ${experienceNoun}, then an object in its structure to edit its properties.`
-              : "Select an object in the structure to edit its properties."}
-          </p>
-        )}
-      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="flex flex-col gap-4 p-4">
+          {variant && selectedStructureNodeId ? (
+            <PropertiesBody
+              context={context}
+              variantId={variant.id}
+              nodeId={selectedStructureNodeId}
+            />
+          ) : (
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
+              {selectedRouteId
+                ? `Select a ${experienceNoun}, then an object in its structure to edit its properties.`
+                : "Select an object in the structure to edit its properties."}
+            </p>
+          )}
+        </div>
+      </ScrollArea>
     </aside>
   );
 }
@@ -389,9 +379,9 @@ function FieldsBody({ data }: { data: ObjectProperties }) {
     <>
       <ObjectHeader eyebrow={eyebrow} name={name} />
       {headers.length > 1 && (
-        <div className="ui-ws-props__collapse-all">
+        <div className="-mt-1 flex justify-end">
           <Button
-            variant="tertiary"
+            variant="ghost"
             size="sm"
             onClick={allCollapsed ? expandAll : collapseAll}
           >
@@ -399,9 +389,9 @@ function FieldsBody({ data }: { data: ObjectProperties }) {
           </Button>
         </div>
       )}
-      <div className="ui-ws-props__groups">
+      <div className="flex flex-col gap-1">
         {groups.map((group, i) => (
-          <PropertySection
+          <GroupSection
             key={group.header ?? i}
             group={group}
             expanded={group.header ? !collapsed.has(group.header) : true}
@@ -424,16 +414,12 @@ function CollectionBody({ data }: { data: CollectionProperties }) {
   return (
     <>
       <ObjectHeader eyebrow={eyebrow} name={name ?? eyebrow} />
-      <p className="ui-ws-props__count">
+      <p className="text-[12px] text-muted-foreground">
         {count} {count === 1 ? "item" : "items"}
       </p>
-      <div className="ui-ws-props__actions">
-        <Button
-          variant="secondary"
-          size="sm"
-          leadingIcon="plus"
-          onClick={() => setGalleryOpen((v) => !v)}
-        >
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" onClick={() => setGalleryOpen((v) => !v)}>
+          <Plus className="size-4" />
           Add {itemNoun}
         </Button>
       </div>
@@ -445,16 +431,19 @@ function CollectionBody({ data }: { data: CollectionProperties }) {
         />
       )}
       {count > 0 && (
-        <ul className="ui-ws-props__items">
+        <ul className="flex flex-col gap-2">
           {items.map((item) => (
-            <li key={item.id} className="ui-ws-props__item">
+            <li
+              key={item.id}
+              className="rounded-sm border border-border bg-[var(--color-bg-subtle)] px-3 py-2 text-[13px]"
+            >
               {item.label}
             </li>
           ))}
         </ul>
       )}
-      <div className="ui-ws-props__actions">
-        <Button variant="tertiary" size="sm" onClick={() => {}}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" onClick={() => {}}>
           Paste {itemNoun}
         </Button>
       </div>
@@ -467,56 +456,51 @@ function CollectionBody({ data }: { data: CollectionProperties }) {
 function MetadataBody({ data }: { data: SectionMetadata }) {
   const { eyebrow, name, role, status, sectionId, note, design, designOptions } = data;
   const badgeVariant =
-    status === "published" ? "success" : status === "in-review" ? "warning" : "default";
+    status === "published" ? "success" : status === "in-review" ? "warning" : "secondary";
   return (
     <>
       <ObjectHeader eyebrow={eyebrow} name={name}>
         {status && <Badge variant={badgeVariant}>{status}</Badge>}
       </ObjectHeader>
-      <div className="ui-ws-props__groups">
-        <section className="ui-ws-props__group">
-          <div className="ui-ws-props__rows">
-            {role && (
-              <div className="ui-ws-props__row">
-                <span className="ui-ws-props__row-label">Type / Role</span>
-                <div className="ui-ws-props__row-control">
-                  <Badge variant="info">{role}</Badge>
-                </div>
-              </div>
-            )}
-            <div className="ui-ws-props__row">
-              <span className="ui-ws-props__row-label">Section ID</span>
-              <div className="ui-ws-props__row-control">
-                <code className="ui-ws-props__code">{sectionId}</code>
-              </div>
-            </div>
-            {designOptions && (
-              <div className="ui-ws-props__row ui-ws-props__row--stacked">
-                <span className="ui-ws-props__row-label">Design</span>
-                <div className="ui-ws-props__row-control">
-                  <RadioGroup
-                    name={`design-${sectionId}`}
-                    value={design ?? designOptions[0]}
-                    onChange={() => {}}
-                    options={designOptions}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
+      <div className="flex flex-col gap-4">
+        <PropertyRows>
+          {role && (
+            <PropRow label="Type / Role">
+              <Badge variant="info">{role}</Badge>
+            </PropRow>
+          )}
+          <PropRow label="Section ID">
+            <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[12px] text-muted-foreground">
+              {sectionId}
+            </code>
+          </PropRow>
+          {designOptions && (
+            <PropRow label="Design" stacked>
+              <RadioField
+                name={`design-${sectionId}`}
+                value={design ?? designOptions[0]}
+                options={designOptions}
+              />
+            </PropRow>
+          )}
+        </PropertyRows>
         {data.intelligentAffordance && (
-          <section className="ui-ws-props__notice">
-            <p className="ui-ws-props__notice-title">Intelligent authoring</p>
-            <p className="ui-ws-props__notice-detail">
+          <section className="rounded-sm border border-border bg-[var(--color-bg-subtle)] p-3">
+            <p className="text-[13px] font-semibold text-foreground">
+              Intelligent authoring
+            </p>
+            <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
               Variations are generated per audience. Manage variant names in
               Section Options.
             </p>
           </section>
         )}
       </div>
-      {note && <p className="ui-ws-props__note">{note}</p>}
-      <div className="ui-ws-props__actions">
+      {note && (
+        <p className="text-[12px] leading-relaxed text-muted-foreground">{note}</p>
+      )}
+      <Separator />
+      <div className="flex flex-wrap gap-2">
         <Button variant="secondary" size="sm" onClick={() => {}}>
           Duplicate
         </Button>
@@ -537,17 +521,17 @@ function NoticeBody({ data }: { data: NoticeProperties }) {
   return (
     <>
       <ObjectHeader eyebrow={eyebrow} name={name} />
-      <section className="ui-ws-props__notice">
-        <p className="ui-ws-props__notice-title">{message}</p>
-        {detail && <p className="ui-ws-props__notice-detail">{detail}</p>}
+      <section className="rounded-sm border border-border bg-[var(--color-bg-subtle)] p-3">
+        <p className="text-[13px] font-semibold text-foreground">{message}</p>
+        {detail && (
+          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+            {detail}
+          </p>
+        )}
       </section>
-      <div className="ui-ws-props__actions">
-        <Button
-          variant="secondary"
-          size="sm"
-          leadingIcon="plus"
-          onClick={() => setGalleryOpen((v) => !v)}
-        >
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" onClick={() => setGalleryOpen((v) => !v)}>
+          <Plus className="size-4" />
           Add module
         </Button>
       </div>

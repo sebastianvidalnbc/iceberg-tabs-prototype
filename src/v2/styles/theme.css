@@ -1,0 +1,100 @@
+/* V2 shadcn/Tailwind theme entry — LOADED ONLY BY src/v2/main.tsx.
+   ============================================================================
+   Architecture (do not invert):
+
+     ICEBERG SEMANTIC TOKENS  (src/ui/tokens.css — canonical)
+        ↓  mapped here
+     SHADCN / TAILWIND THEME VARIABLES
+        ↓
+     SHADCN-DERIVED ICEBERG COMPONENTS  (src/v2/ui/*)
+        ↓
+     V2 APP  (src/v2/regions, src/v2/views)
+
+   The shadcn variables below are NOT a second palette. Each one *aliases* an
+   existing Iceberg role, so retuning a theme still happens in tokens.css and no
+   component carries a raw value. Dark is V2's default (tokens.css sets the dark
+   role values under [data-theme="dark"], which the V2 shell already applies).
+
+   V1 SAFETY: this file is never imported by V1. Tailwind's preflight/reset is
+   scoped so it cannot leak into the shared classes V1 also uses. */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* shadcn components opt into dark tokens via the `.dark` class OR our existing
+   [data-theme="dark"] attribute — treat them as equivalent dark scopes. */
+@custom-variant dark (&:where(.dark, [data-theme="dark"]) *);
+
+/* Map Tailwind/shadcn theme variables to Iceberg semantic roles. @theme inline
+   makes them Tailwind utilities (bg-background, text-foreground, …) that resolve
+   THROUGH the Iceberg tokens, so utilities and tokens can never diverge. */
+@theme inline {
+  --color-background: var(--color-bg-canvas);
+  --color-foreground: var(--color-text-primary);
+
+  --color-card: var(--color-bg-panel);
+  --color-card-foreground: var(--color-text-primary);
+  --color-popover: var(--color-bg-elevated);
+  --color-popover-foreground: var(--color-text-primary);
+
+  --color-primary: var(--color-action-primary);
+  --color-primary-foreground: var(--color-text-inverse);
+  --color-secondary: var(--color-bg-control);
+  --color-secondary-foreground: var(--color-text-primary);
+
+  --color-muted: var(--color-bg-subtle);
+  --color-muted-foreground: var(--color-text-secondary);
+  --color-accent: var(--color-bg-hover);
+  --color-accent-foreground: var(--color-text-primary);
+
+  --color-destructive: var(--color-status-danger);
+  --color-destructive-foreground: var(--color-text-inverse);
+
+  --color-border: var(--color-border-default);
+  --color-input: var(--color-bg-control);
+  --color-ring: var(--color-focus-ring);
+
+  /* Status roles surfaced as utilities for Badges (§28). */
+  --color-success: var(--color-status-success);
+  --color-success-foreground: var(--color-text-inverse);
+  --color-warning: var(--color-status-warning);
+  --color-warning-foreground: var(--color-text-inverse);
+  --color-info: var(--color-status-info);
+  --color-info-foreground: var(--color-text-inverse);
+
+  /* Restrained Iceberg radius (§33) — NOT rounded-xl. */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-md);
+
+  /* Type + font family come from Iceberg tokens. */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* shadcn's base layer expects bare --background / --radius (no --color- prefix)
+   on the theme scope. Bind them to the Iceberg roles too. */
+:root,
+[data-theme="dark"],
+[data-theme="light"] {
+  --background: var(--color-bg-canvas);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-bg-panel);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-elevated);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-action-primary);
+  --primary-foreground: var(--color-text-inverse);
+  --secondary: var(--color-bg-control);
+  --secondary-foreground: var(--color-text-primary);
+  --muted: var(--color-bg-subtle);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-bg-hover);
+  --accent-foreground: var(--color-text-primary);
+  --destructive: var(--color-status-danger);
+  --destructive-foreground: var(--color-text-inverse);
+  --border: var(--color-border-default);
+  --input: var(--color-bg-control);
+  --ring: var(--color-focus-ring);
+  --radius: var(--radius-sm);
+}

@@ -1,7 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { renameSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+
+// NOTE: Tailwind v4 (@tailwindcss/vite) + the "@" alias are wired into the V2
+// build ONLY. V1 (vite.config.ts) intentionally has neither, so the V1 bundle
+// contains no Tailwind/shadcn output and V1 stays byte-for-byte unchanged.
 
 // V2 build target. Serves at https://sebastianvidalnbc.github.io/iceberg-v2-prototype/
 // Entry: v2.html -> src/v2/main.tsx. Output: dist-v2/. Separate base + outDir
@@ -45,7 +50,16 @@ function serveV2AtBaseRoot(base: string) {
 
 export default defineConfig({
   base: "/iceberg-v2-prototype/",
-  plugins: [react(), serveV2AtBaseRoot("/iceberg-v2-prototype/"), emitIndexHtml()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    serveV2AtBaseRoot("/iceberg-v2-prototype/"),
+    emitIndexHtml(),
+  ],
+  resolve: {
+    // "@" → src, used by the V2 shadcn layer (@/v2/ui/...). V2-only.
+    alias: { "@": resolve(__dirname, "./src") },
+  },
   // During dev, V1's index.html and V2's v2.html both live at the repo root. The
   // serveV2AtBaseRoot middleware rewrites the base root to v2.html so the V2 app
   // is served at …/iceberg-v2-prototype/ (matching the deployed build). Auto-open

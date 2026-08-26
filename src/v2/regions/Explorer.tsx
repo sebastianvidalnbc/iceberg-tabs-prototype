@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Icon } from "../../ui/Icon";
-import { SearchInput } from "../../ui/TextInput";
+import { Panel, PanelHeader, SearchInput } from "@/v2/ui/panel";
+import { TreeRow } from "@/v2/ui/tree-row";
+import { RowActionsMenu } from "@/v2/ui/row-actions";
+import { ScrollArea } from "@/v2/ui/scroll-area";
 import {
   type AuthoringContext,
   type TreeNode,
@@ -10,63 +12,11 @@ import {
   WIDGET_OFFER_FILTER_INDEX,
 } from "../data";
 
-// Row primitive shared by both trees. Chevron controls expansion only; the row
-// body triggers selection.
-function TreeRow({
-  node,
-  depth,
-  isOpen,
-  hasChildren,
-  selected,
-  onSelect,
-  onToggle,
-}: {
-  node: TreeNode;
-  depth: number;
-  isOpen: boolean;
-  hasChildren: boolean;
-  selected: boolean;
-  onSelect: () => void;
-  onToggle: () => void;
-}) {
-  return (
-    <div
-      className={`ui-ws-tree__row${selected ? " ui-ws-tree__row--selected" : ""}`}
-      style={{ paddingLeft: `calc(var(--space-2) + ${depth} * var(--indent-1))` }}
-      onClick={onSelect}
-      role="treeitem"
-      aria-selected={selected}
-      aria-expanded={hasChildren ? isOpen : undefined}
-    >
-      {hasChildren ? (
-        <button
-          type="button"
-          className="ui-ws-tree__disc"
-          aria-label={isOpen ? "Collapse" : "Expand"}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-        >
-          <Icon name={isOpen ? "chevron-down" : "chevron-right"} size={12} />
-        </button>
-      ) : (
-        <span className="ui-ws-tree__spacer" aria-hidden="true" />
-      )}
-      <span
-        className={`ui-ws-tree__label${node.kind === "path" ? " ui-ws-tree__label--path" : ""}`}
-      >
-        {node.label}
-      </span>
-    </div>
-  );
-}
-
 // Collection tree — mixes route rows and experience rows (Variants in Page
 // context, Widget configs in Widget context). Expansion is local (routes are
 // static). Clicking routes to onSelectRoute/onSelectExperience by node type.
 // Remounted per context (via a React key) so its local expansion resets when
-// the dataset changes.
+// the dataset changes. Rows use the V2-local shadcn-based TreeRow (§16).
 function CollectionTree({
   tree,
   selectedId,
@@ -104,11 +54,12 @@ function CollectionTree({
       return (
         <div key={node.id}>
           <TreeRow
-            node={node}
             depth={depth}
-            isOpen={isOpen}
             hasChildren={hasChildren}
+            isOpen={isOpen}
             selected={node.id === selectedId}
+            muted={node.kind === "path"}
+            label={node.label}
             onSelect={() =>
               node.type === "variant"
                 ? onSelectExperience(node.id)
@@ -122,7 +73,7 @@ function CollectionTree({
     });
 
   return (
-    <div className="ui-ws-tree" role="tree">
+    <div className="flex flex-col gap-px px-2 py-2" role="tree">
       {render(tree, 0)}
     </div>
   );
@@ -170,24 +121,22 @@ function StructureTree({
       return (
         <div key={node.id}>
           <TreeRow
-            node={node}
             depth={depth}
-            isOpen={isOpen}
             hasChildren={hasChildren}
+            isOpen={isOpen}
             selected={node.id === selectedId}
+            muted={node.kind === "path"}
+            label={node.label}
+            trailing={<RowActionsMenu label={node.label} />}
             onSelect={() => onSelect(node.id)}
             onToggle={() => onToggle(node.id)}
           />
           {isOffers && isOpen && (
             <div
-              style={{
-                paddingLeft: `calc(var(--space-2) + ${depth + 1} * var(--indent-1))`,
-                paddingRight: "var(--space-2)",
-                paddingBlock: "var(--space-1)",
-              }}
+              className="py-1 pr-2"
+              style={{ paddingLeft: 8 + (depth + 1) * 16 }}
             >
               <SearchInput
-                size="sm"
                 value={offerQuery}
                 onChange={setOfferQuery}
                 onClear={() => setOfferQuery("")}
@@ -201,7 +150,7 @@ function StructureTree({
     });
 
   return (
-    <div className="ui-ws-tree" role="tree">
+    <div className="flex flex-col gap-px px-2 py-2" role="tree">
       {render(nodes, 0)}
     </div>
   );
@@ -263,19 +212,24 @@ export function Explorer({
   const structureEmptyNoun = context === "widget" ? "widget config" : "variant";
 
   return (
-    <section className="ui-ws__region ui-ws-explorer" aria-label="Explorer">
-      <div className="ui-ws-explorer__pane ui-ws-explorer__pane--pages">
-        <div className="ui-ws-head ui-ws-head--stacked">
-          <span className="ui-ws-head__eyebrow">{collectionHeader}</span>
-          <SearchInput
-            size="sm"
-            value={collectionQuery}
-            onChange={setCollectionQuery}
-            onClear={() => setCollectionQuery("")}
-            placeholder="Search…"
-          />
-        </div>
-        <div className="ui-ws-explorer__scroll">
+    // Keep the shell grid contract (.ui-ws__region) on the outer element; the
+    // panel internals are fully shadcn/Tailwind (§8). Dark panel surface.
+    <Panel className="ui-ws__region" aria-label="Explorer">
+      {/* Collection pane */}
+      <div className="flex min-h-0 flex-[0_1_42%] flex-col">
+        <PanelHeader
+          eyebrow={collectionHeader}
+          actions={
+            <div className="w-40">
+              <SearchInput
+                value={collectionQuery}
+                onChange={setCollectionQuery}
+                onClear={() => setCollectionQuery("")}
+              />
+            </div>
+          }
+        />
+        <ScrollArea className="min-h-0 flex-1">
           <CollectionTree
             key={context}
             tree={collectionTree}
@@ -283,16 +237,15 @@ export function Explorer({
             onSelectRoute={onSelectRoute}
             onSelectExperience={onSelectExperience}
           />
-        </div>
+        </ScrollArea>
       </div>
-      <div className="ui-ws-explorer__pane ui-ws-explorer__pane--structure">
-        <div className="ui-ws-head ui-ws-head--stacked">
-          <span className="ui-ws-head__eyebrow">Structure</span>
-          <span className="ui-ws-head__sub">
-            {activeExperience ? activeExperience.name : routeLabel ?? "—"}
-          </span>
-        </div>
-        <div className="ui-ws-explorer__scroll">
+      {/* Structure pane */}
+      <div className="flex min-h-0 flex-[1_1_58%] flex-col border-t border-[var(--color-border-strong)]">
+        <PanelHeader
+          eyebrow="Structure"
+          sub={activeExperience ? activeExperience.name : routeLabel ?? "—"}
+        />
+        <ScrollArea className="min-h-0 flex-1">
           {activeExperience ? (
             <StructureTree
               nodes={activeExperience.structure}
@@ -302,12 +255,12 @@ export function Explorer({
               onToggle={onToggleExpand}
             />
           ) : (
-            <p className="ui-ws-explorer__empty">
+            <p className="m-3 text-[13px] leading-relaxed text-muted-foreground">
               Select a {structureEmptyNoun} to view its structure.
             </p>
           )}
-        </div>
+        </ScrollArea>
       </div>
-    </section>
+    </Panel>
   );
 }
