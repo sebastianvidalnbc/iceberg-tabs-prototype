@@ -4,6 +4,8 @@ import { Explorer } from "./regions/Explorer";
 import { LivePreview } from "./regions/LivePreview";
 import { Properties } from "./regions/Properties";
 import { Breadcrumb } from "../ui/Breadcrumb";
+import { Palette } from "lucide-react";
+import { Button } from "@/v2/ui/button";
 import {
   getVariant,
   seedExpandedFor,
@@ -250,6 +252,17 @@ export function WorkspaceShell({
       <div className="ui-ws-editor">
         <div className="ui-ws-editor__bar">
           <Breadcrumb items={crumbs} />
+          {/* Top-right entry to the V2 design-system catalog (mirrors V1's
+              top-right "Design System" link, scoped to the V2 shadcn layer). */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            onClick={() => navigate(routes.designSystem())}
+          >
+            <Palette className="size-4" />
+            Design System
+          </Button>
         </div>
         <div className="ui-ws">
           <Explorer

@@ -253,7 +253,8 @@ export type V2Route =
   | { view: "pages" }
   | { view: "variants"; pageId: string }
   | { view: "widgets" }
-  | { view: "editor"; context: BrowseContext; variantId: string };
+  | { view: "editor"; context: BrowseContext; variantId: string }
+  | { view: "design-system" };
 
 export const routes = {
   pages: () => "#/pages",
@@ -261,12 +262,14 @@ export const routes = {
   widgets: () => "#/widgets",
   editor: (context: BrowseContext, variantId: string) =>
     `#/editor/${context}/${variantId}`,
+  designSystem: () => "#/design-system",
 };
 
 // Parse a location.hash into a V2Route. Unknown/empty → the Pages list.
 export function parseRoute(hash: string): V2Route {
   const clean = hash.replace(/^#\/?/, "");
   const [head, seg1, seg2] = clean.split("/");
+  if (head === "design-system") return { view: "design-system" };
   if (head === "editor" && seg1) {
     // #/editor/:context/:id when the first segment is a known context;
     // otherwise treat the legacy #/editor/:id form as page context.

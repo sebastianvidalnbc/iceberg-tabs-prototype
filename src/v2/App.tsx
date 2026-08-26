@@ -4,6 +4,7 @@ import { AppShell } from "./AppShell";
 import { PagesView } from "./views/PagesView";
 import { VariantsView } from "./views/VariantsView";
 import { WidgetsView } from "./views/WidgetsView";
+import { DesignSystem } from "./regions/DesignSystem";
 import { parseRoute } from "./browse";
 
 // V2 entry point + top-level router. Pages use a two-level browse-then-edit
@@ -31,6 +32,15 @@ export default function App() {
         initialContext={route.context}
         initialVariantId={route.variantId}
       />
+    );
+  }
+  if (route.view === "design-system") {
+    // V2-only catalog for the shadcn layer. Wrapped in AppShell so it keeps the
+    // persistent rail and dark theme; the page owns its own header + back link.
+    return (
+      <AppShell activeContext="page">
+        <DesignSystem />
+      </AppShell>
     );
   }
   if (route.view === "widgets") {
