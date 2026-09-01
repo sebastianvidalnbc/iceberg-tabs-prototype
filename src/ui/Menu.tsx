@@ -17,12 +17,16 @@ export interface MenuProps {
   y: number;
   items: UiMenuItem[];
   onClose: () => void;
+  // "right" treats `x` as the menu's right edge, so a menu opened from an
+  // overflow button hangs leftwards from the trigger instead of overflowing.
+  align?: "left" | "right";
+  className?: string;
 }
 
 // Floating menu anchored at page coordinates. Used by right-click context menus
 // and overflow (•••) buttons. Arrow/Home/End move focus, Esc closes, first item
 // is focused on open, click-outside closes, position is clamped to the viewport.
-export function Menu({ x, y, items, onClose }: MenuProps) {
+export function Menu({ x, y, items, onClose, align = "left", className }: MenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -66,14 +70,17 @@ export function Menu({ x, y, items, onClose }: MenuProps) {
     e.preventDefault();
   };
 
-  const left = Math.min(x, window.innerWidth - 180);
   const top = Math.min(y, window.innerHeight - items.length * 34 - 8);
+  const position =
+    align === "right"
+      ? { right: Math.max(8, window.innerWidth - x) }
+      : { left: Math.min(x, window.innerWidth - 180) };
 
   return (
     <div
       ref={ref}
-      className="ui-menu"
-      style={{ left, top }}
+      className={`ui-menu${className ? ` ${className}` : ""}`}
+      style={{ ...position, top }}
       role="menu"
       onKeyDown={onKeyDown}
     >

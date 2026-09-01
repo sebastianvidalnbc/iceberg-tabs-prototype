@@ -138,15 +138,14 @@ const variation = (name: string, categories: VariantCategory[]): Variation => ({
   categories,
 });
 
+// This scenario deliberately ships a single "Control" variation. `variations` is
+// still an ordered, sortable list and every Add/Duplicate/Paste/reorder action
+// works on it, so additional variations can be seeded or authored at any time —
+// only the seed data is scoped down, not the architecture.
 export const seedJourney = (): Journey => ({
   id: uid("jn"),
   name: "Premium card first test",
-  variations: [
-    variation("Predecision", []),
-    variation("Predecision", []),
-    variation("Control", specCategories()),
-    variation("Default", specCategories()),
-  ],
+  variations: [variation("Control", specCategories())],
 });
 
 export const seedSectionOptions = (): SectionOptions => ({

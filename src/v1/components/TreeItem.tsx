@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { useStore } from "../store";
 import { useToast } from "../../ui/Toast";
@@ -40,9 +40,10 @@ export function TreeItem({
 }) {
   const { state, dispatch } = useStore();
   const { notify } = useToast();
-  const { menu, openAt, close } = useMenu();
+  const { menu, openAt, openAtTrigger, close } = useMenu();
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(item.label);
+  const overflowRef = useRef<HTMLButtonElement>(null);
 
   const startRename = () => {
     setDraft(item.label);
@@ -65,6 +66,7 @@ export function TreeItem({
     },
     {
       label: "Copy",
+      separatorBefore: true,
       onClick: () => {
         dispatch({ type: "copy", path, id: item.id });
         notify(`Copied “${item.label}”`);
@@ -80,6 +82,7 @@ export function TreeItem({
     },
     {
       label: item.disabled ? "Enable" : "Disable",
+      separatorBefore: true,
       onClick: () => {
         dispatch({ type: "toggleDisabled", path, id: item.id });
         notify(`${item.disabled ? "Enabled" : "Disabled"} “${item.label}”`);
@@ -110,29 +113,54 @@ export function TreeItem({
       }${drag.isDragging(index) ? " is-dragging" : ""}${drag.isOver(index) ? " is-drop-over" : ""}`
     : "";
 
+  const bodyId = `${item.id}-body`;
+
   const head = (
     <>
-      <span className={`${B}__grip`} title="Drag to reorder">
+      {/* Only the handle is draggable, so the disclosure control, the overflow
+          menu and the rename field never start a drag. */}
+      <span
+        className={`${B}__grip ib-drag-handle`}
+        title="Drag to reorder"
+        aria-hidden="true"
+        {...drag.gripProps(index)}
+      >
         <Icon name="grip" />
       </span>
-      <span className={`${B}__chevron`}>
-        <Icon name={expanded ? "chevron-down" : "chevron-right"} />
-      </span>
       {renaming ? (
-        <input
-          className={`${B}__rename`}
-          autoFocus
-          value={draft}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commitRename}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commitRename();
-            else if (e.key === "Escape") setRenaming(false);
-          }}
-        />
+        <>
+          <span className={`${B}__chevron`}>
+            <Icon name={expanded ? "chevron-down" : "chevron-right"} />
+          </span>
+          <input
+            className={`${B}__rename`}
+            aria-label="Rename"
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitRename();
+              else if (e.key === "Escape") setRenaming(false);
+            }}
+          />
+        </>
       ) : (
-        <span className={`${B}__name`}>{item.label}</span>
+        // A real button so the accordion is keyboard-operable and exposes its
+        // expanded state; the grip and overflow controls stay outside it so no
+        // interactive element is nested inside another.
+        <button
+          type="button"
+          className={`${B}__disclosure`}
+          aria-expanded={expanded}
+          aria-controls={expanded ? bodyId : undefined}
+          onClick={onToggle}
+        >
+          <span className={`${B}__chevron`}>
+            <Icon name={expanded ? "chevron-down" : "chevron-right"} />
+          </span>
+          <span className={`${B}__name`}>{item.label}</span>
+        </button>
       )}
       {item.invalid && !item.disabled && (
         <span className="ui-row-warn" title="Has validation issues">
@@ -145,10 +173,18 @@ export function TreeItem({
         </span>
       )}
       <button
-        className={`${B}__overflow`}
+        ref={overflowRef}
+        type="button"
+        className={`${B}__overflow ib-overflow`}
+        aria-label={`Actions for ${item.label}`}
+        aria-haspopup="menu"
+        aria-expanded={menu != null}
+        // Keeps the click off the row header, so opening the menu never toggles
+        // the accordion.
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
-          openAt(e, rowMenu());
+          openAtTrigger(overflowRef.current, rowMenu());
         }}
       >
         <Icon name="dots" />
@@ -157,35 +193,51 @@ export function TreeItem({
   );
 
   const headProps = {
-    ...drag.handlers(index),
-    onClick: () => {
-      if (!renaming) onToggle();
-    },
+    ...drag.dropProps(index),
     onContextMenu: (e: MouseEvent) => {
       e.preventDefault();
       openAt(e, rowMenu());
     },
   };
 
+  const floatingMenu = menu && (
+    <Menu
+      x={menu.x}
+      y={menu.y}
+      align={menu.align}
+      items={menu.items}
+      onClose={close}
+      className="ib-menu"
+    />
+  );
+
   if (card) {
     return (
-      <div className={shellClass}>
+      <div className={shellClass} data-drag-row>
         <div className={headClass} {...headProps}>
           {head}
         </div>
-        {expanded && <div className="ui-var-card__body">{renderBody()}</div>}
-        {menu && <Menu x={menu.x} y={menu.y} items={menu.items} onClose={close} />}
+        {expanded && (
+          <div className="ui-var-card__body" id={bodyId}>
+            {renderBody()}
+          </div>
+        )}
+        {floatingMenu}
       </div>
     );
   }
 
   return (
-    <div className="ui-nrow-node">
+    <div className="ui-nrow-node" data-drag-row>
       <div className={headClass} {...headProps}>
         {head}
       </div>
-      {expanded && <div className="ui-nrow__children">{renderBody()}</div>}
-      {menu && <Menu x={menu.x} y={menu.y} items={menu.items} onClose={close} />}
+      {expanded && (
+        <div className="ui-nrow__children" id={bodyId}>
+          {renderBody()}
+        </div>
+      )}
+      {floatingMenu}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { ReactNode } from "react";
 import { useStore } from "../store";
 import { useToast } from "../../ui/Toast";
@@ -27,7 +28,8 @@ export function TreeCollection({
 }) {
   const { state, dispatch } = useStore();
   const { notify } = useToast();
-  const { menu, openAt, close } = useMenu();
+  const { menu, openAtTrigger, close } = useMenu();
+  const overflowRef = useRef<HTMLButtonElement>(null);
   const drag = useDrag((from, to) => dispatch({ type: "reorder", path, from, to }));
   const key = collectionKey(path);
   const openIds = state.expanded[key] ?? [];
@@ -54,38 +56,49 @@ export function TreeCollection({
         <span className={card ? "ui-coll-head__title" : "tree-collection-title"}>{title}</span>
         <span className={card ? "ui-coll-head__count" : "pill"}>{items.length}</span>
         {card && <span className="ui-coll-head__spacer" />}
-        <button
-          className="tree-add"
-          onClick={() => {
-            dispatch({ type: "add", path });
-            notify(`Added ${addLabel.replace(/^Add\s+/i, "")}`);
-          }}
-        >
-          <Icon name="plus" /> {addLabel}
-        </button>
-        {items.length > 1 && (
+        {/* Grouped so the actions wrap together and stay right-aligned when the
+            editor column is too narrow to fit them beside the title. */}
+        <div className="tree-collection-actions">
           <button
-            className="tree-expand-all"
-            title={allOpen ? "Collapse all" : "Expand all"}
-            onClick={() =>
-              allOpen
-                ? dispatch({ type: "collapseAll", path })
-                : dispatch({ type: "expandAll", path, ids: items.map((it) => it.id) })
-            }
+            type="button"
+            className="tree-add ib-btn"
+            onClick={() => {
+              dispatch({ type: "add", path });
+              notify(`Added ${addLabel.replace(/^Add\s+/i, "")}`);
+            }}
           >
-            <Icon name={allOpen ? "chevron-down" : "chevron-right"} />
-            {allOpen ? "Collapse all" : "Expand all"}
+            <Icon name="plus" /> {addLabel}
           </button>
-        )}
-        <button
-          className="overflow"
-          onClick={(e) => {
-            e.stopPropagation();
-            openAt(e, collMenu);
-          }}
-        >
-          <Icon name="dots" />
-        </button>
+          {items.length > 1 && (
+            <button
+              type="button"
+              className="tree-expand-all ib-btn"
+              title={allOpen ? "Collapse all" : "Expand all"}
+              onClick={() =>
+                allOpen
+                  ? dispatch({ type: "collapseAll", path })
+                  : dispatch({ type: "expandAll", path, ids: items.map((it) => it.id) })
+              }
+            >
+              <Icon name={allOpen ? "chevron-down" : "chevron-right"} />
+              {allOpen ? "Collapse all" : "Expand all"}
+            </button>
+          )}
+          <button
+            ref={overflowRef}
+            type="button"
+            className="overflow ib-overflow"
+            aria-label={`Actions for ${title}`}
+            aria-haspopup="menu"
+            aria-expanded={menu != null}
+            onClick={(e) => {
+              e.stopPropagation();
+              openAtTrigger(overflowRef.current, collMenu);
+            }}
+          >
+            <Icon name="dots" />
+          </button>
+        </div>
       </div>
       <div className={card ? "ui-var-list" : "tree-list"}>
         {items.map((item, i) => (
@@ -103,7 +116,16 @@ export function TreeCollection({
         ))}
         {items.length === 0 && <div className="empty small">No items yet.</div>}
       </div>
-      {menu && <Menu x={menu.x} y={menu.y} items={menu.items} onClose={close} />}
+      {menu && (
+        <Menu
+          x={menu.x}
+          y={menu.y}
+          align={menu.align}
+          items={menu.items}
+          onClose={close}
+          className="ib-menu"
+        />
+      )}
     </div>
   );
 }

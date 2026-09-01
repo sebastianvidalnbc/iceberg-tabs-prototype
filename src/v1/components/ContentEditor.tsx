@@ -1,30 +1,16 @@
 import { useStore } from "../store";
 import { Icon } from "../../ui/Icon";
-import { Badge } from "../../ui/Badge";
 import { TreeCollection } from "./TreeCollection";
 import { VariationBody } from "./EditorBodies";
 import { SectionOptionsForm } from "./SectionOptionsForm";
 import { variationInvalid } from "../validation";
 import type { ListPath } from "../model";
-import type { PublishStatus, SiblingSection } from "../types";
+import type { SiblingSection } from "../types";
 
 const SECTIONS: { key: "content" | "options"; label: string }[] = [
   { key: "content", label: "Section Content" },
   { key: "options", label: "Section Options" },
 ];
-
-const STATUS_LABEL: Record<PublishStatus, string> = {
-  draft: "Draft",
-  "in-review": "In Review",
-  published: "Published",
-};
-
-// Map publish status to the design-system Badge tint (never color-only).
-const STATUS_VARIANT: Record<PublishStatus, "default" | "warning" | "success"> = {
-  draft: "default",
-  "in-review": "warning",
-  published: "success",
-};
 
 // A collapsed sibling section on the page — placeholder context only (not
 // authorable in this prototype).
@@ -36,8 +22,9 @@ function SiblingRow({ section }: { section: SiblingSection }) {
           <Icon name="chevron-right" />
         </span>
         <span className="ui-section-head__name">{section.name}</span>
-        <Badge variant={STATUS_VARIANT[section.status]}>{STATUS_LABEL[section.status]}</Badge>
-        <span className="ui-section-head__id">Section ID: {section.sectionId}</span>
+        <span className="ui-section-head__id">
+          Section ID: <strong>{section.sectionId}</strong>
+        </span>
       </div>
     </div>
   );
@@ -61,10 +48,9 @@ function TargetSection() {
           <Icon name={sectionExpanded ? "chevron-down" : "chevron-right"} />
         </span>
         <span className="ui-section-head__name">{journey.name}</span>
-        <Badge variant={STATUS_VARIANT[state.page.status]}>
-          {STATUS_LABEL[state.page.status]}
-        </Badge>
-        <span className="ui-section-head__id">Section ID: {journey.id}</span>
+        <span className="ui-section-head__id">
+          Section ID: <strong>{journey.id}</strong>
+        </span>
       </button>
 
       {sectionExpanded && (
@@ -113,11 +99,10 @@ export function ContentEditor() {
   const { page } = state;
 
   return (
-    <main className="col editor">
+    <main className="col editor ib-editor">
       <nav className="page-crumb" aria-label="Page">
         <span className="page-url">{page.url}</span>
         <span className="page-meta">{page.pageId}</span>
-        <span className={`chip ${page.status} active`}>{STATUS_LABEL[page.status]}</span>
       </nav>
       <div className="editor-scroll page-sections">
         {page.siblingsBefore.map((s) => (

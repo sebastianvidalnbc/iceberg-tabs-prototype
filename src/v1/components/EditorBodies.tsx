@@ -7,17 +7,9 @@ import type {
   PlanPickerData,
   ProductFeature,
   PricingOption,
-  PublishStatus,
   VariantCategory,
   Variation,
 } from "../types";
-
-const STATUSES: PublishStatus[] = ["draft", "in-review", "published"];
-const statusLabel: Record<PublishStatus, string> = {
-  draft: "Draft",
-  "in-review": "In Review",
-  published: "Published",
-};
 
 const ALIGNMENTS = ["Left", "Centre", "Right"];
 const VARIANTS = ["Button Variant", "Card Variant", "Compact Variant"];
@@ -67,7 +59,9 @@ export function VariationBody({ variation }: { variation: Variation }) {
           onChange={(v) => patch({ pickVariant: v })}
         />
       </div>
-      <div className="subhead">Variant Categories</div>
+      {/* The collection header below already carries the "Variant Categories"
+          label, its count and its actions, so the separate subhead would just
+          repeat it. */}
       <TreeCollection
         path={categoryPath}
         title="Variant Categories"
@@ -102,19 +96,6 @@ export function CategoryBody({
 
   return (
     <>
-      <div className="publish-row">
-        {STATUSES.map((s) => (
-          <button
-            key={s}
-            className={`chip ${s}${category.publishStatus === s ? " active" : ""}`}
-            onClick={() =>
-              dispatch({ type: "setPublishStatus", variationId, categoryId: category.id, status: s })
-            }
-          >
-            {statusLabel[s]}
-          </button>
-        ))}
-      </div>
       <Field
         label="Category Title"
         required

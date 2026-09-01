@@ -1,0 +1,738 @@
+/* ==========================================================================
+   Production Iceberg visual language for the main editor column.
+
+   Everything here is scoped to `.ib-editor` (the Pages editor <main>), except
+   the `.ib-menu` overflow menu, which renders as a fixed-position sibling of the
+   column and is therefore scoped by its own class. The sidebar, the resizer and
+   the Live Preview are deliberately untouched.
+
+   The V1 structure, hierarchy and interactions are unchanged — only the visual
+   treatment is replaced. Every value below is taken from the production
+   repository (apps/iceberg-commerce-ui); the source is named in each comment.
+   Bootstrap values are the real computed values from production's
+   _variable-overrides.scss compiled against Bootstrap 5.3.7.
+   ========================================================================== */
+
+.ib-editor {
+  /* Typography — _variable-overrides.scss */
+  --ib-font: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ib-text-base: 15px;      /* $font-size-base: 0.938rem */
+  --ib-text-sm: 13px;        /* .example (base.scss) */
+  --ib-text-xs: 11.25px;     /* Bootstrap .badge: 0.75em */
+  --ib-text-h4: 18.75px;     /* $h4-font-size + .section-heading__button */
+  --ib-lh: 1.5;              /* $line-height-base */
+
+  /* Colour — variables.scss + Bootstrap 5.3.7 defaults */
+  --ib-text-color: #212529;  /* $body-color */
+  --ib-text-meta: rgba(60, 60, 60, 0.5); /* .example */
+  --ib-text-muted: #6c757d;  /* $secondary / $gray-600 */
+  --ib-label: #2c3e50;       /* $blueDark — .module-settings label */
+  --ib-link: #0077bb;        /* $blue: #07b (= $primary) */
+  --ib-link-hover: #005f96;
+  --ib-heading-hover-bg: #08c;   /* .section-heading__button:hover */
+  --ib-icon-hover: #1dd2af;      /* shared icon hover across edit.scss */
+  --ib-danger: #dc3545;          /* $danger */
+  --ib-invalid: #ef3a35;         /* $errorText */
+
+  /* Borders / surfaces */
+  --ib-border: #dee2e6;          /* $border-color */
+  --ib-border-input: #ccc;       /* $input-border-color */
+  --ib-border-tab: #ddd;         /* .ib-nav-item li a */
+  --ib-border-hard: #999;        /* $grayLight — panel borders */
+  --ib-rule: #eee;               /* $grayLighter — h4 rules */
+  --ib-rule-dark: #e1e1e1;       /* darken($grayLighter, 5%) */
+  --ib-surface: #fff;
+  --ib-surface-hover: #fbfbfb;   /* lighten($grayLighter, 5%) */
+  /* Production's data panel is #e2e2e2, which reads as heavy grey against this
+     prototype's white page. Stepped up to the lighter well surface production
+     also uses, so the expanded body still separates from the page without
+     turning the column grey. */
+  --ib-panel: #f5f5f5;
+  --ib-tab-inactive: #eee;       /* .tab-section */
+  /* edit.scss also declares #fafafa here, but via `.nav-tabs > .active > a` —
+     a Bootstrap 3 selector that never matches React Bootstrap 2's
+     `button.nav-link.active`, so production really renders Bootstrap's own
+     $nav-tabs-link-active-bg (= $body-bg). */
+  --ib-tab-active: #fff;
+
+  /* Radii — Bootstrap $border-radius / $border-radius-sm + tab override */
+  --ib-radius: 6px;
+  --ib-radius-sm: 4px;
+  --ib-radius-tab: 10px;
+  /* V1's `--radius-md` / `--radius-sm`, kept from the prototype's card language
+     at the reviewer's request rather than production's square-cornered panels.
+     Nested rows sit one step tighter than the card that contains them. */
+  --ib-radius-card: 8px;
+  --ib-radius-row: 6px;
+
+  /* Focus — Bootstrap $input-focus-* / $btn-focus-box-shadow */
+  --ib-focus-border: #80bbdd;
+  --ib-focus-ring: 0 0 0 0.25rem rgba(0, 119, 187, 0.25);
+
+  font-family: var(--ib-font);
+  font-size: var(--ib-text-base);
+  line-height: var(--ib-lh);
+  color: var(--ib-text-color);
+  background: var(--ib-surface);
+}
+
+.ib-editor button,
+.ib-editor input,
+.ib-editor select,
+.ib-editor textarea {
+  font-family: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   Page context strip. Production uses Lato throughout the editor chrome, so
+   the monospaced treatment is dropped. (.slug / .page-title, edit.scss)
+   -------------------------------------------------------------------------- */
+.ib-editor .page-crumb {
+  gap: 8px;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--ib-rule);
+}
+.ib-editor .page-url {
+  font-family: var(--ib-font);
+  font-size: var(--ib-text-base);
+  font-weight: 700;
+  color: var(--ib-text-color);
+}
+.ib-editor .page-meta {
+  font-family: var(--ib-font);
+  font-size: var(--ib-text-sm);
+  color: var(--ib-text-meta);
+}
+
+/* Sections stack flush and are separated by rules, not gaps or cards.
+   (.section-editor-container padding: 9px 15px) */
+.ib-editor .editor-scroll.page-sections {
+  gap: 0;
+  padding: 0 15px 60px;
+}
+
+/* --------------------------------------------------------------------------
+   Level 2 — Section header.
+   Reference: section-heading.tsx (h4.edit-form-heading, .section-heading__button,
+   .section-id.example) and `#modulesForm h4` in section-heading.scss.
+   -------------------------------------------------------------------------- */
+.ib-editor .ui-section-block {
+  background: transparent;
+  border-bottom: 0;
+}
+.ib-editor .ui-section-head {
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 4px 0 14px;
+  border-bottom: 1px solid var(--ib-rule);
+  border-radius: 0;
+  background: transparent;
+}
+.ib-editor .ui-section-head:hover:not([aria-disabled="true"]) {
+  background: transparent;
+}
+.ib-editor .ui-section-head:focus-visible {
+  outline: none;
+  border-radius: var(--ib-radius-sm);
+  box-shadow: var(--ib-focus-ring);
+}
+.ib-editor .ui-section-head__chevron {
+  color: var(--ib-text-color);
+}
+.ib-editor .ui-section-head__name {
+  font-size: var(--ib-text-h4);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: normal;
+  padding: 0 5px;
+  border-radius: 5px;
+}
+/* .section-heading__button:hover — white on #08c with a 5px radius. */
+.ib-editor .ui-section-head:hover:not([aria-disabled="true"]) .ui-section-head__name {
+  color: #fff;
+  background: var(--ib-heading-hover-bg);
+}
+.ib-editor .ui-section-head__id {
+  font-family: var(--ib-font);
+  font-size: var(--ib-text-sm);
+  font-weight: 400;
+  color: var(--ib-text-meta);
+}
+.ib-editor .ui-section-head__id strong {
+  font-weight: 700;
+}
+/* Collapsed sibling sections stay quiet, non-authorable context. */
+.ib-editor .ui-section-block--placeholder .ui-section-head {
+  color: var(--ib-text-muted);
+}
+.ib-editor .ui-section-block--placeholder .ui-section-head__name {
+  font-weight: 400;
+}
+
+.ib-editor .ui-section-block__body {
+  padding: 9px 0 20px;
+  background: transparent;
+  border-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Level 3 — Section Content / Section Options tabs.
+   V1 keeps its own tab behaviour (a roving tablist of real buttons); only the
+   appearance comes from production: Bootstrap 5 .nav-tabs, overridden by
+   `.tab-section` (edit.scss) and `.ib-nav-item li a` (placeholderForm.scss) —
+   grey rounded-top tabs, active tab lifted onto a #fafafa panel.
+   -------------------------------------------------------------------------- */
+.ib-editor .ui-section-views {
+  display: flex;
+  gap: 0;
+  margin: 0 0 20px;
+  padding: 0;
+  border-bottom: 1px solid var(--ib-border);
+}
+.ib-editor .ui-section-view {
+  margin: 0 0 -1px;
+  padding: 8px 16px;
+  font-size: var(--ib-text-base);
+  font-weight: 400;
+  line-height: 21px;
+  color: var(--ib-link);
+  background: var(--ib-tab-inactive);
+  border: 1px solid var(--ib-tab-inactive);
+  border-bottom: 1px solid var(--ib-border-tab);
+  border-radius: var(--ib-radius-tab) var(--ib-radius-tab) 0 0;
+}
+.ib-editor .ui-section-view + .ui-section-view {
+  margin-left: 2px;
+}
+.ib-editor .ui-section-view:hover {
+  color: var(--ib-link-hover);
+  background: var(--ib-rule-dark);
+  border-color: var(--ib-rule-dark);
+  border-bottom-color: var(--ib-border-tab);
+}
+.ib-editor .ui-section-view[aria-selected="true"] {
+  color: #000;
+  font-weight: 400;
+  background: var(--ib-tab-active);
+  border-color: var(--ib-border) var(--ib-border) var(--ib-tab-active);
+}
+.ib-editor .ui-section-view:focus-visible {
+  outline: none;
+  box-shadow: var(--ib-focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   Level 4 — Collection headers (Content Variations, and the nested
+   collections). Reference: `#modulesForm h4` and
+   .ib-editor-module-data-panel__header — a bold heading over a hairline rule.
+   Collection title uses $h5-font-size (= $font-size-base) so the Section title
+   at 18.75px stays dominant.
+   -------------------------------------------------------------------------- */
+.ib-editor .ui-coll-head,
+.ib-editor .tree-collection-head {
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--ib-rule);
+}
+.ib-editor .tree-collection-head {
+  margin-top: 15px;
+  border-bottom-color: var(--ib-border-input);
+}
+.ib-editor .ui-coll-head__title,
+.ib-editor .tree-collection-title {
+  font-size: var(--ib-text-base);
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ib-text-color);
+  /* Titles stay on one line as the column narrows; the action group beside
+     them wraps as a unit instead. */
+  white-space: nowrap;
+}
+.ib-editor .ui-coll-head,
+.ib-editor .tree-collection-head {
+  flex-wrap: wrap;
+}
+.ib-editor .ui-coll-head__count,
+.ib-editor .tree-collection-head .pill {
+  flex: none;
+}
+/* Nested collections carry three controls in a column too narrow to hold them
+   beside the title, so the group drops to its own right-aligned line rather
+   than letting one stray button wrap on its own. */
+.ib-editor .tree-collection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+/* Bootstrap .badge + .bg-secondary, as production's `.ib-*` status badges do. */
+.ib-editor .ui-coll-head__count,
+.ib-editor .tree-collection-head .pill {
+  margin-left: 0;
+  padding: 0.35em 0.65em;
+  font-size: var(--ib-text-xs);
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: var(--ib-text-muted);
+  border: 0;
+  border-radius: var(--ib-radius-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons. Reference: Bootstrap `.btn` + `.btn-sm` from production's config,
+   skinned by `.btn:not([class*="btn-"])` in bootstrapOverides/forms.scss
+   (btn-outline-secondary, colour #444, white on hover).
+   -------------------------------------------------------------------------- */
+.ib-editor .ib-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 13.13px;             /* $btn-font-size-sm */
+  font-weight: 400;
+  line-height: var(--ib-lh);
+  color: #444;
+  background: transparent;
+  border: 1px solid var(--ib-text-muted);
+  border-radius: var(--ib-radius-sm);
+  white-space: nowrap;
+}
+.ib-editor .ib-btn:hover {
+  color: #fff;
+  background: var(--ib-text-muted);
+  border-color: var(--ib-text-muted);
+}
+.ib-editor .ib-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ib-focus-ring);
+}
+.ib-editor .tree-add.ib-btn,
+.ib-editor .tree-expand-all.ib-btn {
+  margin-left: 0;
+}
+
+/* Section Options' Populate actions use the shared design-system Button. */
+.ib-editor .ui-btn {
+  height: auto;
+  padding: 0.375rem 0.75rem;      /* $btn-padding-y / -x */
+  font: 400 var(--ib-text-base) / var(--ib-lh) var(--ib-font);
+  border-radius: var(--ib-radius);
+}
+.ib-editor .ui-btn--secondary {
+  color: #444;
+  background: transparent;
+  border: 1px solid var(--ib-text-muted);
+}
+.ib-editor .ui-btn--secondary:hover {
+  color: #fff;
+  background: var(--ib-text-muted);
+}
+.ib-editor .ui-btn:focus-visible {
+  box-shadow: var(--ib-focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   Drag handle and overflow trigger.
+   Reference: `i.icon-move.drag-handle` (section-heading.scss — cursor: move,
+   opacity transition) and `.cut-copy-paste-button` (cutCopyPaste.scss — a
+   vertical ellipsis, black inside a section, #1dd2af on hover).
+   -------------------------------------------------------------------------- */
+.ib-editor .ib-drag-handle {
+  display: inline-flex;
+  flex: none;
+  padding: 0 6px 0 0;
+  color: var(--ib-text-color);
+  cursor: move;
+  opacity: 0.55;
+  transition: opacity 0.3s, color 0.3s;
+}
+/* The grip is drawn as zero-length round-capped strokes, so it needs weight to
+   render as dots rather than specks. */
+.ib-editor .ib-drag-handle svg {
+  stroke-width: 2.5;
+}
+.ib-editor .ib-drag-handle:hover {
+  color: var(--ib-icon-hover);
+  opacity: 1;
+}
+.ib-editor .ui-var-card:hover .ib-drag-handle,
+.ib-editor .ui-nrow:hover .ib-drag-handle {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ib-editor .ib-drag-handle { transition: none; }
+}
+
+.ib-editor .ib-overflow {
+  display: inline-flex;
+  flex: none;
+  opacity: 1;
+  padding: 5px;
+  color: var(--ib-text-color);
+  background: none;
+  border: 0;
+  border-radius: var(--ib-radius-sm);
+  cursor: pointer;
+}
+.ib-editor .ib-overflow:hover {
+  color: var(--ib-icon-hover);
+  background: none;
+}
+.ib-editor .ib-overflow:focus-visible {
+  outline: none;
+  opacity: 1;
+  box-shadow: var(--ib-focus-ring);
+}
+/* Read as FontAwesome's solid vertical ellipsis rather than a hairline dot row. */
+.ib-editor .ib-overflow svg {
+  stroke-width: 3;
+}
+
+/* --------------------------------------------------------------------------
+   Level 5 — a Content Variation (Control) as an editable unit.
+   Reference: the production module accordion — `.module-heading .accordion-heading > a`
+   (white header on hairline borders, #999 borders and #fbfbfb on hover, edit.scss)
+   over `.ib-editor-module-data-panel` (a tinted body inside a 1px #999 border,
+   placeholderForm.scss). No shadow and no card float, but rounded corners are
+   carried over from V1 rather than production's square panels.
+   -------------------------------------------------------------------------- */
+.ib-editor .ui-var-list {
+  gap: 0;
+}
+.ib-editor .ui-var-card {
+  margin-bottom: 10px;
+  background: var(--ib-surface);
+  border: 1px solid var(--ib-rule);
+  border-radius: var(--ib-radius-card);
+  /* The corners are rounded on the head and body individually rather than by
+     clipping here, so the card never becomes an overflow boundary that could
+     trap the overflow menu. */
+  overflow: visible;
+}
+.ib-editor .ui-var-card:hover,
+.ib-editor .ui-var-card.is-expanded {
+  border-color: var(--ib-border-hard);
+}
+.ib-editor .ui-var-card.is-warning {
+  border-color: var(--ib-invalid);
+}
+.ib-editor .ui-var-card.is-disabled {
+  opacity: 0.6;
+}
+.ib-editor .ui-var-card__head {
+  gap: 0;
+  min-height: 38px;
+  padding: 5px 10px;
+  background: var(--ib-surface);
+  /* Collapsed, the head is the whole card, so it takes all four corners. */
+  border-radius: inherit;
+  cursor: default;
+}
+.ib-editor .ui-var-card:hover > .ui-var-card__head {
+  background: var(--ib-surface-hover);
+}
+.ib-editor .ui-var-card.is-expanded > .ui-var-card__head {
+  background: var(--ib-surface-hover);
+  border-bottom: 1px solid var(--ib-border-hard);
+  border-radius: var(--ib-radius-card) var(--ib-radius-card) 0 0;
+}
+
+/* The disclosure control is a real button spanning the name, so the accordion
+   is keyboard-operable without nesting interactive elements. */
+.ib-editor .ui-var-card__disclosure,
+.ib-editor .ui-nrow__disclosure {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--ib-radius-sm);
+  cursor: pointer;
+}
+.ib-editor .ui-var-card__disclosure:focus-visible,
+.ib-editor .ui-nrow__disclosure:focus-visible {
+  outline: none;
+  box-shadow: var(--ib-focus-ring);
+}
+.ib-editor .ui-var-card__chevron,
+.ib-editor .ui-nrow__chevron {
+  color: var(--ib-text-color);
+}
+.ib-editor .ui-var-card__name {
+  font-size: var(--ib-text-base);
+  font-weight: 700;
+  color: var(--ib-text-color);
+}
+.ib-editor .ui-nrow__name {
+  font-size: var(--ib-text-base);
+  font-weight: 400;
+}
+.ib-editor .ui-var-card__body {
+  padding: 10px;
+  gap: 0;
+  background: var(--ib-panel);
+  border-top: 0;
+  border-radius: 0 0 var(--ib-radius-card) var(--ib-radius-card);
+}
+
+/* Nested rows (Variant Categories and deeper) — the same accordion idiom, one
+   step lighter so the nesting still reads on the panel. Each row is its own
+   rounded unit at V1's nested-row radius, so they are spaced rather than
+   border-collapsed into a single stack. */
+.ib-editor .ui-nrow-node + .ui-nrow-node {
+  margin-top: 6px;
+}
+.ib-editor .ui-nrow {
+  gap: 0;
+  padding: 4px 8px;
+  background: var(--ib-surface);
+  border: 1px solid var(--ib-border-input);
+  border-radius: var(--ib-radius-row);
+  cursor: default;
+}
+.ib-editor .ui-nrow:hover {
+  background: var(--ib-surface-hover);
+}
+.ib-editor .ui-nrow.is-expanded {
+  background: var(--ib-surface-hover);
+  border-bottom-color: var(--ib-border-hard);
+  border-radius: var(--ib-radius-row) var(--ib-radius-row) 0 0;
+}
+.ib-editor .ui-nrow__children {
+  margin: 0;
+  padding: 10px;
+  gap: 0;
+  background: var(--ib-surface-hover);
+  border: 1px solid var(--ib-border-input);
+  border-top: 0;
+  border-radius: 0 0 var(--ib-radius-row) var(--ib-radius-row);
+}
+.ib-editor .tree-list {
+  gap: 0;
+}
+
+/* Rename field inside a row header — Bootstrap .form-control-sm. */
+.ib-editor .ui-var-card__rename,
+.ib-editor .ui-nrow__rename {
+  padding: 0.25rem 0.5rem;
+  font-size: 13.13px;
+  color: var(--ib-text-color);
+  border: 1px solid var(--ib-border-input);
+  border-radius: var(--ib-radius-sm);
+}
+.ib-editor .ui-var-card__rename:focus,
+.ib-editor .ui-nrow__rename:focus {
+  border-color: var(--ib-focus-border);
+  box-shadow: var(--ib-focus-ring);
+}
+
+/* Drag feedback. Reference: `.ib-dragging` and `.ib-drop-target-*` in
+   section/containers/section.scss (dashed outline over a pale blue wash). */
+.ib-editor .ui-var-card.is-dragging,
+.ib-editor .ui-nrow.is-dragging {
+  opacity: 0.45;
+  box-shadow: none;
+}
+.ib-editor .ui-var-card.is-drop-over,
+.ib-editor .ui-nrow.is-drop-over {
+  border: 1px dashed #000;
+  background-color: rgba(89, 171, 227, 0.1);
+  box-shadow: none;
+}
+
+/* Row affordances — validation marker and the Disabled badge. */
+.ib-editor .ui-row-warn {
+  color: var(--ib-invalid);       /* .editor .warning-messages i */
+  padding: 0 4px;
+}
+.ib-editor .ui-row-tag {
+  padding: 0.35em 0.65em;
+  font-size: var(--ib-text-xs);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #fff;
+  background: var(--ib-text-muted);
+  border: 0;
+  border-radius: var(--ib-radius-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Form controls.
+   Reference: bootstrapOverides/forms.scss (input[type=text] extends
+   .form-control with margin-bottom: 10px; select gets a 1px #ccc border),
+   FormComponents/text (a plain <label> above the input),
+   FormComponents/checkbox/checkbox.styles.scss and `.module-settings label`.
+   -------------------------------------------------------------------------- */
+.ib-editor .section-fields,
+.ib-editor .options-form {
+  gap: 0;
+}
+.ib-editor .field {
+  gap: 0;
+  margin-bottom: 10px;
+}
+.ib-editor .field-label {
+  margin-bottom: 2px;
+  font-size: var(--ib-text-base);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ib-label);
+}
+.ib-editor .req {
+  color: var(--ib-invalid);
+}
+.ib-editor .input {
+  width: 100%;
+  padding: 0.375rem 0.75rem;      /* $input-padding-y / -x */
+  font-size: var(--ib-text-base);
+  line-height: var(--ib-lh);
+  color: var(--ib-text-color);
+  background: var(--ib-surface);
+  border: 1px solid var(--ib-border-input);
+  border-radius: var(--ib-radius);
+}
+.ib-editor .input::placeholder {
+  color: rgba(33, 37, 41, 0.75);  /* $input-placeholder-color */
+}
+.ib-editor .input:focus {
+  border-color: var(--ib-focus-border);
+  box-shadow: var(--ib-focus-ring);
+}
+/* `.invalid` in app.scss: a red border over a 10% red wash. */
+.ib-editor .input.invalid {
+  border-color: red;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+.ib-editor select.input {
+  padding-right: 2.25rem;         /* $form-select-indicator-padding */
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;     /* $form-select-bg-size */
+}
+.ib-editor textarea.input {
+  min-height: 0;
+}
+
+/* Native checkbox at its native size, as production renders it. */
+.ib-editor .checkbox {
+  align-items: center;
+  gap: 0;
+  padding: 6px 0;
+  font-size: var(--ib-text-base);
+  line-height: 1.4;
+  color: var(--ib-label);
+}
+.ib-editor .checkbox input {
+  width: auto;
+  height: auto;
+  margin: 0 10px 0 0;
+  accent-color: auto;
+  flex: none;
+}
+.ib-editor .radio-row {
+  gap: 10px;
+  padding: 2px 0 8px;
+}
+.ib-editor .radio {
+  gap: 4px;
+  font-size: var(--ib-text-base);
+  color: var(--ib-label);
+}
+.ib-editor .radio input {
+  margin: 0 4px 0 0;              /* .ib-section-heading__layout input[type=radio] */
+  accent-color: auto;
+}
+
+/* Group divider above a sub-form heading — `#modulesForm h4`. */
+.ib-editor .subhead {
+  margin-top: 15px;
+  padding: 8px 0;
+  font-size: var(--ib-text-base);
+  font-weight: 700;
+  color: var(--ib-text-color);
+  border-top: 0;
+  border-bottom: 1px solid var(--ib-rule);
+}
+.ib-editor .options-actions {
+  gap: 8px;
+  margin: 10px 0 15px;
+}
+
+.ib-editor .empty {
+  font-size: var(--ib-text-sm);
+  color: var(--ib-text-meta);
+  padding: 10px 0;
+  text-align: left;
+}
+
+/* --------------------------------------------------------------------------
+   Overflow menu.
+   Reference: `.cut-copy-paste-menu` in components/cutCopyPaste/cutCopyPaste.scss
+   — a tight white 13px list, 2px radius, hairline translucent border, soft
+   shadow, #f1f1f1 hover with the link colour and an underline, #B2ADAB when
+   disabled. Rendered fixed-position, so it is scoped by class rather than by
+   the `.ib-editor` ancestor and is never clipped by a parent's overflow.
+   -------------------------------------------------------------------------- */
+.ui-menu.ib-menu {
+  min-width: 140px;
+  padding: 5px 0;
+  font-family: var(--ib-font, "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.ui-menu.ib-menu .ui-menu__item {
+  gap: 8px;
+  padding: 3px 20px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.42857143;
+  color: #333;
+  white-space: nowrap;
+  border-radius: 0;
+}
+.ui-menu.ib-menu .ui-menu__item:hover:not(:disabled) {
+  color: #0074ad;
+  background-color: #f1f1f1;
+  text-decoration: underline;
+}
+.ui-menu.ib-menu .ui-menu__item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ib-focus-border, #80bbdd);
+}
+.ui-menu.ib-menu .ui-menu__item:disabled {
+  color: #b2adab;
+  cursor: default;
+  text-decoration: none;
+}
+/* Delete stays clearly destructive, using Bootstrap's $danger from production. */
+.ui-menu.ib-menu .ui-menu__item--danger {
+  color: #dc3545;
+}
+.ui-menu.ib-menu .ui-menu__item--danger:hover:not(:disabled) {
+  color: #dc3545;
+  background-color: #f1f1f1;
+}
+.ui-menu.ib-menu .ui-menu__sep {
+  height: 0;
+  margin: 5px 0;
+  background: none;
+  border-top: 1px solid #e5e5e5;
+}

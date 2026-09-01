@@ -6,6 +6,9 @@ import App from "./App";
 import "../ui/tokens.css";
 import "../ui/ui.css";
 import "./index.css";
+// Production Iceberg visual language for the main editor column. Loads last so
+// its `.ib-editor`-scoped rules win over the generic prototype styling.
+import "./iceberg-editor.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
