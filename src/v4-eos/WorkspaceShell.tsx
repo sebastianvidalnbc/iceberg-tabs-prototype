@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "./AppShell";
 import { Explorer } from "./regions/Explorer";
 import { LivePreview } from "./regions/LivePreview";
@@ -32,10 +32,12 @@ import {
   insertAfter,
   moveWithin,
   renameNode,
+  setNodeContent,
   toggleDisabled,
 } from "./structureOps";
 import type { StructureNode } from "./data";
-import { derivePreviewModel, type NodeOverrides } from "./previewModel";
+import { collectVariationNodes, derivePreviewModel } from "./previewModel";
+import { collectInvalidFields } from "./validate";
 
 // Per-experience Explorer memory: which Structure nodes are expanded and which
 // object is selected. Keeping this keyed by experience (Variant or Widget
@@ -125,13 +127,10 @@ export function WorkspaceShell({
   // Structure clipboard for Copy/Paste, shared across experiences (mirrors V1).
   const [clipboard, setClipboard] = useState<StructureNode | null>(null);
 
-  // Per-experience property edits (nodeId → field label → value). These drive
-  // BOTH the (now editable) Properties panel and the live preview, so typing a
-  // new plan title or toggling a badge updates the canvas immediately. Kept as
-  // overrides so the underlying sample data is never mutated.
-  const [propOverrides, setPropOverrides] = useState<
-    Record<string, NodeOverrides>
-  >({});
+  // MVT / A-B override: a variation id to PREVIEW instead of the current
+  // selection (the mvtOverride analog — preview-only, never mutates data). ""
+  // means "as authored" (derive from the selected node).
+  const [mvtOverride, setMvtOverride] = useState<string>("");
 
   const isPage = context === "page";
 
@@ -332,33 +331,41 @@ export function WorkspaceShell({
     [updateStructure]
   );
 
-  // Edit a property field on the selected object (live). Scoped per experience.
+  // Edit a property field on the selected object (live). This writes the value
+  // onto the element INSTANCE's `content` within the variant's Structure — the
+  // V4 analog of updatePlaceholderContentByPath — so the edit persists on the
+  // instance and drives both the Properties panel and the live preview.
   const handleEditField = useCallback(
     (nodeId: string, label: string, value: string) => {
-      if (!selectedExperienceId) return;
-      setPropOverrides((prev) => {
-        const forExp = prev[selectedExperienceId] ?? {};
-        const forNode = forExp[nodeId] ?? {};
-        return {
-          ...prev,
-          [selectedExperienceId]: {
-            ...forExp,
-            [nodeId]: { ...forNode, [label]: value },
-          },
-        };
-      });
+      updateStructure((nodes) => setNodeContent(nodes, nodeId, label, value));
     },
-    [selectedExperienceId]
+    [updateStructure]
   );
 
-  // The editable overrides + derived, renderable preview for the active object.
-  const experienceOverrides: NodeOverrides = selectedExperienceId
-    ? propOverrides[selectedExperienceId] ?? {}
-    : {};
-  const previewModel = derivePreviewModel(
-    activeExperience,
-    selectedStructureNodeId,
-    experienceOverrides
+  // The selected instance's authored VALUES.
+  const selectedNodeContent: Record<string, string> = selectedNode?.content ?? {};
+
+  // MVT variations available in this experience, and the derived preview. When
+  // an MVT override is active the canvas renders that variation's subtree;
+  // otherwise it follows the tree selection.
+  const variations = collectVariationNodes(activeExperience);
+  // Drop a stale override if the active experience no longer has that variation.
+  useEffect(() => {
+    if (mvtOverride && !variations.some((v) => v.id === mvtOverride)) {
+      setMvtOverride("");
+    }
+  }, [mvtOverride, variations]);
+  const previewNodeId = mvtOverride || selectedStructureNodeId;
+  const previewModel = derivePreviewModel(activeExperience, previewNodeId);
+
+  // Validation across the whole experience (the invalidSections analog). Feeds
+  // the save gate in the editor bar and the inline invalid marks on the selected
+  // object's required fields.
+  const issues = collectInvalidFields(activeExperience);
+  const selectedInvalidFields = new Set(
+    issues
+      .filter((i) => i.nodeId === selectedStructureNodeId)
+      .map((i) => i.field)
   );
 
   // Breadcrumb keeps the author oriented ("Where am I?"): <Collection> / /slug /
@@ -402,17 +409,36 @@ export function WorkspaceShell({
       <div className="ui-ws-editor">
         <div className="ui-ws-editor__bar">
           <Breadcrumb items={crumbs} />
-          {/* Top-right entry to the V2 design-system catalog (mirrors V1's
-              top-right "Design System" link, scoped to the V2 shadcn layer). */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto"
-            onClick={() => navigate(routes.designSystem())}
-          >
-            <Icon name="grid" size={16} />
-            Design System
-          </Button>
+          {/* Right cluster: a save gate (blocked while required fields are empty,
+              the checkValidationErrors analog) + the design-system catalog link. */}
+          <div className="ml-auto flex items-center gap-2">
+            {activeExperience && (
+              <Button
+                variant={issues.length > 0 ? "outline" : "default"}
+                size="sm"
+                disabled={issues.length > 0}
+                title={
+                  issues.length > 0
+                    ? `${issues.length} required field${
+                        issues.length === 1 ? "" : "s"
+                      } need attention before saving`
+                    : "All required fields complete"
+                }
+                onClick={() => {}}
+              >
+                <Icon name="check" size={16} />
+                {issues.length > 0 ? `Save · ${issues.length} issue${issues.length === 1 ? "" : "s"}` : "Save"}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(routes.designSystem())}
+            >
+              <Icon name="grid" size={16} />
+              Design System
+            </Button>
+          </div>
         </div>
         <div className="ui-ws">
           <Explorer
@@ -442,13 +468,19 @@ export function WorkspaceShell({
             context={context}
             selectedObject={selectedObject}
             previewModel={previewModel}
+            selectedId={mvtOverride || selectedStructureNodeId}
+            onPickSection={handleSelectStructureNode}
+            variations={variations}
+            mvtOverride={mvtOverride}
+            onMvtChange={setMvtOverride}
           />
           <Properties
             context={context}
             variant={activeExperience}
             selectedRouteId={selectedRouteId}
             selectedStructureNodeId={selectedStructureNodeId}
-            overrides={experienceOverrides}
+            content={selectedNodeContent}
+            invalidFields={selectedInvalidFields}
             onEditField={handleEditField}
           />
         </div>

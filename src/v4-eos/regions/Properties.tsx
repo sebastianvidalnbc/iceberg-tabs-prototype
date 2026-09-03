@@ -30,7 +30,6 @@ import {
   type NoticeProperties,
   type VariantWorkspace,
 } from "../data";
-import type { NodeOverrides } from "../previewModel";
 
 interface PropertiesProps {
   // The active authoring context; selects which Properties resolver is used.
@@ -42,9 +41,14 @@ interface PropertiesProps {
   selectedRouteId: string | null;
   // The selected STRUCTURE object id within the active experience.
   selectedStructureNodeId: string | null;
-  // In-session field edits for this experience, and the setter. Editing a field
-  // updates these overrides, which also drive the live preview.
-  overrides: NodeOverrides;
+  // The selected instance's authored VALUES (its `content`, the placeholder.content
+  // analog). Field controls overlay these on the registry schema defaults, and
+  // editing writes back via onEditField — which persists on the instance and
+  // drives the live preview.
+  content: Record<string, string>;
+  // Labels of the selected object's required fields that are currently empty
+  // (the invalidSections analog, scoped to this object). Marks them invalid.
+  invalidFields: Set<string>;
   onEditField: (nodeId: string, label: string, value: string) => void;
 }
 
@@ -255,13 +259,16 @@ function TemplateGallery({
 function PropertyFieldRow({
   field,
   value,
+  invalid,
   onEdit,
 }: {
   field: PropertyField;
   value: string;
+  invalid: boolean;
   onEdit: (value: string) => void;
 }) {
   const id = useId();
+  const errId = invalid ? `${id}-err` : undefined;
   const helpId = field.helper ? `${id}-help` : undefined;
   const stacked =
     field.kind === "textarea" ||
@@ -273,15 +280,23 @@ function PropertyFieldRow({
       htmlFor={id}
       required={field.required}
       stacked={stacked}
-      help={field.helper ? <span id={helpId}>{field.helper}</span> : undefined}
+      help={
+        invalid ? (
+          <span id={errId} className="text-[var(--color-status-danger)]">
+            {field.label} is required.
+          </span>
+        ) : field.helper ? (
+          <span id={helpId}>{field.helper}</span>
+        ) : undefined
+      }
     >
       <PropertyControl
         field={field}
         value={value}
         onEdit={onEdit}
         id={id}
-        describedBy={helpId}
-        invalid={false}
+        describedBy={errId ?? helpId}
+        invalid={invalid}
       />
     </PropRow>
   );
@@ -292,10 +307,12 @@ function PropertyFieldRow({
 function GroupRows({
   group,
   overridesForNode,
+  invalidFields,
   onEdit,
 }: {
   group: PropertyGroup;
   overridesForNode: Record<string, string>;
+  invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
 }) {
   return (
@@ -305,6 +322,7 @@ function GroupRows({
           key={field.label}
           field={field}
           value={overridesForNode[field.label] ?? field.value}
+          invalid={invalidFields.has(field.label)}
           onEdit={(v) => onEdit(field.label, v)}
         />
       ))}
@@ -318,17 +336,24 @@ function GroupSection({
   expanded,
   onToggle,
   overridesForNode,
+  invalidFields,
   onEdit,
 }: {
   group: PropertyGroup;
   expanded: boolean;
   onToggle: () => void;
   overridesForNode: Record<string, string>;
+  invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
 }) {
   return (
     <PropSection header={group.header} expanded={expanded} onToggle={onToggle}>
-      <GroupRows group={group} overridesForNode={overridesForNode} onEdit={onEdit} />
+      <GroupRows
+        group={group}
+        overridesForNode={overridesForNode}
+        invalidFields={invalidFields}
+        onEdit={onEdit}
+      />
     </PropSection>
   );
 }
@@ -342,7 +367,8 @@ export function Properties({
   variant,
   selectedRouteId,
   selectedStructureNodeId,
-  overrides,
+  content,
+  invalidFields,
   onEditField,
 }: PropertiesProps) {
   const experienceNoun = context === "widget" ? "widget config" : "variant";
@@ -365,7 +391,8 @@ export function Properties({
               context={context}
               variantId={variant.id}
               nodeId={selectedStructureNodeId}
-              overridesForNode={overrides[selectedStructureNodeId] ?? {}}
+              overridesForNode={content}
+              invalidFields={invalidFields}
               onEdit={(label, value) =>
                 onEditField(selectedStructureNodeId, label, value)
               }
@@ -392,12 +419,14 @@ function PropertiesBody({
   variantId,
   nodeId,
   overridesForNode,
+  invalidFields,
   onEdit,
 }: {
   context: AuthoringContext;
   variantId: string;
   nodeId: string;
   overridesForNode: Record<string, string>;
+  invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
 }) {
   const resolved =
@@ -414,6 +443,7 @@ function PropertiesBody({
       key={nodeId}
       data={resolved.data}
       overridesForNode={overridesForNode}
+      invalidFields={invalidFields}
       onEdit={onEdit}
     />
   );
@@ -426,10 +456,12 @@ function PropertiesBody({
 function FieldsBody({
   data,
   overridesForNode,
+  invalidFields,
   onEdit,
 }: {
   data: ObjectProperties;
   overridesForNode: Record<string, string>;
+  invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
 }) {
   const { eyebrow, name } = data;
@@ -475,6 +507,7 @@ function FieldsBody({
             expanded={group.header ? !collapsed.has(group.header) : true}
             onToggle={group.header ? () => toggle(group.header!) : () => {}}
             overridesForNode={overridesForNode}
+            invalidFields={invalidFields}
             onEdit={onEdit}
           />
         ))}

@@ -17,9 +17,8 @@ import {
   productSchema,
   featureSchema,
   cadenceSchema,
-  contentAreaSchema,
-  behavioursState,
 } from "./previews";
+import { getElementDef } from "./elements";
 
 // Classifies a Structure object so Properties resolution and (later) drag/paste
 // rules are type-aware rather than relying only on label string matching.
@@ -79,8 +78,16 @@ export interface TreeNode {
   design?: SectionDesign; // Sections only
   role?: SectionRole; // Sections only — system/domain role vs authored label
   // Authored Properties payload for canonical nodes. When present it is used
-  // verbatim instead of a label-derived template.
+  // as the element's DEFAULT resolved panel (schema + seed values), the analog
+  // of an element type's schema. Per-instance edits accrue in `content`.
   props?: ResolvedProperties;
+  // Instance VALUES for this element, keyed by field label — the V4 analog of
+  // real Iceberg's `placeholder.content` / `section.settings`. The schema comes
+  // from the element registry (by objectType); these values overlay the schema
+  // defaults in both Properties and the live preview. Author edits are written
+  // here (see structureOps.setNodeContent), so they persist on the instance
+  // within the variant's Structure — exactly like updatePlaceholderContentByPath.
+  content?: Record<string, string>;
   // Structure-tree authoring state: a disabled layer is dimmed + excluded from
   // the experience but preserved (toggle via the row's Disable/Enable action).
   disabled?: boolean;
@@ -885,56 +892,11 @@ export function classifyNode(
   const parentLabel = parent?.label.toLowerCase() ?? "";
   const t = node.objectType;
 
-  // --- objectType-driven (canonical 0609) ----------------------------------
-  if (t) {
-    switch (t) {
-      case "page-section":
-        return metadataFor(node);
-      case "section-content":
-      case "categories":
-      case "variant-categories":
-      case "products":
-      case "plan-picker-data":
-      case "product-features-list":
-      case "price-cadence":
-      case "pricing":
-        return collectionFor(node, t);
-      case "section-options":
-        return {
-          kind: "fields",
-          data: sectionOptionsSchema(node.design ?? parent?.design),
-        };
-      case "variation":
-        // Predecision is a deliberate empty variation (no configured content).
-        if (node.label.toLowerCase() === "predecision") {
-          return {
-            kind: "notice",
-            data: {
-              eyebrow: "CONTENT VARIATION",
-              name: node.label,
-              message: "This variation has no configured content.",
-              detail:
-                "Add a module or duplicate the Control variation to populate it.",
-            },
-          };
-        }
-        return { kind: "fields", data: controlSchema(node.label) };
-      case "category":
-        return { kind: "fields", data: categorySchema(node.label) };
-      case "product":
-      case "plan":
-        return { kind: "fields", data: productSchema(node.label) };
-      case "feature":
-        return { kind: "fields", data: featureSchema(node.label) };
-      case "cadence":
-      case "pricing-option":
-        return { kind: "fields", data: cadenceSchema(node.label) };
-      case "content-area":
-        return contentAreaSchema(node.label);
-      case "behaviours":
-        return behavioursState(parent?.label ?? node.label);
-    }
-  }
+  // --- registry-driven (canonical 0609 + any typed node) -------------------
+  // The element registry (elements.ts) is the single source of truth for how a
+  // type resolves to a schema, mirroring elements.modules / elements.layouts.
+  const def = getElementDef(t);
+  if (def?.build) return def.build(node, parent);
 
   // --- label fallback (non-canonical sample Variants) ----------------------
   const collections: Partial<Record<string, StructureObjectType>> = {

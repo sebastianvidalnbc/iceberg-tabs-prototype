@@ -65,7 +65,12 @@ export default defineConfig({
   build: {
     outDir: V4_OUT_DIR,
     rollupOptions: {
-      input: resolve(__dirname, "v4.html"),
+      // Multi-page build: the CMS app (v4.html → renamed to index.html) and the
+      // standalone preview renderer (renderer.html) that the editor iframe loads.
+      input: {
+        v4: resolve(__dirname, "v4.html"),
+        renderer: resolve(__dirname, "renderer.html"),
+      },
     },
   },
 });

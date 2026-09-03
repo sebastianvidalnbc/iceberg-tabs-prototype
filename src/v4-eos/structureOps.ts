@@ -58,6 +58,28 @@ export function renameNode(
   });
 }
 
+// Write a single field VALUE onto an instance's `content`, returning a new tree.
+// This is the V4 analog of the real reducer's
+// `updatePlaceholderContentByPath → mergeIn(['content', ...path])`: the edited
+// value is stored on the element instance within the variant's Structure, so it
+// persists across selection changes and drives both Properties and the preview.
+export function setNodeContent(
+  nodes: StructureNode[],
+  id: string,
+  field: string,
+  value: string,
+): StructureNode[] {
+  return nodes.map((n) => {
+    if (n.id === id) {
+      return { ...n, content: { ...(n.content ?? {}), [field]: value } };
+    }
+    if (n.children) {
+      return { ...n, children: setNodeContent(n.children, id, field, value) };
+    }
+    return n;
+  });
+}
+
 export function toggleDisabled(
   nodes: StructureNode[],
   id: string,

@@ -1,0 +1,218 @@
+/* Customer-facing brand render (Peacock) — the CONTENT shown inside the preview
+   iframe. Self-contained on purpose: it declares its OWN --brand-* scale and an
+   explicit font stack, and never consumes the CMS's Eos tokens, so the tool's
+   chrome and the previewed page stay separate design systems (a brand refresh
+   must not touch the CMS, and a CMS token change must not move this pixel). */
+:root {
+  color-scheme: light;
+}
+html,
+body,
+#preview-root {
+  margin: 0;
+  height: 100%;
+  background: #ffffff;
+}
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.ui-brand {
+  --brand-bg: #ffffff;
+  --brand-fg: #0a0a0f;
+  --brand-muted: #5b5b66;
+  --brand-accent: #6a4bff;
+  --brand-accent-fg: #ffffff;
+  --brand-card-bg: #f6f6f8;
+  --brand-card-border: #e5e5ec;
+  --brand-radius: 14px;
+  font-family: inherit;
+  background: var(--brand-bg);
+  color: var(--brand-fg);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.ui-brand__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--brand-card-border);
+}
+.ui-brand__logo {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+  color: var(--brand-fg);
+}
+.ui-brand__nav { display: flex; align-items: center; gap: 16px; }
+.ui-brand__link { font-size: 14px; color: var(--brand-muted); }
+.ui-brand__btn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: var(--brand-accent);
+  color: var(--brand-accent-fg);
+}
+.ui-brand__section {
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ui-brand__section[data-align="centre"] { align-items: center; text-align: center; }
+.ui-brand__section[data-align="left"] { align-items: flex-start; text-align: left; }
+.ui-brand__section[data-align="right"] { align-items: flex-end; text-align: right; }
+.ui-brand__section-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-accent);
+  margin: 0;
+}
+.ui-brand__title {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.ui-brand__subtitle {
+  font-size: 16px;
+  color: var(--brand-muted);
+  margin: 0;
+  max-width: 52ch;
+}
+.ui-brand__cards {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  margin-top: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
+}
+.ui-brand__cards[data-count="1"] {
+  grid-template-columns: minmax(240px, 360px);
+  justify-content: center;
+}
+.ui-brand__card {
+  position: relative;
+  display: flex;
+  background: var(--brand-card-bg);
+  border: 1px solid var(--brand-card-border);
+  border-radius: var(--brand-radius);
+  padding: 20px;
+  text-align: left;
+}
+.ui-brand__card[data-featured="true"] {
+  border-color: var(--brand-accent);
+  box-shadow: inset 0 0 0 1px var(--brand-accent);
+}
+.ui-brand__badge {
+  position: absolute;
+  top: -11px;
+  left: 20px;
+  background: var(--brand-accent);
+  color: var(--brand-accent-fg);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+.ui-brand__card-body { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.ui-brand__eyebrow { font-size: 12px; font-weight: 600; color: var(--brand-muted); margin: 0; }
+.ui-brand__name { font-size: 18px; font-weight: 700; margin: 0; }
+.ui-brand__desc { font-size: 13px; line-height: 1.5; color: var(--brand-muted); margin: 0; }
+.ui-brand__features {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ui-brand__features li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--brand-fg);
+}
+.ui-brand__features li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--brand-accent);
+  font-weight: 700;
+}
+.ui-brand__price { font-size: 20px; font-weight: 800; margin: 12px 0 0; }
+.ui-brand__cadence { font-size: 13px; font-weight: 500; color: var(--brand-muted); }
+.ui-brand__cta {
+  margin-top: auto;
+  padding-top: 12px;
+}
+.ui-brand__card-body .ui-brand__cta {
+  display: block;
+  margin-top: 16px;
+  text-align: center;
+  background: var(--brand-accent);
+  color: var(--brand-accent-fg);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 100px;
+}
+.ui-brand__message {
+  margin-top: 16px;
+  max-width: 60ch;
+  background: var(--brand-card-bg);
+  border: 1px solid var(--brand-card-border);
+  border-radius: var(--brand-radius);
+  padding: 16px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--brand-fg);
+}
+.ui-brand__disclaimer {
+  margin-top: 20px;
+  max-width: 60ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--brand-muted);
+}
+
+/* --- Editor-only affordances (selection highlight + Pick Section) ---------- */
+/* Present only inside the CMS iframe; harmless in a standalone tab. */
+[data-node-id] { scroll-margin: 24px; }
+
+.ui-brand__section[data-selected="true"],
+.ui-brand__card[data-selected="true"] {
+  outline: 2px solid #01699b;
+  outline-offset: 2px;
+}
+
+/* Pick Section mode: the whole render invites clicking a node. */
+.ui-brand[data-pick="true"] [data-node-id] { cursor: pointer; }
+.ui-brand[data-pick="true"] [data-node-id]:hover {
+  outline: 2px dashed #01699b;
+  outline-offset: 2px;
+}
+.ui-brand[data-pick="true"]::after {
+  content: "Pick Section — click an element to select it";
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #01699b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 100px;
+  z-index: 10;
+  pointer-events: none;
+}

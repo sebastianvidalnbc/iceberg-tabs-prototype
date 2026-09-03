@@ -522,3 +522,43 @@
   line-height: 1.5;
   color: var(--brand-muted);
 }
+
+/* ========================================================================== */
+/* PREVIEW IFRAME — the customer render now lives in a separate document       */
+/* (renderer.html), driven by postMessage. The canvas switches to a flex frame */
+/* so the iframe can fill height and be reframed to device widths.             */
+.ui-preview__canvas[data-mode="frame"] {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: var(--space-3);
+  border-style: solid;
+  border-color: var(--color-border-subtle);
+}
+.ui-preview__canvas[data-mode="frame"] .ui-preview__frame {
+  display: flex;
+  height: 100%;
+  position: relative;
+}
+.ui-preview__iframe {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: #fff;
+  display: block;
+}
+/* Device presets reframe the iframe wrapper (widths mirror the real editor's
+   device-selector presets). */
+.ui-preview__frame--full { max-width: 100%; width: 100%; }
+.ui-preview__frame--laptop { max-width: 1024px; }
+.ui-preview__frame--tablet { max-width: 834px; }
+.ui-preview__frame--mobile { max-width: 390px; }
+.ui-preview__audience-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}

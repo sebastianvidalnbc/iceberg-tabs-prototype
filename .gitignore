@@ -4,6 +4,10 @@ node_modules/
 # Build output
 dist/
 dist-v2/
+dist-v4/
+
+# Test / tooling artifacts
+.playwright-mcp/
 
 # TypeScript build info
 *.tsbuildinfo
