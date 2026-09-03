@@ -1,10 +1,10 @@
-import type { PreviewModel, PreviewCard } from "../previewModel";
+import type { PreviewModel, PreviewCard, PreviewSection } from "../previewModel";
 
-// Customer-facing brand render (Peacock), living INSIDE the preview iframe. This
-// is the leaf renderer the CMS drives via postMessage — the V4 analog of an
-// elements-peacock module render. Each selectable element carries a
-// `data-node-id` so the CMS can (a) outline the selected node and (b) receive a
-// Pick Section click that selects it.
+// Customer-facing brand render (Peacock), living INSIDE the preview iframe. It
+// renders the WHOLE variant as a vertical stack of sections (like a Figma frame
+// showing every element), NOT just the selected layer. Each selectable element
+// carries a `data-node-id` so the CMS can (a) outline the selected node and
+// (b) receive a Pick Section click that selects it.
 
 function BrandCard({
   card,
@@ -52,6 +52,55 @@ function BrandCard({
   );
 }
 
+function BrandSection({
+  section,
+  selectedId,
+  onPick,
+}: {
+  section: PreviewSection;
+  selectedId: string | null;
+  onPick: (nodeId: string) => void;
+}) {
+  return (
+    <div
+      className="ui-brand__section"
+      data-align={section.alignment}
+      data-node-id={section.nodeId}
+      data-selected={section.nodeId === selectedId ? "true" : undefined}
+      onClick={() => onPick(section.nodeId)}
+    >
+      {section.eyebrow ? (
+        <p className="ui-brand__section-eyebrow">{section.eyebrow}</p>
+      ) : null}
+      {section.title ? <h2 className="ui-brand__title">{section.title}</h2> : null}
+      {section.subtitle ? (
+        <p className="ui-brand__subtitle">{section.subtitle}</p>
+      ) : null}
+
+      {section.kind === "plans" && (
+        <div className="ui-brand__cards" data-count={section.cards.length}>
+          {section.cards.map((card) => (
+            <BrandCard
+              key={card.id}
+              card={card}
+              selectedId={selectedId}
+              onPick={onPick}
+            />
+          ))}
+        </div>
+      )}
+
+      {section.kind === "message" && section.message ? (
+        <div className="ui-brand__message">{section.message}</div>
+      ) : null}
+
+      {section.disclaimer ? (
+        <p className="ui-brand__disclaimer">{section.disclaimer}</p>
+      ) : null}
+    </div>
+  );
+}
+
 export function BrandRender({
   model,
   selectedId,
@@ -73,38 +122,14 @@ export function BrandRender({
         </div>
       </header>
 
-      <div
-        className="ui-brand__section"
-        data-align={model.alignment}
-        data-node-id={model.nodeId}
-        data-selected={model.nodeId && model.nodeId === selectedId ? "true" : undefined}
-        onClick={() => model.nodeId && onPick(model.nodeId)}
-      >
-        {model.eyebrow ? <p className="ui-brand__section-eyebrow">{model.eyebrow}</p> : null}
-        {model.title ? <h2 className="ui-brand__title">{model.title}</h2> : null}
-        {model.subtitle ? <p className="ui-brand__subtitle">{model.subtitle}</p> : null}
-
-        {model.kind === "plans" && (
-          <div className="ui-brand__cards" data-count={model.cards.length}>
-            {model.cards.map((card) => (
-              <BrandCard
-                key={card.id}
-                card={card}
-                selectedId={selectedId}
-                onPick={onPick}
-              />
-            ))}
-          </div>
-        )}
-
-        {model.kind === "message" && model.message ? (
-          <div className="ui-brand__message">{model.message}</div>
-        ) : null}
-
-        {model.disclaimer ? (
-          <p className="ui-brand__disclaimer">{model.disclaimer}</p>
-        ) : null}
-      </div>
+      {model.sections.map((section) => (
+        <BrandSection
+          key={section.nodeId}
+          section={section}
+          selectedId={selectedId}
+          onPick={onPick}
+        />
+      ))}
     </div>
   );
 }

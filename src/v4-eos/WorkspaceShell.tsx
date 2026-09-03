@@ -355,8 +355,10 @@ export function WorkspaceShell({
       setMvtOverride("");
     }
   }, [mvtOverride, variations]);
-  const previewNodeId = mvtOverride || selectedStructureNodeId;
-  const previewModel = derivePreviewModel(activeExperience, previewNodeId);
+  // The preview composes the WHOLE variant (all sections) and is independent of
+  // which layer is selected — selection only drives the edit panel + highlight.
+  // It changes on variant switch, live field edits, or an MVT variation choice.
+  const previewModel = derivePreviewModel(activeExperience, mvtOverride || null);
 
   // Validation across the whole experience (the invalidSections analog). Feeds
   // the save gate in the editor bar and the inline invalid marks on the selected
@@ -468,7 +470,7 @@ export function WorkspaceShell({
             context={context}
             selectedObject={selectedObject}
             previewModel={previewModel}
-            selectedId={mvtOverride || selectedStructureNodeId}
+            selectedId={selectedStructureNodeId}
             onPickSection={handleSelectStructureNode}
             variations={variations}
             mvtOverride={mvtOverride}

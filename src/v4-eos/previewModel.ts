@@ -1,7 +1,10 @@
-// Derives a live, renderable preview model from the currently-selected Structure
-// node. This is what makes the center canvas DYNAMIC: selecting a Plan Picker
-// (or a product, section, disclaimer…) and editing its fields projects a branded
-// placeholder that reflects the instance's authored VALUES.
+// Derives a live, renderable preview of the WHOLE variant/page — the way a
+// Figma frame shows every element inside it. The canvas composes ALL top-level
+// sections of the active variant and never re-scopes to the selected layer:
+//   • it changes when you switch VARIANTS (a different page composition),
+//   • it updates live as you EDIT a field's value,
+//   • selecting a Structure layer does NOT change what's rendered — it only
+//     drives the edit panel and highlights that element in the canvas.
 //
 // Faithful to real Iceberg: the schema comes from the element registry (via
 // classifyNode) and the VALUES come from each instance's `node.content`
@@ -27,13 +30,13 @@ export interface PreviewCard {
   cta?: string;
 }
 
-export interface PreviewModel {
-  // plans → product-card grid (the plan picker); message → a single copy block
-  // (error / disclaimer); hero → title + subtitle only; empty → nothing selected.
-  kind: "plans" | "message" | "hero" | "empty";
-  // The selected element instance id this section band maps to, so Pick Section
-  // clicks in the iframe can post it back to select the node.
-  nodeId?: string;
+// One rendered SECTION of the page (a top-level Structure node). The page is a
+// vertical stack of these, mirroring how the variant's sections compose.
+export interface PreviewSection {
+  // The section's element instance id, so selecting/Pick-Section maps to it.
+  nodeId: string;
+  // plans → product-card grid; message → a copy block; hero → title band.
+  kind: "plans" | "message" | "hero";
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -41,6 +44,11 @@ export interface PreviewModel {
   disclaimer?: string;
   message?: string;
   cards: PreviewCard[];
+}
+
+export interface PreviewModel {
+  variantName: string;
+  sections: PreviewSection[];
 }
 
 // Flatten a resolved "fields" object (flat or grouped) into label→value.
@@ -68,21 +76,6 @@ function pick(map: Record<string, string>, labels: string[]): string | undefined
     if (v != null && v.trim() !== "") return v;
   }
   return undefined;
-}
-
-function findWithParent(
-  nodes: StructureNode[],
-  id: string,
-  parent: StructureNode | null = null,
-): { node: StructureNode; parent: StructureNode | null } | null {
-  for (const n of nodes) {
-    if (n.id === id) return { node: n, parent };
-    if (n.children) {
-      const hit = findWithParent(n.children, id, n);
-      if (hit) return hit;
-    }
-  }
-  return null;
 }
 
 // A node is a product/plan if its element type renders as a product card, or
@@ -147,14 +140,119 @@ function collectCards(
 ): void {
   if (isProductNode(node, parent)) {
     out.push(buildCard(node, parent));
+    return; // a product's own subtree feeds its card, not nested cards
   }
   for (const c of node.children ?? []) collectCards(c, node, out);
 }
 
+// Aggregate the non-product "header" fields within a subtree (Plan Picker Title,
+// Subtitle, Disclaimer, Error copy…). Product subtrees are skipped because their
+// fields belong to cards, not the section band.
+function aggregateHeaderFields(
+  node: StructureNode,
+  parent: StructureNode | null,
+  acc: Record<string, string>,
+): void {
+  if (isProductNode(node, parent)) return;
+  Object.assign(acc, fieldsForNode(node, parent));
+  for (const c of node.children ?? []) aggregateHeaderFields(c, node, acc);
+}
+
+// All variation nodes (Control / Predecision / Variant A…) within a section.
+function variationsIn(section: StructureNode): StructureNode[] {
+  const out: StructureNode[] = [];
+  const walk = (n: StructureNode) => {
+    if (n.objectType === "variation") out.push(n);
+    for (const c of n.children ?? []) walk(c);
+  };
+  for (const c of section.children ?? []) walk(c);
+  return out;
+}
+
+// The content root that feeds a section's render: the active variation
+// (mvtOverride if it belongs to this section, else the first non-empty one) when
+// the section has variations, otherwise the section itself.
+function contentRootFor(
+  section: StructureNode,
+  mvtOverride: string | null,
+): StructureNode {
+  const variations = variationsIn(section);
+  if (variations.length === 0) return section;
+  if (mvtOverride) {
+    const hit = variations.find((v) => v.id === mvtOverride);
+    if (hit) return hit;
+  }
+  return variations.find((v) => (v.children?.length ?? 0) > 0) ?? variations[0];
+}
+
+// Build one PreviewSection from a top-level Structure node.
+function buildSection(
+  section: StructureNode,
+  mvtOverride: string | null,
+): PreviewSection {
+  const root = contentRootFor(section, mvtOverride);
+
+  const cards: PreviewCard[] = [];
+  collectCards(root, section, cards);
+
+  const map: Record<string, string> = {};
+  aggregateHeaderFields(root, section, map);
+
+  const title =
+    pick(map, [
+      "Plan Picker Title",
+      "Header",
+      "Category Title",
+      "Category Label",
+      "Error Title",
+      "Title",
+    ]) ?? section.label;
+  const subtitle = pick(map, ["Subtitle", "Subheader", "Error Body"]);
+  const alignmentRaw =
+    pick(map, ["Title & Subtitle Alignment", "Title Alignment", "Alignment"]) ??
+    "Centre";
+  const alignment = alignmentRaw.toLowerCase() as PreviewSection["alignment"];
+
+  const discText = pick(map, ["Disclaimer Text", "Legal Description"]);
+  const disclaimer =
+    discText && map["Show Disclaimer"] !== "false" ? discText : undefined;
+
+  const message = pick(map, ["Error Body", "Voucher Error Text"]);
+  const eyebrow = section.role ?? undefined;
+
+  const kind: PreviewSection["kind"] =
+    cards.length > 0 ? "plans" : message ? "message" : "hero";
+
+  return {
+    nodeId: section.id,
+    kind,
+    eyebrow,
+    title,
+    subtitle,
+    alignment,
+    disclaimer,
+    message: kind === "message" ? message : undefined,
+    cards,
+  };
+}
+
+// Build the whole-page preview for the active variant. Independent of the tree
+// SELECTION (selection only drives the edit panel + highlight); depends only on
+// the variant, the instances' authored content, and the MVT override.
+export function derivePreviewModel(
+  variant: VariantWorkspace | null,
+  mvtOverride: string | null = null,
+): PreviewModel {
+  if (!variant) return { variantName: "", sections: [] };
+  const sections = variant.structure
+    .filter((n) => !n.disabled)
+    .map((section) => buildSection(section, mvtOverride));
+  return { variantName: variant.name, sections };
+}
+
 // Collect the experience's content VARIATIONS (Control / Predecision / Variant
 // A…) — the MVT/A-B units the real editor exposes via the preview's variant
-// dropdown (mvtOverride). Used to let the author preview a specific variation
-// without changing the tree selection.
+// dropdown (mvtOverride). Used to let the author preview a specific variation.
 export function collectVariationNodes(
   variant: VariantWorkspace | null,
 ): { id: string; label: string; section?: string }[] {
@@ -171,77 +269,4 @@ export function collectVariationNodes(
   };
   walk(variant.structure, undefined);
   return out;
-}
-
-// Build the preview model for the active experience + current selection. Reads
-// each instance's authored `content` (plus schema defaults) so the canvas
-// reflects the edited values live.
-export function derivePreviewModel(
-  variant: VariantWorkspace | null,
-  selectedId: string | null,
-): PreviewModel {
-  if (!variant) {
-    return { kind: "empty", title: "", alignment: "centre", cards: [] };
-  }
-
-  const found = selectedId ? findWithParent(variant.structure, selectedId) : null;
-  const node = found?.node ?? null;
-  const parent = found?.parent ?? null;
-
-  // Cards come from the selected subtree, so selecting a Plan Picker section
-  // shows every plan, while selecting one product shows just that card.
-  const cards: PreviewCard[] = [];
-  if (node) collectCards(node, parent, cards);
-
-  const map = node ? fieldsForNode(node, parent) : {};
-  const title =
-    pick(map, [
-      "Plan Picker Title",
-      "Header",
-      "Product Title",
-      "Category Title",
-      "Category Label",
-      "Error Title",
-      "Title",
-    ]) ??
-    node?.label ??
-    variant.previewData.title;
-  const subtitle = pick(map, [
-    "Subtitle",
-    "Subheader",
-    "Product Description",
-    "Error Body",
-  ]);
-  const alignmentRaw =
-    pick(map, ["Title & Subtitle Alignment", "Title Alignment", "Alignment"]) ??
-    "Centre";
-  const alignment = alignmentRaw.toLowerCase() as PreviewModel["alignment"];
-
-  // Disclaimer copy, honoured only when not explicitly hidden.
-  const discText = pick(map, ["Disclaimer Text", "Legal Description"]);
-  const disclaimer =
-    discText && map["Show Disclaimer"] !== "false" ? discText : undefined;
-
-  const eyebrow = node?.role ?? undefined;
-  const nodeId = node?.id;
-
-  if (cards.length > 0) {
-    return { kind: "plans", nodeId, eyebrow, title, subtitle, alignment, disclaimer, cards };
-  }
-
-  const message = pick(map, ["Error Body", "Disclaimer Text", "Voucher Error Text"]);
-  if (message) {
-    return { kind: "message", nodeId, eyebrow, title, subtitle, alignment, message, cards: [] };
-  }
-
-  return {
-    kind: "hero",
-    nodeId,
-    eyebrow,
-    title,
-    subtitle: subtitle ?? variant.previewData.subtitle,
-    alignment,
-    disclaimer,
-    cards: [],
-  };
 }

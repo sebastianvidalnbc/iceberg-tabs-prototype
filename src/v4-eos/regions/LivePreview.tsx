@@ -89,7 +89,7 @@ export function LivePreview({
 
   const audienceLabel =
     AUDIENCE_OPTIONS.find((o) => o.value === audience)?.label ?? "Default";
-  const hasContent = variant != null && previewModel.kind !== "empty";
+  const hasContent = variant != null && previewModel.sections.length > 0;
 
   // MVT/A-B dropdown options: "As authored" + one per variation in the experience.
   const mvtOptions = [

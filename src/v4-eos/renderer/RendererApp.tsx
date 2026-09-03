@@ -16,7 +16,7 @@ interface RenderState {
 }
 
 const EMPTY: RenderState = {
-  model: { kind: "empty", title: "", alignment: "centre", cards: [] },
+  model: { variantName: "", sections: [] },
   selectedId: null,
   pickMode: false,
 };
