@@ -124,6 +124,47 @@ export function insertAfter(
   return inserted ? result : [...nodes, incoming];
 }
 
+// Insert `incoming` immediately BEFORE the node with `beforeId`, in that node's
+// sibling list (at any depth). If `beforeId` is null/not found, prepend to root.
+export function insertBefore(
+  nodes: StructureNode[],
+  beforeId: string | null,
+  incoming: StructureNode,
+): StructureNode[] {
+  if (!beforeId) return [incoming, ...nodes];
+  let inserted = false;
+  const walk = (list: StructureNode[]): StructureNode[] => {
+    const out: StructureNode[] = [];
+    for (const n of list) {
+      if (n.id === beforeId) {
+        out.push(incoming);
+        inserted = true;
+      }
+      out.push(n.children ? { ...n, children: walk(n.children) } : n);
+    }
+    return out;
+  };
+  const result = walk(nodes);
+  return inserted ? result : [incoming, ...nodes];
+}
+
+// Append `incoming` as the LAST child of the node with `parentId` (creating the
+// children array if absent). If `parentId` is null/not found, append to root.
+export function appendChild(
+  nodes: StructureNode[],
+  parentId: string | null,
+  incoming: StructureNode,
+): StructureNode[] {
+  if (!parentId) return [...nodes, incoming];
+  return nodes.map((n) => {
+    if (n.id === parentId) {
+      return { ...n, children: [...(n.children ?? []), incoming] };
+    }
+    if (n.children) return { ...n, children: appendChild(n.children, parentId, incoming) };
+    return n;
+  });
+}
+
 // Duplicate the node with `id`, inserting the clone right after it (same list).
 export function duplicateNode(
   nodes: StructureNode[],

@@ -22,11 +22,13 @@ export function ObjectHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      <span className="basis-full text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-[var(--color-border-subtle)] pb-3">
+      <span className="basis-full text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {eyebrow}
       </span>
-      <span className="text-[15px] font-semibold text-foreground">{name}</span>
+      <span className="text-[16px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+        {name}
+      </span>
       {children}
     </div>
   );
@@ -101,7 +103,7 @@ export function PropertySection({
   }
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
-      <CollapsibleTrigger className="group flex w-full items-center gap-1.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+      <CollapsibleTrigger className="group flex w-full items-center gap-1.5 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
         <MSym name="chevron_right" size={18} className="transition-transform group-data-[state=open]:rotate-90" />
         {header}
       </CollapsibleTrigger>

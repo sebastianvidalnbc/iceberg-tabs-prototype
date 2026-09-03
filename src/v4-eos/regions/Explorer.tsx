@@ -93,6 +93,31 @@ interface StructureActions {
   onToggleDisabledNode: (id: string) => void;
   onDeleteNode: (id: string) => void;
   onMoveNode: (parentId: string | null, from: number, to: number) => void;
+  // Page-builder: open the Layout Picker to insert a new top-level section.
+  onRequestAddLayout: (
+    position: "before" | "after" | "end",
+    refId: string | null,
+    refLabel?: string,
+  ) => void;
+}
+
+// A quiet, always-present insert point between top-level sections. Brightens on
+// hover/focus into a "+ Add layout" affordance — the page-builder entry point.
+function InsertLayoutBar({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="group/ins flex items-center gap-2 px-3 py-1">
+      <span className="h-px flex-1 bg-[var(--color-border-subtle)] transition-colors group-hover/ins:bg-[var(--color-action-primary-border)]" />
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--color-border-strong)] px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-bg)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        <MSym name="add" size={14} />
+        Add layout
+      </button>
+      <span className="h-px flex-1 bg-[var(--color-border-subtle)] transition-colors group-hover/ins:bg-[var(--color-action-primary-border)]" />
+    </div>
+  );
 }
 
 // One sibling list within the Structure tree. Each level owns its own drag
@@ -150,6 +175,9 @@ function StructureLevel({
     });
   };
 
+  // Top-level lists get page-builder insert points between/around sections.
+  const isTopLevel = parentId === null;
+
   return (
     <>
       {nodes.map((node, index) => {
@@ -173,8 +201,16 @@ function StructureLevel({
         );
         return (
           <div key={node.id}>
+            {isTopLevel && (
+              <InsertLayoutBar
+                onClick={() =>
+                  actions.onRequestAddLayout("before", node.id, node.label)
+                }
+              />
+            )}
             <TreeRow
               depth={depth}
+              fluid
               hasChildren={hasChildren}
               isOpen={isOpen}
               selected={node.id === selectedId}
@@ -256,6 +292,11 @@ function StructureLevel({
           </div>
         );
       })}
+      {isTopLevel && (
+        <InsertLayoutBar
+          onClick={() => actions.onRequestAddLayout("end", null)}
+        />
+      )}
     </>
   );
 }
@@ -294,7 +335,9 @@ function StructureTree({
   const cancelRename = () => setRenamingId(null);
 
   return (
-    <div className="flex flex-col gap-px px-2 py-2" role="tree">
+    // min-w-max lets the tree grow to its widest row so the pane can scroll
+    // horizontally (revealing deep rows + the overflow menu) instead of clipping.
+    <div className="flex min-w-max flex-col gap-px px-2 py-2" role="tree">
       <StructureLevel
         nodes={nodes}
         parentId={null}
@@ -353,6 +396,11 @@ interface ExplorerProps {
   onToggleDisabledNode: (id: string) => void;
   onDeleteNode: (id: string) => void;
   onMoveNode: (parentId: string | null, from: number, to: number) => void;
+  onRequestAddLayout: (
+    position: "before" | "after" | "end",
+    refId: string | null,
+    refLabel?: string,
+  ) => void;
 }
 
 // Explorer region: two persistent panes (collection / STRUCTURE) that scroll
@@ -381,6 +429,7 @@ export function Explorer({
   onToggleDisabledNode,
   onDeleteNode,
   onMoveNode,
+  onRequestAddLayout,
 }: ExplorerProps) {
   const [collectionQuery, setCollectionQuery] = useState("");
   // The highlighted collection row is whichever of route/experience is active.
@@ -422,7 +471,7 @@ export function Explorer({
           eyebrow="Structure"
           sub={activeExperience ? activeExperience.name : routeLabel ?? "—"}
         />
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="min-h-0 flex-1" orientation="both">
           {activeExperience ? (
             <StructureTree
               nodes={activeExperience.structure}
@@ -439,6 +488,7 @@ export function Explorer({
                 onToggleDisabledNode,
                 onDeleteNode,
                 onMoveNode,
+                onRequestAddLayout,
               }}
             />
           ) : (

@@ -51,7 +51,10 @@
   --color-destructive-foreground: var(--color-text-inverse);
 
   --color-border: var(--color-border-default);
-  --color-input: var(--color-bg-control);
+  /* border-input is the field OUTLINE (M3 outlined text field), not the fill.
+     It previously aliased --color-bg-control, so border == fill == panel and
+     every field was invisible. Bind it to the strong outline role. */
+  --color-input: var(--color-border-strong);
   --color-ring: var(--color-focus-ring);
 
   /* Status roles surfaced as utilities for Badges (§28). */
@@ -94,7 +97,7 @@
   --destructive: var(--color-status-danger);
   --destructive-foreground: var(--color-text-inverse);
   --border: var(--color-border-default);
-  --input: var(--color-bg-control);
+  --input: var(--color-border-strong);
   --ring: var(--color-focus-ring);
   --radius: var(--radius-sm);
 }

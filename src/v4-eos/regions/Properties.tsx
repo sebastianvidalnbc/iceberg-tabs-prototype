@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from "react";
 import { Icon, type IconName } from "../ui-lib/Icon";
+import { MSym } from "@/v4-eos/ui/msym";
 import { Button } from "@/v4-eos/ui/button";
 import { Badge } from "@/v4-eos/ui/badge";
 import { Separator } from "@/v4-eos/ui/separator";
@@ -19,8 +20,8 @@ import {
   PropertySection as PropSection,
 } from "@/v4-eos/ui/property";
 import {
-  resolvePropertiesFor,
-  resolveWidgetPropertiesFor,
+  resolvePropertiesForVariant,
+  resolveWidgetPropertiesForVariant,
   type AuthoringContext,
   type PropertyField,
   type PropertyGroup,
@@ -28,8 +29,10 @@ import {
   type CollectionProperties,
   type SectionMetadata,
   type NoticeProperties,
+  type StructureObjectType,
   type VariantWorkspace,
 } from "../data";
+import { allowedChildType, maxChildrenFor } from "../elements";
 
 interface PropertiesProps {
   // The active authoring context; selects which Properties resolver is used.
@@ -49,7 +52,15 @@ interface PropertiesProps {
   // Labels of the selected object's required fields that are currently empty
   // (the invalidSections analog, scoped to this object). Marks them invalid.
   invalidFields: Set<string>;
+  // The selected object's element type — drives the collection Add/Remove rules
+  // (allowed child type + max children).
+  selectedObjectType: StructureObjectType | null;
   onEditField: (nodeId: string, label: string, value: string) => void;
+  // Container authoring: add a child of the given type, remove a child by id,
+  // and reorder a child within its parent list (the add-plan/product actions).
+  onAddChild: (parentId: string, childType: StructureObjectType) => void;
+  onRemoveChild: (childId: string) => void;
+  onReorderChild: (parentId: string, from: number, to: number) => void;
 }
 
 // A single property control. The row (PropertyRow) provides the label, so
@@ -142,11 +153,13 @@ function PropertyControl({
 function AssetPicker({ value }: { value: string }) {
   const empty = value.trim() === "";
   return (
-    <div className="flex items-center gap-2 rounded-sm border border-border bg-[var(--color-bg-control)] p-1.5">
+    <div className="flex items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] p-1.5">
       <span
         aria-hidden
-        className="size-8 shrink-0 rounded-sm bg-[var(--color-bg-subtle)]"
-      />
+        className="grid size-8 shrink-0 place-items-center rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-muted-foreground"
+      >
+        <Icon name="image" size={16} />
+      </span>
       <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
         {empty ? "No asset selected" : value}
       </span>
@@ -181,15 +194,6 @@ const MODULE_TEMPLATES: TemplateGroup = {
     { id: "carousel", name: "Carousel", description: "Recommendations row from a collection.", icon: "blocks" },
     { id: "faq", name: "FAQ", description: "Dynamic questions and answers.", icon: "help" },
     { id: "text", name: "Text block", description: "Rich copy with headings.", icon: "doc-text" },
-  ],
-};
-
-const WIDGET_TEMPLATES: TemplateGroup = {
-  label: "Widget",
-  cards: [
-    { id: "what-is", name: "what-is-peacock", description: "Published “What is” widget.", icon: "cube" },
-    { id: "seo-footer", name: "seo-footer", description: "Footer navigation widget.", icon: "cube" },
-    { id: "sticky-banner", name: "sticky-banner-widget-data", description: "Sticky banner widget.", icon: "cube" },
   ],
 };
 
@@ -367,9 +371,13 @@ export function Properties({
   variant,
   selectedRouteId,
   selectedStructureNodeId,
+  selectedObjectType,
   content,
   invalidFields,
   onEditField,
+  onAddChild,
+  onRemoveChild,
+  onReorderChild,
 }: PropertiesProps) {
   const experienceNoun = context === "widget" ? "widget config" : "variant";
   return (
@@ -389,13 +397,17 @@ export function Properties({
           {variant && selectedStructureNodeId ? (
             <PropertiesBody
               context={context}
-              variantId={variant.id}
+              variant={variant}
               nodeId={selectedStructureNodeId}
+              objectType={selectedObjectType}
               overridesForNode={content}
               invalidFields={invalidFields}
               onEdit={(label, value) =>
                 onEditField(selectedStructureNodeId, label, value)
               }
+              onAddChild={onAddChild}
+              onRemoveChild={onRemoveChild}
+              onReorderChild={onReorderChild}
             />
           ) : (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
@@ -416,24 +428,42 @@ export function Properties({
 // uses the placeholder Widget-area resolver.
 function PropertiesBody({
   context,
-  variantId,
+  variant,
   nodeId,
+  objectType,
   overridesForNode,
   invalidFields,
   onEdit,
+  onAddChild,
+  onRemoveChild,
+  onReorderChild,
 }: {
   context: AuthoringContext;
-  variantId: string;
+  variant: VariantWorkspace;
   nodeId: string;
+  objectType: StructureObjectType | null;
   overridesForNode: Record<string, string>;
   invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
+  onAddChild: (parentId: string, childType: StructureObjectType) => void;
+  onRemoveChild: (childId: string) => void;
+  onReorderChild: (parentId: string, from: number, to: number) => void;
 }) {
   const resolved =
     context === "widget"
-      ? resolveWidgetPropertiesFor(variantId, nodeId)
-      : resolvePropertiesFor(variantId, nodeId);
-  if (resolved.kind === "collection") return <CollectionBody data={resolved.data} />;
+      ? resolveWidgetPropertiesForVariant(variant, nodeId)
+      : resolvePropertiesForVariant(variant, nodeId);
+  if (resolved.kind === "collection")
+    return (
+      <CollectionBody
+        data={resolved.data}
+        nodeId={nodeId}
+        objectType={objectType}
+        onAddChild={onAddChild}
+        onRemoveChild={onRemoveChild}
+        onReorderChild={onReorderChild}
+      />
+    );
   if (resolved.kind === "metadata") return <MetadataBody data={resolved.data} />;
   if (resolved.kind === "notice") return <NoticeBody data={resolved.data} />;
   // key={nodeId} remounts FieldsBody per selected object so its per-group
@@ -487,18 +517,18 @@ function FieldsBody({
 
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name} />
-      {headers.length > 1 && (
-        <div className="-mt-1 flex justify-end">
+      <ObjectHeader eyebrow={eyebrow} name={name}>
+        {headers.length > 1 && (
           <Button
             variant="ghost"
-            size="sm"
+            size="xs"
+            className="ml-auto self-center text-[12px] text-muted-foreground hover:text-foreground"
             onClick={allCollapsed ? expandAll : collapseAll}
           >
             {allCollapsed ? "Expand all" : "Collapse all"}
           </Button>
-        </div>
-      )}
+        )}
+      </ObjectHeader>
       <div className="flex flex-col gap-1">
         {groups.map((group, i) => (
           <GroupSection
@@ -516,49 +546,105 @@ function FieldsBody({
   );
 }
 
-// Structural/collection object: TYPE eyebrow, "N items" count, derived
-// read-only item list, no-op paste. "Add {itemNoun}" opens the inline template
-// gallery (Modules + Widget) rather than adding blindly. Items come from actual
-// children.
-function CollectionBody({ data }: { data: CollectionProperties }) {
+// Structural/collection object: TYPE eyebrow, "N items · max M" count, and an
+// EDITABLE item list. Items come from actual Structure children; "Add {itemNoun}"
+// instantiates a real child (up to the container's max), each row can be removed
+// (down to the min of 1 for capped containers) and reordered. This is the
+// add/remove/reorder-plan capability — the tabs minSize/maxSize analog.
+function CollectionBody({
+  data,
+  nodeId,
+  objectType,
+  onAddChild,
+  onRemoveChild,
+  onReorderChild,
+}: {
+  data: CollectionProperties;
+  nodeId: string;
+  objectType: StructureObjectType | null;
+  onAddChild: (parentId: string, childType: StructureObjectType) => void;
+  onRemoveChild: (childId: string) => void;
+  onReorderChild: (parentId: string, from: number, to: number) => void;
+}) {
   const { eyebrow, name, itemNoun, items } = data;
   const count = items.length;
-  const [galleryOpen, setGalleryOpen] = useState(false);
+  const childType = allowedChildType(objectType ?? undefined);
+  const max = data.max ?? maxChildrenFor(objectType ?? undefined);
+  const atMax = max != null && count >= max;
+  // Capped containers (a defined max) imply a minSize of 1 — keep at least one.
+  const atMin = max != null && count <= 1;
+  const canAdd = !!childType && !atMax;
+  const nounLower = itemNoun.toLowerCase();
+
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name ?? eyebrow} />
-      <p className="text-[12px] text-muted-foreground">
-        {count} {count === 1 ? "item" : "items"}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" size="sm" onClick={() => setGalleryOpen((v) => !v)}>
-          <Icon name="plus" size={16} />
-          Add {itemNoun}
-        </Button>
-      </div>
-      {galleryOpen && (
-        <TemplateGallery
-          groups={[MODULE_TEMPLATES, WIDGET_TEMPLATES]}
-          onSelect={() => setGalleryOpen(false)}
-          onCancel={() => setGalleryOpen(false)}
-        />
-      )}
+      <ObjectHeader eyebrow={eyebrow} name={name ?? eyebrow}>
+        <span className="ml-auto self-center text-[12px] text-muted-foreground">
+          {count}
+          {max != null ? ` / ${max}` : ""} {count === 1 ? nounLower : `${nounLower}s`}
+        </span>
+      </ObjectHeader>
+
       {count > 0 && (
-        <ul className="flex flex-col gap-2">
-          {items.map((item) => (
+        <ul className="flex flex-col gap-1.5">
+          {items.map((item, i) => (
             <li
               key={item.id}
-              className="rounded-sm border border-border bg-[var(--color-bg-subtle)] px-3 py-2 text-[13px]"
+              className="group/item flex items-center gap-1 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] py-1 pl-2.5 pr-1"
             >
-              {item.label}
+              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+                {item.label}
+              </span>
+              <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  title={`Move ${nounLower} up`}
+                  disabled={i === 0}
+                  onClick={() => onReorderChild(nodeId, i, i - 1)}
+                >
+                  <MSym name="keyboard_arrow_up" size={16} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  title={`Move ${nounLower} down`}
+                  disabled={i === count - 1}
+                  onClick={() => onReorderChild(nodeId, i, i + 1)}
+                >
+                  <MSym name="keyboard_arrow_down" size={16} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  title={atMin ? `At least one ${nounLower} required` : `Remove ${nounLower}`}
+                  disabled={atMin}
+                  onClick={() => onRemoveChild(item.id)}
+                  className="text-muted-foreground hover:text-[var(--color-status-danger)]"
+                >
+                  <MSym name="delete" size={15} />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
       )}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" size="sm" onClick={() => {}}>
-          Paste {itemNoun}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!canAdd}
+          onClick={() => childType && onAddChild(nodeId, childType)}
+        >
+          <Icon name="plus" size={16} />
+          Add {itemNoun}
         </Button>
+        {atMax && (
+          <span className="text-[11px] text-muted-foreground">
+            Maximum of {max} reached.
+          </span>
+        )}
       </div>
     </>
   );

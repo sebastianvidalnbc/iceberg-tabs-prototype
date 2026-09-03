@@ -189,6 +189,45 @@ export function sectionOptionsSchema(design?: SectionDesign): ObjectProperties {
   };
 }
 
+// Content block — the editable field set behind the premade content layouts
+// (Hero / Banner / Content promo / FAQ) added via the Layout Picker. Title feeds
+// the preview's section band; Subtitle + a single CTA round out the module. The
+// authored VALUES arrive on the instance's `content` (seeded by the layout).
+export function contentBlockSchema(label: string): ObjectProperties {
+  return {
+    eyebrow: "CONTENT",
+    name: label,
+    groups: [
+      {
+        header: "CONTENT",
+        fields: [
+          { label: "Title", value: "", required: true },
+          { label: "Subtitle", value: "", kind: "textarea" },
+          {
+            label: "Title & Subtitle Alignment",
+            value: "Centre",
+            kind: "select",
+            options: ALIGNMENTS,
+          },
+        ],
+      },
+      {
+        header: "CTA",
+        fields: [
+          {
+            label: "Primary CTA",
+            value: "None",
+            kind: "select",
+            options: CTA_CHOICES,
+          },
+          { label: "Primary CTA Text", value: "" },
+          { label: "Primary CTA HREF", value: "" },
+        ],
+      },
+    ],
+  };
+}
+
 export function categorySchema(label: string): ObjectProperties {
   return {
     eyebrow: "VARIANT CATEGORY",

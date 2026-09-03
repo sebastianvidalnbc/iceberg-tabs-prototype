@@ -28,6 +28,9 @@ export interface TreeRowProps {
   isOver?: boolean;
   /** Disabled (dimmed + struck-through) layer. */
   disabled?: boolean;
+  /** Fluid width: row grows to its content (no label truncation) so the pane can
+   *  scroll horizontally to reveal deep rows + the trailing overflow menu. */
+  fluid?: boolean;
   onSelect: () => void;
   onToggle: () => void;
 }
@@ -45,6 +48,7 @@ export function TreeRow({
   isDragging,
   isOver,
   disabled,
+  fluid,
   onSelect,
   onToggle,
 }: TreeRowProps) {
@@ -60,6 +64,9 @@ export function TreeRow({
         "group relative flex h-7 cursor-pointer items-center gap-1 rounded-sm pr-1 text-[13px] leading-none",
         "text-foreground/90 transition-colors",
         "hover:bg-accent",
+        // Fluid rows grow to content and always fill the pane width (so the
+        // selection/hover fill spans the full — possibly scrolled — width).
+        fluid && "w-max min-w-full",
         selected && "bg-[var(--color-bg-selected)] text-foreground",
         isDragging && "opacity-40",
         isOver && "before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:content-['']",
@@ -97,7 +104,7 @@ export function TreeRow({
       )}
       <span
         className={cn(
-          "min-w-0 flex-1 truncate",
+          fluid ? "whitespace-nowrap" : "min-w-0 flex-1 truncate",
           muted && "font-mono text-[12px] text-muted-foreground",
           disabled && "line-through",
         )}
@@ -105,7 +112,16 @@ export function TreeRow({
         {label}
       </span>
       {trailing != null && (
-        <span className="ml-auto flex shrink-0 items-center gap-1 pl-1">
+        <span
+          className={cn(
+            "ml-auto flex shrink-0 items-center gap-1 pl-1 transition-opacity",
+            // Show the overflow menu only on hover, when the row is selected, or
+            // while its menu is open (so the dropdown doesn't vanish mid-use).
+            "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+            "group-has-[[data-state=open]]:opacity-100",
+            selected && "opacity-100",
+          )}
+        >
           {trailing}
         </span>
       )}

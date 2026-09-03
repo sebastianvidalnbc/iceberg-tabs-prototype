@@ -18,7 +18,7 @@ import {
   featureSchema,
   cadenceSchema,
 } from "./previews";
-import { getElementDef } from "./elements";
+import { getElementDef, maxChildrenFor } from "./elements";
 
 // Classifies a Structure object so Properties resolution and (later) drag/paste
 // rules are type-aware rather than relying only on label string matching.
@@ -27,6 +27,7 @@ import { getElementDef } from "./elements";
 export type StructureObjectType =
   | "page-section" // a Section (Page Title / Plan Picker / Footer / …)
   | "content-area" // Desktop Content / Mobile Content
+  | "content-block" // a title/subtitle/CTA content module (Hero / Banner / FAQ …)
   | "behaviours" // Behaviours authoring area
   | "section-options" // Section Options (Custom or Intelligent)
   | "section-content" // Section Content collection
@@ -88,6 +89,10 @@ export interface TreeNode {
   // here (see structureOps.setNodeContent), so they persist on the instance
   // within the variant's Structure — exactly like updatePlaceholderContentByPath.
   content?: Record<string, string>;
+  // Container cap (the real layout's `tabsConfig.maxSize`). Overrides the
+  // objectType default so each inserted layout keeps its own limit (e.g. a
+  // single-diff plan picker caps plans at 4, multi-diff at 5). Undefined ⇒ default.
+  maxChildren?: number;
   // Structure-tree authoring state: a disabled layer is dimmed + excluded from
   // the experience but preserved (toggle via the row's Disable/Enable action).
   disabled?: boolean;
@@ -736,6 +741,8 @@ export interface CollectionProperties {
   name?: string;
   itemNoun: string;
   items: { id: string; label: string }[];
+  // Container cap (real tabsConfig.maxSize). Undefined ⇒ unlimited.
+  max?: number;
 }
 
 // Page sections resolve to a deliberate metadata state: Section ID + Design
@@ -874,6 +881,7 @@ function collectionFor(
       name: node.label,
       itemNoun: COLLECTION_NOUNS[type] ?? "Item",
       items: childrenToItems(node),
+      max: node.maxChildren ?? maxChildrenFor(type),
     },
   };
 }
@@ -975,6 +983,53 @@ export function resolvePropertiesFor(
       sectionId: nodeId,
       designOptions: ["Custom", "Legacy layout", "Intelligent authoring"],
       design: "Custom",
+    },
+  };
+}
+
+// Resolves Properties from a LIVE VariantWorkspace (the edited structure held in
+// the shell's per-experience memory) rather than the static VARIANTS dataset.
+// This is what makes runtime-created nodes — added layouts, added plans, and
+// duplicated/pasted subtrees (all of which have ids absent from VARIANTS) —
+// resolve to their real schema instead of the metadata fallback.
+export function resolvePropertiesForVariant(
+  variant: VariantWorkspace,
+  nodeId: string
+): ResolvedProperties {
+  const found = findNodeWithParent(variant.structure, nodeId, null);
+  if (found?.node.props) return found.node.props;
+  if (OBJECT_PROPERTIES[nodeId]) {
+    return { kind: "fields", data: OBJECT_PROPERTIES[nodeId] };
+  }
+  if (found) return classifyNode(found.node, found.parent);
+  return {
+    kind: "metadata",
+    data: {
+      eyebrow: "SECTION",
+      name: nodeId,
+      status: "draft",
+      sectionId: nodeId,
+      designOptions: ["Custom", "Legacy layout", "Intelligent authoring"],
+      design: "Custom",
+    },
+  };
+}
+
+// Live-structure counterpart for Widget configs (mirrors the page resolver).
+export function resolveWidgetPropertiesForVariant(
+  config: VariantWorkspace,
+  nodeId: string
+): ResolvedProperties {
+  const found = findNodeWithParent(config.structure, nodeId, null);
+  if (found?.node.props) return found.node.props;
+  const label = found ? found.node.label : nodeId;
+  return {
+    kind: "notice",
+    data: {
+      eyebrow: "WIDGET AREA",
+      name: label,
+      message: "No configured content yet.",
+      detail: "This retention widget area is not modelled in the V2 prototype yet.",
     },
   };
 }

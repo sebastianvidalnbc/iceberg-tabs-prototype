@@ -24,6 +24,7 @@ import {
   cadenceSchema,
   categorySchema,
   contentAreaSchema,
+  contentBlockSchema,
   controlSchema,
   featureSchema,
   productSchema,
@@ -92,6 +93,7 @@ const collection = (
       name: node.label,
       itemNoun,
       items: (node.children ?? []).map((c) => ({ id: c.id, label: c.label })),
+      max: node.maxChildren ?? maxChildrenFor(node.objectType),
     },
   });
 
@@ -123,6 +125,12 @@ export const ELEMENT_REGISTRY: Partial<
     kind: "module",
     preview: "hero",
     build: fields((node) => contentAreaSchema(node.label)),
+  },
+  "content-block": {
+    type: "content-block",
+    kind: "module",
+    preview: "hero",
+    build: fields((node) => ({ kind: "fields", data: contentBlockSchema(node.label) })),
   },
   behaviours: {
     type: "behaviours",
@@ -272,11 +280,35 @@ export const ELEMENT_REGISTRY: Partial<
   },
 };
 
+// Container child caps — the tabsConfig.maxSize analog from the real plan-picker
+// schema (`plans`/`categories` cap at 4). Undefined ⇒ unlimited.
+export const MAX_CHILDREN: Partial<Record<StructureObjectType, number>> = {
+  products: 4,
+  "plan-picker-data": 4,
+  categories: 4,
+  "variant-categories": 4,
+};
+
 // Look up an element definition by type.
 export function getElementDef(
   type: StructureObjectType | undefined,
 ): ElementDefinition | undefined {
   return type ? ELEMENT_REGISTRY[type] : undefined;
+}
+
+// The child element type a collection instantiates when the author clicks
+// "Add {itemNoun}" (the first allowed child in the registry).
+export function allowedChildType(
+  type: StructureObjectType | undefined,
+): StructureObjectType | undefined {
+  return getElementDef(type)?.allowedChildren?.[0];
+}
+
+// The max number of children a container accepts (undefined ⇒ unlimited).
+export function maxChildrenFor(
+  type: StructureObjectType | undefined,
+): number | undefined {
+  return type ? MAX_CHILDREN[type] : undefined;
 }
 
 // The preview render role for a node's element type (defaults to passthrough so

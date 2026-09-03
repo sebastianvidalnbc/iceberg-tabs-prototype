@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AppShell } from "./AppShell";
 import { Explorer } from "./regions/Explorer";
 import { LivePreview } from "./regions/LivePreview";
@@ -24,20 +24,24 @@ import {
 } from "./data";
 import { findPageForVariant, routes, navigate } from "./browse";
 import {
+  appendChild,
   cloneKeepIds,
   cloneWithNewIds,
   deleteNode,
   duplicateNode,
   findNodeById,
   insertAfter,
+  insertBefore,
   moveWithin,
   renameNode,
   setNodeContent,
   toggleDisabled,
 } from "./structureOps";
-import type { StructureNode } from "./data";
+import type { StructureNode, StructureObjectType } from "./data";
 import { collectVariationNodes, derivePreviewModel } from "./previewModel";
 import { collectInvalidFields } from "./validate";
+import { LayoutPicker } from "./regions/LayoutPicker";
+import { createChildNode, getLayoutDef } from "./layouts";
 
 // Per-experience Explorer memory: which Structure nodes are expanded and which
 // object is selected. Keeping this keyed by experience (Variant or Widget
@@ -127,10 +131,50 @@ export function WorkspaceShell({
   // Structure clipboard for Copy/Paste, shared across experiences (mirrors V1).
   const [clipboard, setClipboard] = useState<StructureNode | null>(null);
 
+  // Layout Picker target: where a newly chosen premade layout will be inserted.
+  // null ⇒ the picker is closed. `refId` is the top-level section the insert is
+  // relative to (null for "append to end").
+  const [layoutPicker, setLayoutPicker] = useState<{
+    position: "before" | "after" | "end";
+    refId: string | null;
+    refLabel?: string;
+  } | null>(null);
+
   // MVT / A-B override: a variation id to PREVIEW instead of the current
   // selection (the mvtOverride analog — preview-only, never mutates data). ""
   // means "as authored" (derive from the selected node).
   const [mvtOverride, setMvtOverride] = useState<string>("");
+
+  // Resizable Explorer column: the author can drag the divider between the
+  // tree/collection pane and the preview to widen the tree (up to a max).
+  const EXPLORER_MIN = 240;
+  const EXPLORER_MAX = 560;
+  const [explorerWidth, setExplorerWidth] = useState(280);
+  const beginExplorerResize = useCallback(
+    (e: ReactPointerEvent) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = explorerWidth;
+      const onMove = (ev: PointerEvent) => {
+        const next = Math.min(
+          EXPLORER_MAX,
+          Math.max(EXPLORER_MIN, startW + (ev.clientX - startX)),
+        );
+        setExplorerWidth(next);
+      };
+      const onUp = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [explorerWidth],
+  );
 
   const isPage = context === "page";
 
@@ -331,6 +375,74 @@ export function WorkspaceShell({
     [updateStructure]
   );
 
+  // --- Page builder: add a premade LAYOUT (a new top-level section) ---------
+  // Open the Layout Picker, targeting an insert position relative to a section.
+  const handleRequestAddLayout = useCallback(
+    (position: "before" | "after" | "end", refId: string | null, refLabel?: string) => {
+      setLayoutPicker({ position, refId, refLabel });
+    },
+    []
+  );
+
+  // Apply the chosen layout: build a fresh pre-filled section subtree and insert
+  // it at the target slot, then select + expand it so the author lands on it.
+  const handleChooseLayout = useCallback(
+    (layoutId: string) => {
+      const def = getLayoutDef(layoutId);
+      if (!def || !selectedExperienceId || !layoutPicker) return;
+      const node = def.build();
+      const { position, refId } = layoutPicker;
+      const setter = isPage ? setPageMemory : setWidgetMemory;
+      setter((prev) => {
+        const cur = prev[selectedExperienceId];
+        if (!cur) return prev;
+        const structure =
+          position === "before"
+            ? insertBefore(cur.structure, refId, node)
+            : insertAfter(cur.structure, refId, node); // "after" or "end" (refId null)
+        const expanded = new Set(cur.expanded).add(node.id);
+        return {
+          ...prev,
+          [selectedExperienceId]: {
+            ...cur,
+            structure,
+            expanded,
+            selectedNodeId: node.id,
+          },
+        };
+      });
+      setLayoutPicker(null);
+    },
+    [isPage, selectedExperienceId, layoutPicker]
+  );
+
+  // Add a CHILD to a container (the "Add {itemNoun}" / add-plan action). Builds a
+  // default instance of the container's child type, appends it, then selects +
+  // expands the parent so the new card/row is visible and editable.
+  const handleAddChild = useCallback(
+    (parentId: string, childType: StructureObjectType) => {
+      if (!selectedExperienceId) return;
+      const child = createChildNode(childType);
+      const setter = isPage ? setPageMemory : setWidgetMemory;
+      setter((prev) => {
+        const cur = prev[selectedExperienceId];
+        if (!cur) return prev;
+        const structure = appendChild(cur.structure, parentId, child);
+        const expanded = new Set(cur.expanded).add(parentId);
+        return {
+          ...prev,
+          [selectedExperienceId]: {
+            ...cur,
+            structure,
+            expanded,
+            selectedNodeId: child.id,
+          },
+        };
+      });
+    },
+    [isPage, selectedExperienceId]
+  );
+
   // Edit a property field on the selected object (live). This writes the value
   // onto the element INSTANCE's `content` within the variant's Structure — the
   // V4 analog of updatePlaceholderContentByPath — so the edit persists on the
@@ -442,7 +554,12 @@ export function WorkspaceShell({
             </Button>
           </div>
         </div>
-        <div className="ui-ws">
+        <div
+          className="ui-ws"
+          style={{
+            gridTemplateColumns: `${explorerWidth}px 6px minmax(0, 1fr) 380px`,
+          }}
+        >
           <Explorer
             context={context}
             collectionTree={collectionTree}
@@ -464,7 +581,22 @@ export function WorkspaceShell({
             onToggleDisabledNode={handleToggleDisabled}
             onDeleteNode={handleDeleteNode}
             onMoveNode={handleMoveNode}
+            onRequestAddLayout={handleRequestAddLayout}
           />
+          {/* Drag handle: resize the Explorer column (tree/collection) against
+              the preview, up to a max width. */}
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize structure panel"
+            title="Drag to resize"
+            onPointerDown={beginExplorerResize}
+            onDoubleClick={() => setExplorerWidth(280)}
+            className="group relative z-10 cursor-col-resize select-none"
+          >
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--color-border-default)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100" style={{ background: "var(--color-action-primary)" }} />
+          </div>
           <LivePreview
             variant={activeExperience}
             context={context}
@@ -481,12 +613,34 @@ export function WorkspaceShell({
             variant={activeExperience}
             selectedRouteId={selectedRouteId}
             selectedStructureNodeId={selectedStructureNodeId}
+            selectedObjectType={selectedNode?.objectType ?? null}
             content={selectedNodeContent}
             invalidFields={selectedInvalidFields}
             onEditField={handleEditField}
+            onAddChild={handleAddChild}
+            onRemoveChild={handleDeleteNode}
+            onReorderChild={handleMoveNode}
           />
         </div>
       </div>
+      {/* Page-builder: the Layout Picker modal (opened from the Structure pane's
+          "+ Add layout" affordances). Selecting inserts a pre-filled section. */}
+      <LayoutPicker
+        open={layoutPicker != null}
+        onOpenChange={(open) => {
+          if (!open) setLayoutPicker(null);
+        }}
+        onSelect={handleChooseLayout}
+        contextLabel={
+          layoutPicker
+            ? layoutPicker.position === "end"
+              ? "at the end of the page"
+              : `${layoutPicker.position === "before" ? "above" : "below"} ${
+                  layoutPicker.refLabel ?? "this section"
+                }`
+            : undefined
+        }
+      />
     </AppShell>
   );
 }

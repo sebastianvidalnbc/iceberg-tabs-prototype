@@ -45,7 +45,8 @@ export type IconName =
   | "copy"
   | "archive"
   | "eye"
-  | "grid";
+  | "grid"
+  | "image";
 
 // IconName → Material Symbols ligature. Documented mapping (Phase 4 audit):
 //   Nav destinations use the closest Material Symbol to each Iceberg concept;
@@ -70,6 +71,7 @@ const LIGATURES: Record<IconName, string> = {
   archive: "archive",
   eye: "visibility",
   grid: "grid_view",
+  image: "image",
   star: "star",
   trophy: "trophy",
   sparkles: "auto_awesome",

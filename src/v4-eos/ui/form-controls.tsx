@@ -19,7 +19,12 @@ import { cn } from "@/v4-eos/ui/lib/utils";
 // code stays declarative and never imports Radix directly (§10). Compact
 // Iceberg density: 28px controls, restrained radius, subtle dark input fills.
 
-const FIELD = "h-7 rounded-sm bg-[var(--color-bg-control)] text-[13px]";
+// Compact Iceberg density with a clear field affordance: a recessed subtle fill
+// (M3 Surface Container) reads as an editable well against the lighter panel,
+// the outline comes from border-input (the strong outline role), and focus
+// lifts the fill to plain surface plus the blue ring.
+const FIELD =
+  "h-7 rounded-sm bg-[var(--color-bg-subtle)] text-[13px] focus-visible:bg-[var(--color-bg-surface)]";
 
 export function TextField(
   props: React.ComponentProps<typeof Input> & { invalid?: boolean },
@@ -43,7 +48,7 @@ export function TextAreaField(
       {...rest}
       aria-invalid={invalid || undefined}
       className={cn(
-        "min-h-16 rounded-sm bg-[var(--color-bg-control)] text-[13px]",
+        "min-h-16 rounded-sm bg-[var(--color-bg-subtle)] text-[13px] focus-visible:bg-[var(--color-bg-surface)]",
         className,
       )}
     />
@@ -91,7 +96,7 @@ export function SelectField({
         id={id}
         size="sm"
         aria-invalid={invalid || undefined}
-        className={cn(FIELD, "w-full bg-[var(--color-bg-control)]")}
+        className={cn(FIELD, "w-full")}
       >
         <SelectValue placeholder="Select…" />
       </SelectTrigger>
