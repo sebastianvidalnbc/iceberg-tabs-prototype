@@ -1,0 +1,524 @@
+/* ============================================================================
+   EOS COMPONENT OVERLAY (V4 only)
+   ----------------------------------------------------------------------------
+   Loaded LAST (after ui-lib/tokens.css + ui-lib/ui.css + styles/theme.css) so
+   these Eos component refinements win at equal specificity. tokens.css already
+   carries the Eos M3 color / type / spacing / radius / elevation roles; this
+   file applies the Eos *shape and component* details on top of the existing V2
+   markup WITHOUT changing any structure or behaviour:
+     • Material Symbols icon rendering
+     • pill buttons + circular icon buttons (M3)
+     • filled pill search field (Eos Search)
+     • Eos vertical Navigation Bar (icon pill indicator, filled active icon)
+     • Eos table header / row treatment
+     • pill status badges
+   Everything here is presentation-only. No routes, data, or interactions change.
+   ============================================================================ */
+
+/* ---------- Material Symbols (Eos icon set) ------------------------------- */
+.eos-icon {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-grid;
+  place-items: center;
+  white-space: nowrap;
+  direction: ltr;
+  overflow: hidden;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "opsz" 20, "wght" 400, "FILL" 0, "GRAD" 0;
+  user-select: none;
+}
+
+/* ---------- Buttons — M3 pill shape --------------------------------------- */
+.ui-btn { border-radius: var(--radius-pill); font-weight: var(--fw-medium); }
+.ui-btn--icon-only { border-radius: 50%; }
+/* Filled (primary) is Eos near-black; secondary becomes an M3 outlined pill. */
+.ui-btn--secondary {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+.ui-btn--secondary:hover { background: var(--color-bg-hover); }
+.ui-btn--tertiary:hover { background: var(--color-bg-hover); }
+
+/* ---------- Search — Eos filled pill field -------------------------------- */
+.ui-search {
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid transparent;
+}
+.ui-search .ui-control {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-left: var(--space-1);
+  padding-right: var(--space-1);
+}
+.ui-search .ui-control:focus,
+.ui-search .ui-control:focus-visible { box-shadow: none; }
+.ui-search:focus-within { border-color: var(--color-action-primary); }
+
+/* ---------- Floating application tool rail (icon-first) -------------------
+   Modernization pass. Shell pattern inspired by a floating tool rail (NOT
+   Outlook's visuals): a compact Eos surface with radius-lg + subtle elevation,
+   inset by the shell padding, reading as a persistent tool palette rather than
+   a full-height admin sidebar. Icons are the persistent nav signal; labels are
+   exposed as accessible tooltips (hover + keyboard focus).
+   Classification: CUSTOM EOS-CONSISTENT rail + tooltip (Eos has no tooltip
+   component); active indicator = EOS-DERIVED from Navigation Bar 15:1779. */
+.ui-ws-nav {
+  width: 60px;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: none;             /* flat surface — separation via backdrop tone */
+  overflow: visible;            /* let tooltips escape the rail */
+  z-index: 5;
+}
+.ui-ws-nav__brand {
+  padding: var(--space-3) 0 var(--space-2);
+  border-bottom: 0;             /* border reduction — spacing separates */
+}
+.ui-ws-nav__mark { border-radius: var(--radius-pill); }
+.ui-ws-nav__list { overflow: visible; padding: var(--space-1); gap: 2px; }
+.ui-ws-nav__item {
+  position: relative;
+  gap: 0;
+  min-height: 44px;
+  padding: var(--space-1) 0;
+  background: transparent;
+}
+.ui-ws-nav__item:hover { background: transparent; }
+.ui-ws-nav__item--active { background: transparent; color: var(--nav-fg-strong); }
+.ui-ws-nav__icon {
+  width: 44px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+.ui-ws-nav__item:hover .ui-ws-nav__icon { background: var(--nav-hover-bg); }
+.ui-ws-nav__item--active .ui-ws-nav__icon { background: var(--nav-active-bg); color: var(--nav-fg-strong); }
+.ui-ws-nav__item--active .eos-icon { font-variation-settings: "opsz" 24, "wght" 400, "FILL" 1, "GRAD" 0; }
+.ui-ws-nav__item:focus-visible { box-shadow: none; }
+.ui-ws-nav__item:focus-visible .ui-ws-nav__icon { box-shadow: var(--focus-ring); }
+/* Label → tooltip. Shown on pointer hover AND keyboard focus; the button also
+   carries aria-label, so this visual is decorative (aria-hidden in markup). */
+.ui-ws-nav__label {
+  position: absolute;
+  left: calc(100% + var(--space-2));
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  padding: 4px var(--space-2);
+  background: var(--color-toast-bg);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--elevation-2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+  z-index: 20;
+}
+.ui-ws-nav__item:hover .ui-ws-nav__label,
+.ui-ws-nav__item:focus-visible .ui-ws-nav__label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ---------- Browse tables — integrated (modernization) -------------------
+   The table no longer reads as a big outlined card. It sits directly on the
+   workspace surface: no outer border/radius, a quiet transparent header, and
+   lighter row separators. Density and columns are unchanged. */
+.ui-ws-browse__table {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+/* Comfortable body rows (~52px) with lighter separators. */
+.ui-ws-browse__row:not(.ui-ws-browse__row--head) {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom-color: var(--color-border-subtle);
+}
+.ui-ws-browse__row:not(.ui-ws-browse__row--head):hover {
+  background: var(--color-bg-hover);
+}
+.ui-ws-browse__row--head {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  /* sticky header sits on the workspace surface so scrolled rows don't bleed */
+  background: var(--color-bg-surface);
+  border-bottom-color: var(--color-border-default);
+}
+.ui-ws-browse__h1 { font-weight: var(--fw-semibold); }
+
+/* Quiet, compact add button for list headers. Tonal treatment (light Iceberg
+   blue fill + blue glyph) so it is discoverable without competing with the
+   title. EOS-DERIVED compact icon button + ICEBERG OVERRIDE (blue accent). */
+.ui-ws-browse__add.ui-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  background: var(--color-action-primary-bg);
+  color: var(--color-action-primary);
+  border: 0;
+  box-shadow: none;
+}
+.ui-ws-browse__add.ui-btn:hover {
+  background: var(--color-action-primary-border);
+  color: var(--color-action-primary-hover);
+}
+.ui-ws-browse__add.ui-btn:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* Row actions recede until row hover / keyboard focus (kept in DOM + focusable
+   so discoverability + keyboard access are preserved). EOS-DERIVED icon-button
+   behaviour. */
+.ui-ws-browse__actions {
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+.ui-ws-browse__row:hover .ui-ws-browse__actions,
+.ui-ws-browse__row:focus-within .ui-ws-browse__actions {
+  opacity: 1;
+}
+
+/* ---------- Status badges — pill --------------------------------------- */
+.ui-badge { border-radius: var(--radius-pill); font-weight: var(--fw-medium); }
+
+/* ---------- Breadcrumb ---------------------------------------------------- */
+.ui-breadcrumb__item[aria-current="page"] { font-weight: var(--fw-semibold); }
+
+/* ==========================================================================
+   MODERNIZATION PASS — floating workspace shell
+   The shell is an inset canvas holding two floating Eos surfaces: the tool rail
+   (above) and one continuous workspace surface. Regions inside the workspace no
+   longer read as separate bordered cards — hierarchy comes from surface tone +
+   spacing. Presentation only; layout structure, routes and behaviour unchanged.
+   ========================================================================== */
+/* App wrapper: full-viewport column holding the global platform top bar above
+   the floating workspace shell. */
+.ui-ws-app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+.ui-ws-shell {
+  position: static;                  /* now a flex child of .ui-ws-app */
+  inset: auto;
+  flex: 1;
+  min-height: 0;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-bg-app);   /* deeper backdrop so surfaces float */
+}
+
+/* ---------- Global platform top bar (Eos "Opshub bar" 449:14209) ----------
+   48px white bar: brand lockup (left), platform nav tabs (centre), utility
+   cluster (environment pill, app menu, account) on the right. EXACT EOS
+   dimensions/typography; generic glyphs use the established Material Symbols
+   set (grid = "apps", account = "account_circle"). */
+.ui-topbar {
+  flex: none;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0 18px;
+  background: var(--color-bg-surface);
+  border-bottom: var(--border-width) solid var(--color-border-default);
+}
+.ui-topbar__brand { display: flex; align-items: center; gap: 12px; flex: none; }
+.ui-topbar__brand-name {
+  font-size: 16px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.15px;            /* Eos Title Medium */
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+.ui-topbar__utils { display: flex; align-items: center; gap: var(--space-2); flex: none; margin-left: auto; }
+/* Environment selector pill — Eos environment accent (INT-NFT = #275996). */
+.ui-topbar__env {
+  --env-color: #275996;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px 0 8px;
+  border: var(--border-width) solid var(--env-color);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--env-color);
+  font: inherit;
+  cursor: pointer;
+}
+.ui-topbar__env:hover { background: rgba(39, 89, 150, 0.06); }
+.ui-topbar__env:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-topbar__env-label {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.5px;             /* Eos Label Medium */
+  white-space: nowrap;
+}
+.ui-topbar__env .eos-icon { color: var(--env-color); }
+/* Utility icon buttons (app menu, account). */
+.ui-topbar__icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+.ui-topbar__icon-btn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+.ui-topbar__icon-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-topbar__account { color: var(--color-text-muted); }
+@media (max-width: 720px) {
+  .ui-topbar__env-label { display: none; }
+}
+/* One continuous floating workspace surface (holds browse OR the editor). */
+.ui-ws-shell__main {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: none;             /* flat surface — separation via backdrop tone */
+  overflow: hidden;
+}
+
+/* Editor fills the workspace surface — drop its own canvas fills + hard rules
+   so the three columns feel like one workspace. */
+.ui-ws-editor { background: transparent; }
+.ui-ws-editor__bar {
+  background: transparent;
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+.ui-ws { background: transparent; }
+/* Border reduction: columns are separated by surface tone + spacing, not rules. */
+.ui-ws__region + .ui-ws__region { border-left: 0; }
+
+/* Contextual left navigator + Properties read as calm tool panels (white);
+   the centre canvas is a subtly recessed tone so the preview reads as the
+   focal object being worked on. */
+.ui-ws-explorer { background: var(--color-bg-surface); }
+.ui-ws-props { background: var(--color-bg-surface); }
+.ui-ws-preview { background: var(--color-bg-subtle); }
+/* Preview canvas card: keep minimal elevation to separate chrome from preview,
+   but lean on the shadow instead of a hard border. EOS-DERIVED surface. */
+.ui-ws-preview__inner {
+  border-color: var(--color-border-subtle);
+  box-shadow: none;             /* flat — recessed centre tone separates it */
+}
+
+/* Quieter region headers + internal dividers (functional separation kept, just
+   lighter). */
+.ui-ws-head { border-bottom-color: var(--color-border-subtle); }
+.ui-ws-explorer__pane--structure { border-top-color: var(--color-border-subtle); }
+.ui-preview__toolbar { border-bottom-color: var(--color-border-subtle); }
+.ui-ws-props__group-header { border-bottom-color: var(--color-border-subtle); }
+
+/* Clearer tree selection: controlled light-blue fill + a left accent indicator
+   + dark bold label (not an entire bright-blue row). EOS-DERIVED selected
+   state; accent = ICEBERG OVERRIDE blue. */
+.ui-ws-tree__row--selected,
+.ui-ws-tree__row--selected:hover {
+  background: var(--color-bg-selected);
+  color: var(--color-text-primary);
+  font-weight: var(--fw-semibold);
+  box-shadow: inset 2px 0 0 var(--color-action-primary);
+}
+
+/* ========================================================================== */
+/* DYNAMIC PREVIEW — customer-facing brand render (Peacock)                    */
+/* This is CUSTOMER output, not CMS chrome, so it declares its OWN --brand-*   */
+/* scale and never consumes the tool's --color-* / Eos tokens. A brand refresh */
+/* must not touch the CMS, and a CMS token change must not move this pixel.    */
+.ui-brand {
+  --brand-bg: #ffffff;
+  --brand-fg: #0a0a0f;
+  --brand-muted: #5b5b66;
+  --brand-accent: #6a4bff;
+  --brand-accent-fg: #ffffff;
+  --brand-card-bg: #f6f6f8;
+  --brand-card-border: #e5e5ec;
+  --brand-radius: 14px;
+  font-family: var(--font-sans);
+  background: var(--brand-bg);
+  color: var(--brand-fg);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.ui-brand__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--brand-card-border);
+}
+.ui-brand__logo {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+  color: var(--brand-fg);
+}
+.ui-brand__nav { display: flex; align-items: center; gap: 16px; }
+.ui-brand__link { font-size: 14px; color: var(--brand-muted); }
+.ui-brand__btn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: var(--brand-accent);
+  color: var(--brand-accent-fg);
+}
+.ui-brand__section {
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ui-brand__section[data-align="centre"] { align-items: center; text-align: center; }
+.ui-brand__section[data-align="left"] { align-items: flex-start; text-align: left; }
+.ui-brand__section[data-align="right"] { align-items: flex-end; text-align: right; }
+.ui-brand__section-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-accent);
+  margin: 0;
+}
+.ui-brand__title {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.ui-brand__subtitle {
+  font-size: 16px;
+  color: var(--brand-muted);
+  margin: 0;
+  max-width: 52ch;
+}
+.ui-brand__cards {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  margin-top: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
+}
+.ui-brand__cards[data-count="1"] {
+  grid-template-columns: minmax(240px, 360px);
+  justify-content: center;
+}
+.ui-brand__card {
+  position: relative;
+  display: flex;
+  background: var(--brand-card-bg);
+  border: 1px solid var(--brand-card-border);
+  border-radius: var(--brand-radius);
+  padding: 20px;
+  text-align: left;
+}
+.ui-brand__card[data-featured="true"] {
+  border-color: var(--brand-accent);
+  box-shadow: inset 0 0 0 1px var(--brand-accent);
+}
+.ui-brand__badge {
+  position: absolute;
+  top: -11px;
+  left: 20px;
+  background: var(--brand-accent);
+  color: var(--brand-accent-fg);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+.ui-brand__card-body { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.ui-brand__eyebrow { font-size: 12px; font-weight: 600; color: var(--brand-muted); margin: 0; }
+.ui-brand__name { font-size: 18px; font-weight: 700; margin: 0; }
+.ui-brand__desc { font-size: 13px; line-height: 1.5; color: var(--brand-muted); margin: 0; }
+.ui-brand__features {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ui-brand__features li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--brand-fg);
+}
+.ui-brand__features li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--brand-accent);
+  font-weight: 700;
+}
+.ui-brand__price { font-size: 20px; font-weight: 800; margin: 12px 0 0; }
+.ui-brand__cadence { font-size: 13px; font-weight: 500; color: var(--brand-muted); }
+.ui-brand__cta {
+  margin-top: auto;
+  padding-top: 12px;
+}
+.ui-brand__card-body .ui-brand__cta {
+  display: block;
+  margin-top: 16px;
+  text-align: center;
+  background: var(--brand-accent);
+  color: var(--brand-accent-fg);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 100px;
+}
+.ui-brand__message {
+  margin-top: 16px;
+  max-width: 60ch;
+  background: var(--brand-card-bg);
+  border: 1px solid var(--brand-card-border);
+  border-radius: var(--brand-radius);
+  padding: 16px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--brand-fg);
+}
+.ui-brand__disclaimer {
+  margin-top: 20px;
+  max-width: 60ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--brand-muted);
+}

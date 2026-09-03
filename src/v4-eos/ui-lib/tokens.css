@@ -1,0 +1,256 @@
+/* Iceberg UI — semantic design tokens.
+
+   THEMING ARCHITECTURE
+   --------------------
+   The `--color-*` tokens are *semantic roles* (surface / panel / text / border /
+   action / status), not raw values. Components reference the roles only, so a
+   theme is just a different set of values assigned to those roles — components
+   never change to re-theme.
+
+   - `:root` holds the LIGHT theme. These values map 1:1 to the prototype's
+     original raw values, so V1 (which reads `:root` and the legacy aliases
+     below) is byte-for-byte unchanged. Light is the default theme.
+   - `[data-theme="dark"]` (further down) overrides the same roles with dark
+     values. V2 opts in by setting that attribute on its shell; V1 never sets it,
+     so V1 stays light. A future additional theme is added the same way — a new
+     scoped block reassigning roles — with no component edits.
+
+   Rules: never hardcode a raw color in a component; add/adjust roles here. Never
+   change a `:root` value without auditing V1 (it consumes these + the aliases).
+   A legacy alias block below redefines the old variable names to point at these
+   tokens so index.css keeps working while resolving through tokens.
+
+   `[data-theme="light"]` is bound to the SAME light values here so a light
+   island can be nested inside a dark ancestor (e.g. the Live Preview, which
+   shows real Peacock output and must not inherit the CMS dark theme). It carries
+   the full light palette so it fully overrides an enclosing dark scope. */
+:root,
+[data-theme="light"] {
+  /* Color: background / surfaces (tonal steps, lightest → most recessed).
+     panel/elevated/hover/control are explicit surface roles; in the light theme
+     they intentionally resolve to existing values (zero visual drift) but exist
+     as distinct roles so the dark theme can give each its own tone. */
+  /* ===================================================================== */
+  /* EOS — Material 3 light scheme (source of truth: Eos Library v1.0 Figma). */
+  /* Values are the real Eos M3 "Schemes/*" role variables read from the       */
+  /* library (warm-neutral surfaces, near-black primary). See v4-eos README.   */
+  /* ===================================================================== */
+  /* Color: background / surfaces (M3 Surface + Surface Container ladder). */
+  --color-bg-canvas: #f7f3f2;      /* app / chrome background (Surface Container Low) */
+  --color-bg-surface: #fcf8f8;     /* primary surface (M3 Surface) */
+  --color-bg-panel: #fcf8f8;       /* Explorer / Properties panels */
+  --color-bg-subtle: #f2edec;      /* subtle / recessed surface (Surface Container) */
+  --color-bg-elevated: #ffffff;    /* elevated surface: menus / popovers / dialogs (paper elevation-1) */
+  --color-bg-hover: #ebe7e7;       /* hover surface (Surface Container High) */
+  --color-bg-selected: #dbeaf3;    /* selected surface — Iceberg-blue tint (from brand logo) */
+  --color-bg-control: #fcf8f8;     /* form control background */
+  --color-bg-preview-canvas: #e5e2e1;  /* neutral matte behind the preview (Surface Container Highest) */
+  /* Color: text (M3 On Surface / On Surface Variant / Outline). */
+  --color-text-primary: #1c1b1b;
+  --color-text-secondary: #45474a;
+  --color-text-muted: #76777a;
+  --color-text-inverse: #ffffff;
+  /* Borders (M3 divider + outline). */
+  --color-border-default: rgba(0, 0, 0, 0.12);
+  --color-border-strong: rgba(0, 0, 0, 0.22);
+  /* Action / accent — Iceberg brand blue. Eos's own M3 scheme uses a
+     warm near-black primary and defines no blue action role, but Iceberg's
+     product identity is blue (see the brand logo: #01699b / deep #004b73).
+     We carry that blue as the accent so primary actions, links, selection,
+     tabs and focus all read as "Iceberg blue" while every other surface stays
+     on the Eos warm-neutral scheme. */
+  --color-action-primary: #01699b;         /* Iceberg blue (logo primary) */
+  --color-action-primary-hover: #004b73;   /* deep Iceberg blue (logo shadow) */
+  --color-action-primary-bg: #e2eff5;      /* light blue tint (ghost/selected fills) */
+  --color-action-primary-border: #8fbdd5;  /* mid-light blue outline */
+  /* Status — M3-aligned; Eos exposes Error (#ba1a1a). Others are accessible
+     M3-style tones (documented gap: Eos has no explicit success/warning role). */
+  --color-status-success: #146c43;
+  --color-status-success-bg: #e6f2ea;
+  --color-status-warning: #8a5a00;
+  --color-status-warning-bg: #fbf0d9;
+  --color-status-danger: #ba1a1a;
+  --color-status-danger-bg: #fceceb;
+  --color-status-info: #151719;
+  --color-status-info-bg: #dfdcdd;
+  /* Toast surface (dark chip; Eos inverse-surface). */
+  --color-toast-bg: #2f3133;
+  --color-toast-bg-hover: #1c1b1b;
+  /* Nav chrome — the Eos vertical Navigation Bar is a light warm surface. */
+  --color-nav-chrome-bg: #f4f0ef;
+  --color-nav-chrome-fg: #45474a;
+  --color-nav-chrome-fg-strong: #1c1b1b;
+  --color-nav-chrome-hover-bg: rgba(0, 0, 0, 0.06);
+  --color-nav-chrome-active-bg: #dbeaf3;
+  --color-nav-chrome-border: rgba(0, 0, 0, 0.1);
+  /* Focus — M3 uses the primary role for the focus indicator. */
+  --color-focus-ring: var(--color-action-primary);
+  --focus-ring-width: 3px;
+  --focus-ring: 0 0 0 var(--focus-ring-width) rgba(1, 105, 155, 0.30);
+  /* Spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  /* Control sizing */
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+  --control-pad-x: 12px;
+  /* Border width / radius — Eos M3 shape scale (pill CTAs, rounded containers). */
+  --border-width: 1px;
+  --radius-sm: 8px;   /* M3 extra-small / small */
+  --radius-md: 12px;  /* M3 medium (cards, panels, menus) */
+  --radius-lg: 16px;  /* EOS-DERIVED: floating shell surfaces (rail + workspace) */
+  --radius-pill: 100px;
+  /* Backdrop behind the floating workspace surfaces (deeper than Surface so the
+     rail + workspace read as inset sheets). EOS-DERIVED neutral. */
+  --color-bg-app: #ece7e6;
+  /* Hairline for quiet in-surface separation (lighter than border-default).
+     Used for table row dividers once the outer card border is removed. */
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  /* Elevation — Eos M3 "Elevation Light/1" and "/2" drop shadows. */
+  --elevation-1: 0 1px 3px 1px rgba(0, 0, 0, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --elevation-2: 0 2px 6px 2px rgba(0, 0, 0, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  /* Typography — Eos brand type is Inter (M3 component text is Roboto). */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --lh-tight: 1.15;
+  --lh-normal: 1.5;
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-normal: 160ms;
+  --motion-slow: 240ms;
+  --ease-standard: ease-out;
+  /* Z-index */
+  --z-sticky: 5;
+  --z-nav: 20;
+  --z-dropdown: 100;
+  --z-overlay: 1000;
+  /* Indentation (16px/level; token-driven for easy tuning) */
+  --indent-0: 0;
+  --indent-1: 16px;
+  --indent-2: 32px;
+  --indent-3: 48px;
+  --indent-4: 64px;
+}
+
+/* LEGACY COMPATIBILITY ALIASES — do not use for new shared UI development.
+   These old variable names (used by V1's index.css) resolve through the
+   semantic tokens above with identical values, so V1 computed styles stay
+   byte-for-byte equivalent. New shared UI must use the semantic token names
+   (e.g. --color-action-primary, not --blue). */
+:root {
+  --bg: var(--color-bg-canvas);
+  --surface: var(--color-bg-surface);
+  --surface-2: var(--color-bg-subtle);
+  --border: var(--color-border-default);
+  --border-strong: var(--color-border-strong);
+  --text: var(--color-text-primary);
+  --text-2: var(--color-text-secondary);
+  --text-3: var(--color-text-muted);
+  --blue: var(--color-action-primary);
+  --blue-bg: var(--color-action-primary-bg);
+  --blue-border: var(--color-action-primary-border);
+  --green: var(--color-status-success);
+  --green-bg: var(--color-status-success-bg);
+  --amber: var(--color-status-warning);
+  --amber-bg: var(--color-status-warning-bg);
+  --red: var(--color-status-danger);
+  --red-bg: var(--color-status-danger-bg);
+  --radius: var(--radius-sm);
+  --shadow: var(--elevation-1);
+  --shadow-lg: var(--elevation-2);
+  --mono: var(--font-mono);
+  --sans: var(--font-sans);
+}
+
+/* ============================================================================
+   DARK THEME — V2's default. Overrides only the color ROLES defined above;
+   spacing, type, radius, motion, z-index and indentation are theme-agnostic and
+   stay shared. Opt in by setting `data-theme="dark"` on a container (V2 sets it
+   on its shell). V1 never sets it, so V1 keeps the light `:root` values.
+
+   Design intent — a modern professional authoring tool:
+   • dark rail / Explorer / Structure / Properties with SUBTLE tonal steps
+     between surfaces (tone, not heavy borders) — canvas < panel < subtle <
+     elevated, each a small lift so hierarchy reads without hard lines;
+   • restrained accent (a slightly brighter blue) used only for selection and
+     primary actions; selected surfaces are a low-chroma blue-tinted fill;
+   • elevated dark menus/popovers/dialogs sit above panels with a real shadow;
+   • high readability WITHOUT pure-white body text (primary is a soft off-white,
+     secondary/muted step down) to reduce glare;
+   • strong, clearly visible focus ring on the dark ground.
+   The legacy aliases resolve THROUGH these roles, so any shared component that
+   still uses an alias also themes correctly. Only V1 (never dark) reads them.
+   ============================================================================ */
+[data-theme="dark"] {
+  /* Backgrounds / surfaces — subtle tonal ladder (darkest chrome → elevated). */
+  --color-bg-canvas: #0f1419;      /* app / chrome background (behind panels) */
+  --color-bg-surface: #171d25;     /* primary surface (panel base) */
+  --color-bg-panel: #1a212b;       /* Explorer / Properties panels (a step up) */
+  --color-bg-subtle: #12181f;      /* recessed surface (below the base tone) */
+  --color-bg-elevated: #232c38;    /* menus / popovers / dialogs / tooltips */
+  --color-bg-hover: #222b36;       /* hover surface */
+  --color-bg-selected: #1c2c44;    /* low-chroma blue-tinted selected fill */
+  --color-bg-control: #1f2731;     /* compact form-control background */
+  --color-bg-preview-canvas: #0c0f13;   /* neutral matte behind the preview */
+
+  /* Text — soft off-white primary (never #fff), stepped secondary/muted. */
+  --color-text-primary: #e6ebf2;
+  --color-text-secondary: #9aa7b8;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #0f1419;   /* text on light/accent fills */
+
+  /* Borders — quiet; hierarchy comes from surface tone, not heavy lines. */
+  --color-border-default: #29323d;
+  --color-border-strong: #3a4552;
+
+  /* Action / accent — a touch brighter so it reads on the dark ground. */
+  --color-action-primary: #4d8dff;
+  --color-action-primary-hover: #6ba1ff;
+  --color-action-primary-bg: #16233a;
+  --color-action-primary-border: #2f4568;
+
+  /* Status — brightened foregrounds + low-chroma tinted backgrounds for dark. */
+  --color-status-success: #34d399;
+  --color-status-success-bg: #10241d;
+  --color-status-warning: #fbbf24;
+  --color-status-warning-bg: #2a2113;
+  --color-status-danger: #f87171;
+  --color-status-danger-bg: #2c1618;
+  --color-status-info: #4d8dff;
+  --color-status-info-bg: #16233a;
+
+  /* Toast — align to the elevated dark surface. */
+  --color-toast-bg: #232c38;
+  --color-toast-bg-hover: #2b3644;
+
+  /* App-nav chrome — the rail is part of the dark shell (slightly distinct). */
+  --color-nav-chrome-bg: #12171e;
+  --color-nav-chrome-fg: rgba(230, 235, 242, 0.68);
+  --color-nav-chrome-fg-strong: #e6ebf2;
+  --color-nav-chrome-hover-bg: rgba(255, 255, 255, 0.06);
+  --color-nav-chrome-active-bg: rgba(77, 141, 255, 0.18);
+  --color-nav-chrome-border: rgba(255, 255, 255, 0.08);
+
+  /* Focus — strong, visible on dark; matches the brighter accent. */
+  --color-focus-ring: var(--color-action-primary);
+  --focus-ring: 0 0 0 var(--focus-ring-width) rgba(77, 141, 255, 0.45);
+
+  /* Elevation — deeper, darker shadows read on the dark ground. */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --elevation-2: 0 12px 32px rgba(0, 0, 0, 0.55);
+}

@@ -7,11 +7,14 @@
     "dev": "vite",
     "dev:v1": "vite",
     "dev:v2": "vite --config vite.v2.config.ts",
+    "dev:v4": "vite --config vite.v4.config.ts",
     "build": "npm run build:v1",
     "build:v1": "tsc -b && vite build",
     "build:v2": "tsc -b && vite build --config vite.v2.config.ts",
+    "build:v4": "tsc -b && vite build --config vite.v4.config.ts",
     "preview:v1": "vite preview",
-    "preview:v2": "vite preview --config vite.v2.config.ts"
+    "preview:v2": "vite preview --config vite.v2.config.ts",
+    "preview:v4": "vite preview --config vite.v4.config.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
