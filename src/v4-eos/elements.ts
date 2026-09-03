@@ -317,6 +317,8 @@ export const MAX_CHILDREN: Partial<Record<StructureObjectType, number>> = {
   "plan-picker-data": 4,
   categories: 4,
   "variant-categories": 4,
+  // Product List (features) tabs — schema tabsConfig.maxSize.
+  "product-features-list": 4,
 };
 
 // Look up an element definition by type.

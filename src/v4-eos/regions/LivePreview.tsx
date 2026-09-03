@@ -133,8 +133,9 @@ export function LivePreview({
         setReady(true);
         postRender();
       } else if (data.type === "section-selected") {
+        // Click-to-select is always on; picking no longer exits the (optional)
+        // highlight mode, so the author can keep clicking element to element.
         onPickSection(data.nodeId);
-        setPickMode(false);
       }
     };
     window.addEventListener("message", onMessage);
@@ -164,8 +165,9 @@ export function LivePreview({
               size="sm"
               onClick={() => setPickMode((v) => !v)}
               aria-pressed={pickMode}
+              title="Click any element in the preview to select it. Toggle to outline every clickable element."
             >
-              {pickMode ? "Picking…" : "Pick Section"}
+              {pickMode ? "Highlighting…" : "Highlight elements"}
             </Button>
             {variations.length > 0 && (
               <label className="ui-preview__field">

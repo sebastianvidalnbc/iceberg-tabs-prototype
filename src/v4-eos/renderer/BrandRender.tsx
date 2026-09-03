@@ -61,7 +61,19 @@ function BrandCard({
           {card.features.length > 0 ? (
             <ul className="ui-brand__features">
               {card.features.map((f, i) => (
-                <li key={i}>
+                <li
+                  key={f.id ?? i}
+                  data-node-id={f.id}
+                  data-selected={f.id && f.id === selectedId ? "true" : undefined}
+                  onClick={
+                    f.id
+                      ? (e) => {
+                          e.stopPropagation();
+                          onPick(f.id!);
+                        }
+                      : undefined
+                  }
+                >
                   <span className="ui-brand__feature-icon">
                     <Check />
                   </span>

@@ -28,6 +28,7 @@ import {
   cloneKeepIds,
   cloneWithNewIds,
   deleteNode,
+  ancestorIdsOf,
   duplicateNode,
   findNodeById,
   insertAfter,
@@ -41,7 +42,7 @@ import type { StructureNode, StructureObjectType } from "./data";
 import { collectVariationNodes, derivePreviewModel } from "./previewModel";
 import { collectInvalidFields } from "./validate";
 import { LayoutPicker } from "./regions/LayoutPicker";
-import { createChildNode, getLayoutDef } from "./layouts";
+import { buildLayoutNode, createChildNode, getLayoutDef } from "./layouts";
 import { buildSchemaChild } from "./schemaModel";
 
 // Per-experience Explorer memory: which Structure nodes are expanded and which
@@ -259,18 +260,23 @@ export function WorkspaceShell({
     [isPage]
   );
 
-  // Click a Structure node: update only the active experience's selection.
+  // Click a Structure node (in the tree OR the preview): select it AND expand
+  // every ancestor so the tree "focuses" on it — the author never has to chase a
+  // deep field/component down the tree. The Explorer then scrolls it into view.
   const handleSelectStructureNode = useCallback(
     (nodeId: string) => {
       if (!selectedExperienceId) return;
       const setter = isPage ? setPageMemory : setWidgetMemory;
-      setter((prev) => ({
-        ...prev,
-        [selectedExperienceId]: {
-          ...prev[selectedExperienceId],
-          selectedNodeId: nodeId,
-        },
-      }));
+      setter((prev) => {
+        const cur = prev[selectedExperienceId];
+        if (!cur) return prev;
+        const expanded = new Set(cur.expanded);
+        for (const a of ancestorIdsOf(cur.structure, nodeId)) expanded.add(a);
+        return {
+          ...prev,
+          [selectedExperienceId]: { ...cur, selectedNodeId: nodeId, expanded },
+        };
+      });
     },
     [isPage, selectedExperienceId]
   );
@@ -391,7 +397,7 @@ export function WorkspaceShell({
     (layoutId: string) => {
       const def = getLayoutDef(layoutId);
       if (!def || !selectedExperienceId || !layoutPicker) return;
-      const node = def.build();
+      const node = buildLayoutNode(def);
       const { position, refId } = layoutPicker;
       const setter = isPage ? setPageMemory : setWidgetMemory;
       setter((prev) => {

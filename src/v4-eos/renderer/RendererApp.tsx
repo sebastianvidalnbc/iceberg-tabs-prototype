@@ -74,8 +74,10 @@ export function RendererApp() {
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [state.selectedId, state.model]);
 
+  // Any click in the preview selects that element (the CMS then focuses the tree
+  // on it). Pick-mode is now just an optional "outline every clickable element"
+  // affordance, no longer a prerequisite for selecting.
   const onPick = (nodeId: string) => {
-    if (!state.pickMode) return;
     post({ source: PREVIEW_SOURCE, type: "section-selected", nodeId });
   };
 

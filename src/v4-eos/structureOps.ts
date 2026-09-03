@@ -46,6 +46,23 @@ export function findNodeById(
   return null;
 }
 
+// The ids of every ancestor of `id` (root → … → immediate parent), so the path
+// to a node can be expanded and the node revealed in the tree. Excludes the node
+// itself; returns [] if not found or if it's a root node.
+export function ancestorIdsOf(nodes: StructureNode[], id: string): string[] {
+  const find = (list: StructureNode[]): string[] | null => {
+    for (const n of list) {
+      if (n.id === id) return [];
+      if (n.children) {
+        const sub = find(n.children);
+        if (sub) return [n.id, ...sub];
+      }
+    }
+    return null;
+  };
+  return find(nodes) ?? [];
+}
+
 export function renameNode(
   nodes: StructureNode[],
   id: string,

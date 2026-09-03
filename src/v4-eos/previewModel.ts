@@ -20,8 +20,10 @@ import {
 } from "./data";
 import { previewRoleFor } from "./elements";
 
-// A single product feature (bullet): the checkmark/icon + its text.
+// A single product feature (bullet): the checkmark/icon + its text. `id` is the
+// feature node's Structure id, so clicking the bullet selects that node.
 export interface PreviewFeature {
+  id?: string;
   icon?: string;
   text: string;
 }
@@ -188,6 +190,7 @@ function collectFeatures(product: StructureNode): PreviewFeature[] {
       const raw = pick(fm, ["Product Feature", "Feature Description", "Feature", "Description"]);
       if (!raw) continue;
       out.push({
+        id: item.id,
         icon: pick(fm, ["Product Feature Icon", "Feature Icon", "Icon"]) ?? "check",
         text: stripHtml(raw),
       });

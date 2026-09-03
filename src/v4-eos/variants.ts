@@ -131,7 +131,16 @@ const premiumCardStructure: StructureNode[] = [
                     children: [
                       nt("pc-products", "Products", "products", {
                         children: [
-                          nt("pc-select", "Select", "product"),
+                          nt("pc-select", "Select", "product", {
+                            expanded: false,
+                            children: [
+                              nt(
+                                "pc-select-features",
+                                "Product Features",
+                                "product-features-list",
+                              ),
+                            ],
+                          }),
                           nt("pc-premium", "Premium", "product", {
                             children: [
                               nt("pc-product-features", "Product Features", "product-features-list", {
@@ -149,12 +158,26 @@ const premiumCardStructure: StructureNode[] = [
                               }),
                             ],
                           }),
-                          nt("pc-premium-plus", "Premium Plus", "product"),
+                          nt("pc-premium-plus", "Premium Plus", "product", {
+                            expanded: false,
+                            children: [
+                              nt(
+                                "pc-pplus-features",
+                                "Product Features",
+                                "product-features-list",
+                              ),
+                            ],
+                          }),
                         ],
                       }),
                     ],
                   }),
-                  nt("pc-bundles", "Bundles", "category"),
+                  nt("pc-bundles", "Bundles", "category", {
+                    expanded: false,
+                    children: [
+                      nt("pc-bundles-products", "Products", "products"),
+                    ],
+                  }),
                 ],
               }),
             ],

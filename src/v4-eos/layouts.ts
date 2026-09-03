@@ -43,12 +43,22 @@ export interface LayoutDef {
   description: string;
   group: LayoutGroup;
   icon: IconName;
+  // The REAL layout schema id (a key of schemas/layoutSchemas.json). Inserting a
+  // layout builds its subtree from THIS schema, so the section arrives with the
+  // exact set of elements/fields the design team defined (not an empty shell).
+  schemaId: string;
   // Lifecycle badge shown in the picker (real Iceberg's `moduleStatus`). In prod
   // this is a per-artifact CMS override; here it follows the app's live config.
   experiment?: boolean;
   preview?: LayoutPreview;
-  // Builds a fresh, pre-filled page-section subtree with unique ids.
-  build: () => StructureNode;
+}
+
+// Build a fresh, pre-filled page-section subtree for a catalog layout, straight
+// from its real schema (every field + nested collection the design team defined,
+// seeded so the tree/preview aren't empty). Falls back to a titled content
+// section only if the schema id somehow isn't present.
+export function buildLayoutNode(def: LayoutDef): StructureNode {
+  return buildSectionFromSchema(def.schemaId, def.name, def.name) ?? simple(def.name);
 }
 
 // --- Subtree builders -------------------------------------------------------
@@ -82,141 +92,13 @@ function contentSection(
   };
 }
 
-// Generic section for a real layout we surface in the catalog but don't model
-// field-by-field — drops a ready-to-edit, titled content section so insertion
-// works and the tree stays consistent.
+// Fallback section for the rare case a schema id is missing — drops a titled
+// content section so insertion still works and the tree stays consistent.
 function simple(name: string): StructureNode {
   return contentSection(name, name, `${name} Content`, {
     Title: name,
     Subtitle: "Edit this section's content in the panel on the right.",
   });
-}
-
-// A product card with seeded content so it renders immediately in the preview.
-function product(
-  label: string,
-  content: Record<string, string> = {},
-): StructureNode {
-  return {
-    id: uid("prod"),
-    label,
-    objectType: "product",
-    content: { "Product Title": label, ...content },
-  };
-}
-
-// A full Plan Picker section: Section Content → Control → Categories → Plans →
-// Products → three seeded plans, plus Section Options. Renders as a card grid.
-// `maxPlans` mirrors the real layout's `tabsConfig.maxSize` for the plans tab
-// (single-diff = 4, multi-diff = 5, …) so the cap is schema-accurate per layout.
-function planPickerSection(name = "Plan Picker", maxPlans = 4): StructureNode {
-  const sectionId = uid("section");
-  return {
-    id: uid("sec"),
-    label: name,
-    objectType: "page-section",
-    sectionId,
-    role: name,
-    design: "Intelligent authoring",
-    defaultExpanded: true,
-    children: [
-      {
-        id: uid("sc"),
-        label: "Section Content",
-        objectType: "section-content",
-        defaultExpanded: true,
-        children: [
-          {
-            id: uid("ctrl"),
-            label: "Control",
-            objectType: "variation",
-            defaultExpanded: true,
-            content: { "Plan Picker Title": "Pick a Plan. Cancel Anytime." },
-            children: [
-              {
-                id: uid("cats"),
-                label: "Categories",
-                objectType: "categories",
-                defaultExpanded: true,
-                children: [
-                  {
-                    id: uid("cat"),
-                    label: "Plans",
-                    objectType: "category",
-                    defaultExpanded: true,
-                    children: [
-                      {
-                        id: uid("prods"),
-                        label: "Products",
-                        objectType: "products",
-                        maxChildren: maxPlans,
-                        defaultExpanded: true,
-                        children: [
-                          product("Select"),
-                          product("Premium", {
-                            Badge: "true",
-                            "Badge Text": "Best Value",
-                            "Product Description":
-                              "Everything in Select, plus live sports and next-day shows.",
-                          }),
-                          product("Premium Plus"),
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: uid("so"),
-        label: "Section Options",
-        objectType: "section-options",
-        design: "Intelligent authoring",
-      },
-    ],
-  };
-}
-
-// Schema-backed section: build the full field/collection tree from the REAL
-// layout schema (so the panel exposes every field — product bullets, CTAs, etc.).
-// Falls back to the hand-built plan picker if the schema id isn't present.
-function schemaSection(
-  schemaId: string,
-  name: string,
-  fallbackMaxPlans = 4,
-): StructureNode {
-  return (
-    buildSectionFromSchema(schemaId, name, "Plan Picker") ??
-    planPickerSection(name, fallbackMaxPlans)
-  );
-}
-
-// A Footer section (content areas + options + behaviours), matching 0609.
-function footerSection(name = "SEO Footer"): StructureNode {
-  const sectionId = uid("section");
-  return {
-    id: uid("sec"),
-    label: name,
-    objectType: "page-section",
-    sectionId,
-    role: "Footer",
-    design: "Custom",
-    defaultExpanded: true,
-    children: [
-      { id: uid("cd"), label: "Desktop Content", objectType: "content-area" },
-      { id: uid("cm"), label: "Mobile Content", objectType: "content-area" },
-      {
-        id: uid("so"),
-        label: "Section Options",
-        objectType: "section-options",
-        design: "Custom",
-      },
-      { id: uid("bh"), label: "Behaviours", objectType: "behaviours" },
-    ],
-  };
 }
 
 // Preview helpers keyed to the copied art (public/layout-previews/<id>-*.png).
@@ -239,8 +121,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-single-diff"),
-    build: () =>
-      schemaSection("section-ia-plan-picker-single-diff", "Plan Picker - Single Difference", 4),
+    schemaId: "section-ia-plan-picker-single-diff",
   },
   {
     id: "plan-picker-multi-diff",
@@ -249,8 +130,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-multi-diff"),
-    build: () =>
-      schemaSection("section-ia-plan-picker-multi-diff", "Plan Picker - Multi Difference", 5),
+    schemaId: "section-ia-plan-picker-multi-diff",
   },
   {
     id: "plan-picker-mini",
@@ -259,8 +139,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-mini"),
-    build: () =>
-      schemaSection("section-ia-plan-picker-mini-picker", "Plan Picker - Mini Picker", 4),
+    schemaId: "section-ia-plan-picker-mini-picker",
   },
   {
     id: "plan-picker-dual-mini",
@@ -269,8 +148,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-dual-mini"),
-    build: () =>
-      schemaSection("section-ia-plan-picker-dual-mini-picker", "Plan Picker - Dual Mini Picker", 4),
+    schemaId: "section-ia-plan-picker-dual-mini-picker",
   },
   {
     id: "plan-picker-graphic-radio",
@@ -279,8 +157,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-graphic-radio"),
-    build: () =>
-      schemaSection("section-ia-plan-picker-graphic-radio", "Plan Picker - Graphic Radio", 4),
+    schemaId: "section-ia-plan-picker-graphic-radio",
   },
   {
     id: "plan-picker-plan-builder",
@@ -293,8 +170,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
       mobile: "plan-picker-plan-builder-mobile.png",
       ui: "plan-picker-plan-builder-ui.png",
     },
-    build: () =>
-      schemaSection("section-ia-plan-builder", "Plan Picker - Plan Builder", 6),
+    schemaId: "section-ia-plan-builder",
   },
   {
     id: "plan-picker-cta",
@@ -303,8 +179,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-cta"),
-    build: () =>
-      schemaSection("section-ia-plan-picker-cta", "Plan Picker with CTAs", 4),
+    schemaId: "section-ia-plan-picker-cta",
   },
 
   // ---- Content -------------------------------------------------------------
@@ -315,13 +190,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "image",
     preview: dm("hero"),
-    build: () =>
-      contentSection("Hero", "Hero", "Hero Content", {
-        Title: "Your headline goes here",
-        Subtitle: "Add supporting copy that sets up the offer.",
-        "Primary CTA": "Primary",
-        "Primary CTA Text": "Get started",
-      }),
+    schemaId: "section-ia-hero-template",
   },
   {
     id: "content-banner",
@@ -330,13 +199,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "doc-text",
     preview: dm("content-banner"),
-    build: () =>
-      contentSection("Content Banner", "Content Banner", "Banner Content", {
-        Title: "Limited-time offer",
-        Subtitle: "Describe the promotion in a sentence.",
-        "Primary CTA": "Primary",
-        "Primary CTA Text": "Learn more",
-      }),
+    schemaId: "section-ia-content-promotional-banner",
   },
   {
     id: "banner",
@@ -346,7 +209,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     icon: "doc-text",
     experiment: true,
     preview: dm("banner"),
-    build: () => simple("Banner"),
+    schemaId: "section-ia-banner-template",
   },
   {
     id: "countdown",
@@ -355,7 +218,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "clock",
     preview: dm("countdown"),
-    build: () => simple("Countdown"),
+    schemaId: "section-ia-countdown",
   },
   {
     id: "key-art-synopsis",
@@ -364,7 +227,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "image",
     preview: dm("key-art-synopsis"),
-    build: () => simple("Key Art & Synopsis"),
+    schemaId: "section-ia-key-art-synopsis-template",
   },
   {
     id: "text-tcs",
@@ -373,7 +236,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "doc-text",
     preview: dm("text-tcs"),
-    build: () => simple("Text & TCs"),
+    schemaId: "section-ia-text-tcs",
   },
   {
     id: "faqs",
@@ -382,11 +245,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "help",
     preview: dm("faqs"),
-    build: () =>
-      contentSection("FAQ's", "FAQ", "FAQ Content", {
-        Title: "Frequently asked questions",
-        Subtitle: "Answer the questions that block sign-up.",
-      }),
+    schemaId: "section-ia-faqs",
   },
   {
     id: "highlights",
@@ -395,7 +254,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Content",
     icon: "star",
     preview: dm("highlights"),
-    build: () => simple("Highlights"),
+    schemaId: "section-highlights",
   },
 
   // ---- Media & Grids -------------------------------------------------------
@@ -407,7 +266,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     icon: "blocks",
     experiment: true,
     preview: dm("carousel"),
-    build: () => simple("Carousel"),
+    schemaId: "section-ia-carousel",
   },
   {
     id: "cast-layout",
@@ -416,7 +275,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("cast-layout"),
-    build: () => simple("Cast Layout"),
+    schemaId: "section-ia-cast",
   },
   {
     id: "content-grid",
@@ -425,7 +284,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("content-grid"),
-    build: () => simple("Content Grid"),
+    schemaId: "section-ia-content-grid",
   },
   {
     id: "content-promotional-rail",
@@ -434,7 +293,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "blocks",
     preview: dm("content-promotional-rail"),
-    build: () => simple("Content Promotional Rail"),
+    schemaId: "section-ia-content-promo-rail",
   },
   {
     id: "filtered-grid",
@@ -443,7 +302,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("filtered-grid"),
-    build: () => simple("Filtered Grid"),
+    schemaId: "section-ia-filtered-grid",
   },
   {
     id: "logo-grid",
@@ -452,7 +311,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("logo-grid"),
-    build: () => simple("Logo Grid"),
+    schemaId: "section-ia-logo-grid",
   },
   {
     id: "sle-carousel",
@@ -461,7 +320,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "blocks",
     preview: dm("sle-carousel"),
-    build: () => simple("SLE Carousel"),
+    schemaId: "section-ia-sle-carousel",
   },
   {
     id: "seasons-episodes",
@@ -470,7 +329,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "blocks",
     preview: dm("seasons-episodes"),
-    build: () => simple("Seasons/Episodes List"),
+    schemaId: "section-ia-episodes",
   },
   {
     id: "catalogue",
@@ -479,7 +338,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("catalogue"),
-    build: () => simple("Catalogue"),
+    schemaId: "section-peacock-catalogue",
   },
   {
     id: "channels-guide",
@@ -488,7 +347,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "blocks",
     preview: dm("channels-guide"),
-    build: () => simple("Channels Guide"),
+    schemaId: "section-ia-channels-live-schedule",
   },
   {
     id: "comparison-table",
@@ -497,7 +356,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("comparison-table"),
-    build: () => simple("Comparison Table"),
+    schemaId: "section-ia-comparison-table",
   },
   {
     id: "comparison-table-modal",
@@ -506,7 +365,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Media & Grids",
     icon: "grid",
     preview: dm("comparison-table-modal"),
-    build: () => simple("Comparison table - Modal"),
+    schemaId: "section-ia-modal",
   },
 
   // ---- Commerce ------------------------------------------------------------
@@ -517,7 +376,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Commerce",
     icon: "cube",
     preview: dm("incremental-add-ons"),
-    build: () => simple("Incremental Add-Ons"),
+    schemaId: "section-ia-incremental-add-ons",
   },
   {
     id: "payment-options",
@@ -526,7 +385,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Commerce",
     icon: "sliders",
     preview: dm("payment-options"),
-    build: () => simple("Payment Options Template"),
+    schemaId: "section-ia-payment-options",
   },
   {
     id: "paid-sharing",
@@ -535,7 +394,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Commerce",
     icon: "cube",
     preview: dm("paid-sharing"),
-    build: () => simple("Paid Sharing"),
+    schemaId: "section-ia-paid-sharing",
   },
   {
     id: "sticky-basket",
@@ -544,7 +403,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Commerce",
     icon: "clipboard-check",
     preview: dm("sticky-basket"),
-    build: () => simple("Sticky Basket"),
+    schemaId: "section-ia-sticky-basket-template",
   },
   {
     id: "mlb-lookup",
@@ -553,7 +412,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Commerce",
     icon: "trophy",
     preview: dm("mlb-lookup"),
-    build: () => simple("MLB Lookup"),
+    schemaId: "section-ia-mlb-lookup",
   },
   {
     id: "regional-sports-network",
@@ -562,7 +421,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Commerce",
     icon: "trophy",
     preview: dm("regional-sports-network"),
-    build: () => simple("Regional Sports Network"),
+    schemaId: "section-ia-regional-sports-network",
   },
 
   // ---- Structure -----------------------------------------------------------
@@ -573,7 +432,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Structure",
     icon: "file",
     preview: dm("seo-footer"),
-    build: () => footerSection("SEO Footer"),
+    schemaId: "section-ia-footer-navigation",
   },
   {
     id: "sub-navigation",
@@ -582,7 +441,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Structure",
     icon: "redirect",
     preview: dm("sub-navigation"),
-    build: () => simple("Sub-Navigation"),
+    schemaId: "section-ia-header",
   },
   {
     id: "steps",
@@ -591,7 +450,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Structure",
     icon: "blocks",
     preview: dm("steps"),
-    build: () => simple("Steps"),
+    schemaId: "section-ia-supported-devices",
   },
 
   // ---- Logic & Targeting ---------------------------------------------------
@@ -602,7 +461,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Logic & Targeting",
     icon: "flask",
     preview: uiOnly("audience-selection"),
-    build: () => simple("Audience Selection"),
+    schemaId: "section-query-parameters-decider",
   },
   {
     id: "experiment",
@@ -611,7 +470,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Logic & Targeting",
     icon: "flask",
     preview: uiOnly("experiment"),
-    build: () => simple("Experiment"),
+    schemaId: "section-a-b-decider",
   },
   {
     id: "segment-targeting",
@@ -620,7 +479,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Logic & Targeting",
     icon: "flask",
     preview: uiOnly("segment-targeting"),
-    build: () => simple("Segment Targeting"),
+    schemaId: "section-roadblock",
   },
   {
     id: "personalisation",
@@ -629,7 +488,7 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Logic & Targeting",
     icon: "sparkles",
     // No preview art ships for this layout (matches production's "No preview").
-    build: () => simple("Personalisation"),
+    schemaId: "section-personalisation",
   },
 ];
 
@@ -654,9 +513,27 @@ const CHILD_LABELS: Partial<Record<StructureObjectType, string>> = {
 export function createChildNode(type: StructureObjectType): StructureNode {
   const label = CHILD_LABELS[type] ?? "New item";
   const node: StructureNode = { id: uid("new"), label, objectType: type };
-  // Seed a product's title so its preview card is legible on creation.
+  // Seed a product's title so its preview card is legible on creation, plus its
+  // (empty) Product Features collection — the schema's `productList` tabs
+  // (minSize 0) is part of every product, so the card panel always offers
+  // "Add Feature" even before the first bullet exists.
   if (type === "product" || type === "plan") {
     node.content = { "Product Title": label };
+    node.children = [
+      {
+        id: uid("feats"),
+        label: "Product Features",
+        objectType: "product-features-list",
+      },
+    ];
+  }
+  // A category holds its plans in a Products collection (the schema's Plan
+  // Picker Data tabs) — seed an empty one so the author can immediately add
+  // products (and see cards) without first building the container by hand.
+  if (type === "category") {
+    node.children = [
+      { id: uid("prods"), label: "Products", objectType: "products" },
+    ];
   }
   return node;
 }

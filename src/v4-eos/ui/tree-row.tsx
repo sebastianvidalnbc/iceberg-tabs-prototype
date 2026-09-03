@@ -52,8 +52,17 @@ export function TreeRow({
   onSelect,
   onToggle,
 }: TreeRowProps) {
+  // Bring a newly-selected row into view — so selecting from the preview (which
+  // also expands the ancestor path) reveals the row without manual scrolling.
+  const rowRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (selected) {
+      rowRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [selected]);
   return (
     <div
+      ref={rowRef}
       role="treeitem"
       aria-selected={selected}
       aria-expanded={hasChildren ? isOpen : undefined}

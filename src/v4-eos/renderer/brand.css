@@ -627,24 +627,36 @@ body {
   font-size: 14px;
 }
 
-/* --- Editor-only affordances (selection highlight + Pick Section) ---------- */
+/* --- Editor-only affordances (click-to-select + highlight mode) ------------ */
 [data-node-id] {
   scroll-margin: 24px;
 }
+/* Click-to-select is ALWAYS on: any element with a node id is clickable, shows a
+   subtle hover outline, and a solid outline when selected. */
+[data-node-id] {
+  cursor: pointer;
+}
+.ui-brand__card:hover:not([data-selected="true"]),
+.ui-brand__features li[data-node-id]:hover:not([data-selected="true"]) {
+  outline: 2px dashed rgba(1, 105, 155, 0.55);
+  outline-offset: 2px;
+}
+.ui-brand__features li[data-node-id] {
+  border-radius: 6px;
+}
 .ui-brand__section[data-selected="true"],
-.ui-brand__card[data-selected="true"] {
+.ui-brand__card[data-selected="true"],
+.ui-brand__features li[data-selected="true"] {
   outline: 2px solid var(--pk-sel);
   outline-offset: 2px;
 }
-.ui-brand[data-pick="true"] [data-node-id] {
-  cursor: pointer;
-}
+/* Highlight mode: outline EVERY clickable element so they're all discoverable. */
 .ui-brand[data-pick="true"] [data-node-id]:hover {
   outline: 2px dashed var(--pk-sel);
   outline-offset: 2px;
 }
 .ui-brand[data-pick="true"]::after {
-  content: "Pick Section — click an element to select it";
+  content: "Click any element to select it";
   position: fixed;
   top: 12px;
   left: 50%;
