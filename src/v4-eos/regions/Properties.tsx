@@ -29,10 +29,12 @@ import {
   type CollectionProperties,
   type SectionMetadata,
   type NoticeProperties,
+  type StructureNode,
   type StructureObjectType,
   type VariantWorkspace,
 } from "../data";
 import { allowedChildType, maxChildrenFor } from "../elements";
+import { findNodeById } from "../structureOps";
 
 interface PropertiesProps {
   // The active authoring context; selects which Properties resolver is used.
@@ -362,6 +364,159 @@ function GroupSection({
   );
 }
 
+// --- Inline child collections (feature bullets) -----------------------------
+// Real Iceberg renders a product's `productFeaturesList` (a `tabs` field) INLINE
+// within the card's form, not as a separate destination. We keep the feature
+// bullets as Structure nodes for tree navigation, but ALSO surface them here so
+// a card's bullets (icon + text) are editable — with add/remove — right where
+// the card is selected. Each row writes to its own feature node's content.
+
+// Whether a product's child collection holds its feature bullets.
+function isFeatureListNode(node: StructureNode): boolean {
+  const l = node.label.toLowerCase();
+  const noun = (node.itemNoun ?? "").toLowerCase();
+  return (
+    node.objectType === "product-features-list" ||
+    noun.includes("feature") ||
+    l.includes("feature") ||
+    l.includes("product list")
+  );
+}
+
+// Flatten a resolved fields object to its editable field list (groups or flat).
+function flattenFields(data: ObjectProperties): PropertyField[] {
+  if (data.groups) return data.groups.flatMap((g) => g.fields);
+  return data.fields ?? [];
+}
+
+// One feature bullet: its own fields (icon + text) rendered inline, writing to
+// this feature node, plus a Remove control.
+function InlineFeatureItem({
+  fields,
+  overrides,
+  onEdit,
+  onRemove,
+  removable,
+}: {
+  fields: PropertyField[];
+  overrides: Record<string, string>;
+  onEdit: (label: string, value: string) => void;
+  onRemove: () => void;
+  removable: boolean;
+}) {
+  return (
+    <div className="rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] p-2.5">
+      <PropertyRows>
+        {fields.map((field) => (
+          <PropertyFieldRow
+            key={field.label}
+            field={field}
+            value={overrides[field.label] ?? field.value}
+            invalid={false}
+            onEdit={(v) => onEdit(field.label, v)}
+          />
+        ))}
+      </PropertyRows>
+      <div className="mt-2 flex justify-end">
+        <Button
+          variant="ghost"
+          size="xs"
+          disabled={!removable}
+          title={removable ? "Remove feature" : "At least one feature required"}
+          onClick={onRemove}
+          className="text-muted-foreground hover:text-[var(--color-status-danger)]"
+        >
+          <MSym name="delete" size={15} />
+          Remove
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// All feature-bullet collections under the selected product, as inline editors.
+function InlineFeatureCollections({
+  variant,
+  resolve,
+  overridesFor,
+  productId,
+  onEditField,
+  onAddChild,
+  onRemoveChild,
+}: {
+  variant: VariantWorkspace;
+  resolve: (id: string) => ObjectProperties | null;
+  overridesFor: (id: string) => Record<string, string>;
+  productId: string;
+  onEditField: (nodeId: string, label: string, value: string) => void;
+  onAddChild: (parentId: string, childType: StructureObjectType) => void;
+  onRemoveChild: (childId: string) => void;
+}) {
+  const product = findNodeById(variant.structure, productId);
+  const lists = (product?.children ?? []).filter(isFeatureListNode);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  if (!lists.length) return null;
+
+  return (
+    <>
+      {lists.map((list) => {
+        const items = list.children ?? [];
+        const noun = list.itemNoun ?? "Feature";
+        const childType = allowedChildType(list.objectType);
+        const max = list.maxChildren ?? maxChildrenFor(list.objectType);
+        const atMax = max != null && items.length >= max;
+        const open = !collapsed.has(list.id);
+        return (
+          <PropSection
+            key={list.id}
+            header={`${list.label} · ${items.length}${max != null ? ` / ${max}` : ""}`}
+            expanded={open}
+            onToggle={() =>
+              setCollapsed((prev) => {
+                const next = new Set(prev);
+                next.has(list.id) ? next.delete(list.id) : next.add(list.id);
+                return next;
+              })
+            }
+          >
+            <div className="flex flex-col gap-2">
+              {items.map((item) => {
+                const resolved = resolve(item.id);
+                return (
+                  <InlineFeatureItem
+                    key={item.id}
+                    fields={resolved ? flattenFields(resolved) : []}
+                    overrides={overridesFor(item.id)}
+                    onEdit={(label, value) => onEditField(item.id, label, value)}
+                    onRemove={() => onRemoveChild(item.id)}
+                    removable={items.length > 1}
+                  />
+                );
+              })}
+              <div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={!childType || atMax}
+                  onClick={() => childType && onAddChild(list.id, childType)}
+                >
+                  <Icon name="plus" size={16} />
+                  Add {noun}
+                </Button>
+                {atMax && (
+                  <span className="ml-2 text-[11px] text-muted-foreground">
+                    Maximum of {max} reached.
+                  </span>
+                )}
+              </div>
+            </div>
+          </PropSection>
+        );
+      })}
+    </>
+  );
+}
+
 // Fixed-width right panel for the SELECTED object's properties. This is where
 // the forms that V1 showed inline now live. Scrolls internally. Always belongs
 // to the active experience; shows a contextual empty state when a route (not an
@@ -405,6 +560,7 @@ export function Properties({
               onEdit={(label, value) =>
                 onEditField(selectedStructureNodeId, label, value)
               }
+              onEditField={onEditField}
               onAddChild={onAddChild}
               onRemoveChild={onRemoveChild}
               onReorderChild={onReorderChild}
@@ -434,6 +590,7 @@ function PropertiesBody({
   overridesForNode,
   invalidFields,
   onEdit,
+  onEditField,
   onAddChild,
   onRemoveChild,
   onReorderChild,
@@ -445,14 +602,16 @@ function PropertiesBody({
   overridesForNode: Record<string, string>;
   invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
+  onEditField: (nodeId: string, label: string, value: string) => void;
   onAddChild: (parentId: string, childType: StructureObjectType) => void;
   onRemoveChild: (childId: string) => void;
   onReorderChild: (parentId: string, from: number, to: number) => void;
 }) {
-  const resolved =
+  const resolveNode = (id: string) =>
     context === "widget"
-      ? resolveWidgetPropertiesForVariant(variant, nodeId)
-      : resolvePropertiesForVariant(variant, nodeId);
+      ? resolveWidgetPropertiesForVariant(variant, id)
+      : resolvePropertiesForVariant(variant, id);
+  const resolved = resolveNode(nodeId);
   if (resolved.kind === "collection")
     return (
       <CollectionBody
@@ -468,14 +627,30 @@ function PropertiesBody({
   if (resolved.kind === "notice") return <NoticeBody data={resolved.data} />;
   // key={nodeId} remounts FieldsBody per selected object so its per-group
   // expand/collapse memory resets to the default (all open) on each new object.
+  // A product card also gets its feature bullets inline (the real `tabs` field
+  // renders inside the card's form), editable + add/remove.
   return (
-    <FieldsBody
-      key={nodeId}
-      data={resolved.data}
-      overridesForNode={overridesForNode}
-      invalidFields={invalidFields}
-      onEdit={onEdit}
-    />
+    <>
+      <FieldsBody
+        key={nodeId}
+        data={resolved.data}
+        overridesForNode={overridesForNode}
+        invalidFields={invalidFields}
+        onEdit={onEdit}
+      />
+      <InlineFeatureCollections
+        variant={variant}
+        productId={nodeId}
+        resolve={(id) => {
+          const r = resolveNode(id);
+          return r.kind === "fields" ? r.data : null;
+        }}
+        overridesFor={(id) => findNodeById(variant.structure, id)?.content ?? {}}
+        onEditField={onEditField}
+        onAddChild={onAddChild}
+        onRemoveChild={onRemoveChild}
+      />
+    </>
   );
 }
 

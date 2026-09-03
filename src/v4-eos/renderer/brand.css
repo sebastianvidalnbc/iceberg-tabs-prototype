@@ -1,204 +1,646 @@
 /* Customer-facing brand render (Peacock) — the CONTENT shown inside the preview
-   iframe. Self-contained on purpose: it declares its OWN --brand-* scale and an
-   explicit font stack, and never consumes the CMS's Eos tokens, so the tool's
-   chrome and the previewed page stay separate design systems (a brand refresh
-   must not touch the CMS, and a CMS token change must not move this pixel). */
+   iframe. Self-contained on purpose: it declares its OWN Peacock design system,
+   with tokens taken DIRECTLY from the Peacock Global "Commerce UI Kit" Figma
+   (colours, type scale, button + navigation primitives), and never consumes the
+   CMS's Eos tokens. Peacock is DARK-FIRST on a pure-black canvas with a gold
+   BRAND GRADIENT primary CTA and uppercase Peacock Sans labels. Every layout
+   inherits these tokens so it renders like a real Peacock screen.
+
+   Figma sources:
+   • Colours/system   node 43369:459
+   • Buttons          node 57695:44747  (Primary = brand-gradient, black label)
+   • Typography       node 63956:33500  (Peacock Sans TF; title-l 32/40, …)
+   • Navigation       node 45799:659    (black bar, Sign In + Get Started) */
+
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 html,
 body,
 #preview-root {
   margin: 0;
   height: 100%;
-  background: #ffffff;
 }
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Peacock Sans TF", "Figtree", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
 }
 
 .ui-brand {
-  --brand-bg: #ffffff;
-  --brand-fg: #0a0a0f;
-  --brand-muted: #5b5b66;
-  --brand-accent: #6a4bff;
-  --brand-accent-fg: #ffffff;
-  --brand-card-bg: #f6f6f8;
-  --brand-card-border: #e5e5ec;
-  --brand-radius: 14px;
+  /* --- Peacock design tokens (from the Commerce UI Kit) ------------------- */
+  /* content/brand + brand-gradient (primary CTA), content/brand-inverse. */
+  --pk-gold: #fccc12;
+  --pk-gradient: linear-gradient(90deg, #ffe000 0%, #fccc12 50%, #ffa800 100%);
+  --pk-inverse: #000000; /* text on gold                     */
+  /* background/primary = pure black; surfaces are subtle elevations. */
+  --pk-ink: #000000;
+  --pk-ink-2: #0c0c0f;
+  --pk-card: #121216; /* branded card surface on black     */
+  --pk-card-border: rgba(255, 255, 255, 0.14);
+  --pk-white: #ffffff; /* content/primary                  */
+  --pk-muted: #a4a5a7; /* content/secondary                */
+  --pk-muted-2: #6f7075;
+  /* action-secondary = #323538 @ ~64% + material blur (Sign In pill). */
+  --pk-action-2: rgba(50, 53, 56, 0.64);
+  --pk-blue: #069de0; /* brand blue (feather)             */
+  --pk-error: #eb3c3c;
+  --pk-sel: #01699b;
+
+  /* Radii + Peacock type scale (Desktop Large). */
+  --pk-radius-card: 24px;
+  --pk-radius-pill: 100px;
+  --pk-display-s: 104px; /* display/display-s 104/112        */
+  --pk-heading-s: 56px; /* heading/heading-s 56/64          */
+  --pk-heading-xs: 48px; /* heading/heading-xs 48/56         */
+  --pk-title-xl: 40px; /* title/title-xl 40/48             */
+  --pk-title-l: 32px; /* title/title-l 32/40              */
+  --pk-title-m: 28px; /* title/title-m 28/32              */
+  --pk-body-xl: 20px; /* body/body-xl 20/28              */
+  --pk-body-m: 16px; /* body/body-m 16/20              */
+
   font-family: inherit;
-  background: var(--brand-bg);
-  color: var(--brand-fg);
+  background: var(--pk-ink);
+  color: var(--pk-white);
   min-height: 100%;
   display: flex;
   flex-direction: column;
 }
+
+/* --- Brand chrome (navigation) — Commerce UI Kit node 45799:659 ------------- */
 .ui-brand__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--brand-card-border);
+  padding: 16px 32px;
+  background: #000;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
+/* peacock wordmark: white lowercase + the colored feather-dot glyph. */
 .ui-brand__logo {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.03em;
-  color: var(--brand-fg);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--pk-white);
+  text-transform: lowercase;
 }
-.ui-brand__nav { display: flex; align-items: center; gap: 16px; }
-.ui-brand__link { font-size: 14px; color: var(--brand-muted); }
+.ui-brand__logo::after {
+  content: "";
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  /* the three feather dots (blue / gold / green) */
+  background: linear-gradient(
+    180deg,
+    var(--pk-blue) 0 30%,
+    var(--pk-gold) 35% 65%,
+    #4caf50 70% 100%
+  );
+}
+.ui-brand__nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Peacock label style: uppercase, bold, 14/20, no tracking. */
+.ui-brand__link,
 .ui-brand__btn {
   font-size: 14px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 100px;
-  background: var(--brand-accent);
-  color: var(--brand-accent-fg);
+  line-height: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  border-radius: var(--pk-radius-pill);
 }
+/* Sign In = secondary (translucent dark + material blur). */
+.ui-brand__link {
+  color: var(--pk-white);
+  background: var(--pk-action-2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+/* Get Started = primary (brand gradient, black label). */
+.ui-brand__btn {
+  background: var(--pk-gradient);
+  color: var(--pk-inverse);
+}
+
+/* --- Section shell + per-background theming --------------------------------- */
 .ui-brand__section {
-  padding: 40px 32px;
+  --sec-bg: var(--pk-ink);
+  --sec-fg: var(--pk-white);
+  --sec-muted: var(--pk-muted);
+  --sec-card: var(--pk-card);
+  --sec-card-border: var(--pk-card-border);
+  background: var(--sec-bg);
+  color: var(--sec-fg);
+  padding: 56px 48px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 32px;
 }
-.ui-brand__section[data-align="centre"] { align-items: center; text-align: center; }
-.ui-brand__section[data-align="left"] { align-items: flex-start; text-align: left; }
-.ui-brand__section[data-align="right"] { align-items: flex-end; text-align: right; }
+.ui-brand__section[data-bg="light"] {
+  --sec-bg: #f4f4f7;
+  --sec-fg: #0b0b10;
+  --sec-muted: #5b5b66;
+  --sec-card: #ffffff;
+  --sec-card-border: #e4e4ec;
+}
+.ui-brand__section[data-bg="branded"] {
+  --sec-bg: radial-gradient(120% 120% at 50% 0%, #241d3a 0%, #12111c 55%, #0b0b10 100%);
+  --sec-fg: var(--pk-white);
+  --sec-card: rgba(255, 255, 255, 0.06);
+  --sec-card-border: rgba(255, 255, 255, 0.14);
+}
+.ui-brand__section[data-align="left"] {
+  align-items: flex-start;
+}
+.ui-brand__section[data-align="left"] .ui-brand__head {
+  text-align: left;
+}
+.ui-brand__section[data-align="right"] {
+  align-items: flex-end;
+}
+
+.ui-brand__head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: inherit;
+  text-align: center;
+  max-width: 760px;
+}
 .ui-brand__section-eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 12px;
+  letter-spacing: 0.02em;
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 700;
-  color: var(--brand-accent);
+  color: var(--pk-gold);
   margin: 0;
 }
 .ui-brand__title {
-  font-size: 30px;
-  line-height: 1.15;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: var(--pk-title-xl);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
+  color: var(--sec-fg);
 }
 .ui-brand__subtitle {
-  font-size: 16px;
-  color: var(--brand-muted);
+  font-size: var(--pk-body-xl);
+  line-height: 1.4;
+  color: var(--sec-muted);
   margin: 0;
-  max-width: 52ch;
 }
+
+/* --- Plan-picker cards (faithful to mini-picker styles.ts) ------------------ */
 .ui-brand__cards {
-  display: grid;
-  gap: 16px;
-  width: 100%;
-  margin-top: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  align-items: stretch;
-}
-.ui-brand__cards[data-count="1"] {
-  grid-template-columns: minmax(240px, 360px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+}
+.ui-brand__card-li {
+  display: flex;
 }
 .ui-brand__card {
   position: relative;
   display: flex;
-  background: var(--brand-card-bg);
-  border: 1px solid var(--brand-card-border);
-  border-radius: var(--brand-radius);
-  padding: 20px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  width: 340px;
+  max-width: 100%;
+  padding: 32px;
+  background: var(--sec-card);
+  border: 1px solid var(--sec-card-border);
+  border-radius: var(--pk-radius-card);
   text-align: left;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 .ui-brand__card[data-featured="true"] {
-  border-color: var(--brand-accent);
-  box-shadow: inset 0 0 0 1px var(--brand-accent);
+  border-color: var(--pk-gold);
+  box-shadow: 0 0 0 1px var(--pk-gold);
 }
 .ui-brand__badge {
   position: absolute;
-  top: -11px;
-  left: 20px;
-  background: var(--brand-accent);
-  color: var(--brand-accent-fg);
+  top: -12px;
+  left: 32px;
+  background: var(--pk-gold);
+  color: #000;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 4px 10px;
-  border-radius: 100px;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  border-radius: var(--pk-radius-pill);
 }
-.ui-brand__card-body { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.ui-brand__eyebrow { font-size: 12px; font-weight: 600; color: var(--brand-muted); margin: 0; }
-.ui-brand__name { font-size: 18px; font-weight: 700; margin: 0; }
-.ui-brand__desc { font-size: 13px; line-height: 1.5; color: var(--brand-muted); margin: 0; }
+.ui-brand__card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ui-brand__card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ui-brand__card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--pk-gold), #ff8a3c);
+  flex: none;
+}
+/* Plans / Bundles category toggle (segmented control). */
+.ui-brand__cat-toggle {
+  display: inline-flex;
+  align-self: center;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 auto 28px;
+  border-radius: var(--pk-radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+}
+.ui-brand__cat-tab {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  padding: 8px 22px;
+  border-radius: var(--pk-radius-pill);
+  background: transparent;
+  color: var(--pk-muted);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ui-brand__cat-tab[data-active="true"] {
+  background: var(--pk-white);
+  color: var(--pk-inverse);
+}
+.ui-brand__cat-empty {
+  text-align: center;
+  color: var(--pk-muted);
+  font-size: var(--pk-body-m);
+}
+
+.ui-brand__name {
+  font-size: var(--pk-title-m);
+  line-height: 1.14;
+  font-weight: 700;
+  margin: 0;
+  color: var(--sec-fg);
+}
+.ui-brand__desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--sec-muted);
+  margin: 0;
+}
 .ui-brand__features {
   list-style: none;
-  margin: 8px 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 .ui-brand__features li {
-  position: relative;
-  padding-left: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--pk-body-m);
+  line-height: 1.4;
+  color: var(--sec-fg);
+}
+.ui-brand__feature-icon {
+  color: var(--pk-gold);
+  flex: none;
+  display: inline-flex;
+  margin-top: 1px;
+}
+.ui-brand__feature-text {
+  flex: 1;
+}
+.ui-brand__price {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 4px 0 0;
+  color: var(--sec-fg);
+}
+.ui-brand__cadence {
   font-size: 13px;
-  color: var(--brand-fg);
+  font-weight: 500;
+  color: var(--sec-muted);
 }
-.ui-brand__features li::before {
-  content: "\2713";
-  position: absolute;
-  left: 0;
-  color: var(--brand-accent);
-  font-weight: 700;
+.ui-brand__card-bottom {
+  display: flex;
 }
-.ui-brand__price { font-size: 20px; font-weight: 800; margin: 12px 0 0; }
-.ui-brand__cadence { font-size: 13px; font-weight: 500; color: var(--brand-muted); }
+/* Primary CTA — Commerce UI Kit WebButtonPrimary: brand gradient, black
+   uppercase Peacock-Sans label (14/20 bold), pill radius. */
 .ui-brand__cta {
-  margin-top: auto;
-  padding-top: 12px;
-}
-.ui-brand__card-body .ui-brand__cta {
   display: block;
-  margin-top: 16px;
+  width: 100%;
   text-align: center;
-  background: var(--brand-accent);
-  color: var(--brand-accent-fg);
-  font-weight: 600;
+  background: var(--pk-gradient);
+  color: var(--pk-inverse);
+  font-weight: 700;
   font-size: 14px;
-  padding: 10px 16px;
-  border-radius: 100px;
+  line-height: 20px;
+  text-transform: uppercase;
+  padding: 14px 24px;
+  border-radius: var(--pk-radius-pill);
 }
+.ui-brand__cta--lg {
+  width: auto;
+  padding: 16px 44px;
+}
+
+/* --- Hero / banner --------------------------------------------------------- */
+.ui-brand__section[data-kind="hero"] {
+  padding: 96px 48px;
+  --sec-bg: radial-gradient(120% 140% at 50% -10%, #2a2350 0%, #12111c 55%, #0b0b10 100%);
+}
+.ui-brand__section[data-kind="hero"] .ui-brand__title {
+  font-size: var(--pk-heading-s);
+  line-height: 1.1;
+}
+.ui-brand__hero-cta,
+.ui-brand__banner-cta {
+  display: flex;
+}
+.ui-brand__section[data-kind="banner"] {
+  padding: 32px 48px;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 24px;
+  text-align: left;
+  --sec-bg: linear-gradient(90deg, #1a1533, #0b0b10);
+}
+.ui-brand__section[data-kind="banner"] .ui-brand__head {
+  text-align: left;
+  align-items: flex-start;
+}
+.ui-brand__section[data-kind="banner"] .ui-brand__title {
+  font-size: var(--pk-title-l);
+}
+
+/* --- FAQ accordion --------------------------------------------------------- */
+.ui-brand__faq {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ui-brand__faq-item {
+  border: 1px solid var(--sec-card-border);
+  border-radius: 12px;
+  background: var(--sec-card);
+  padding: 16px 20px;
+}
+.ui-brand__faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  list-style: none;
+}
+.ui-brand__faq-item summary::-webkit-details-marker {
+  display: none;
+}
+.ui-brand__faq-item summary::after {
+  content: "+";
+  float: right;
+  color: var(--pk-gold);
+  font-weight: 800;
+}
+.ui-brand__faq-item[open] summary::after {
+  content: "–";
+}
+.ui-brand__faq-item p {
+  margin: 12px 0 0;
+  color: var(--sec-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* --- Rail + grid tiles ----------------------------------------------------- */
+.ui-brand__rail {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.ui-brand__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 960px;
+}
+.ui-brand__tile {
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #23233015, var(--sec-card));
+  border: 1px solid var(--sec-card-border);
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+}
+.ui-brand__tile--wide {
+  flex: none;
+  width: 220px;
+  aspect-ratio: 16 / 9;
+}
+.ui-brand__tile-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sec-muted);
+}
+
+/* --- Comparison table ------------------------------------------------------ */
+.ui-brand__compare {
+  width: 100%;
+  max-width: 820px;
+  border: 1px solid var(--sec-card-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ui-brand__compare-head,
+.ui-brand__compare-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: center;
+}
+.ui-brand__compare-head {
+  background: var(--sec-card);
+  font-weight: 800;
+  font-size: 14px;
+}
+.ui-brand__compare-head span,
+.ui-brand__compare-row span {
+  padding: 14px 16px;
+  text-align: center;
+}
+.ui-brand__compare-head span:first-child,
+.ui-brand__compare-feat {
+  text-align: left;
+}
+.ui-brand__compare-row {
+  border-top: 1px solid var(--sec-card-border);
+  font-size: 14px;
+}
+.ui-brand__compare-feat {
+  color: var(--sec-fg);
+}
+.ui-brand__compare-cell {
+  color: var(--pk-muted-2);
+}
+.ui-brand__compare-cell[data-on="true"] {
+  color: var(--pk-gold);
+  font-weight: 800;
+}
+
+/* --- Footer ---------------------------------------------------------------- */
+.ui-brand__section[data-kind="footer"] {
+  --sec-bg: #000;
+  padding: 48px;
+}
+.ui-brand__footcols {
+  display: flex;
+  gap: 64px;
+  width: 100%;
+  max-width: 900px;
+  flex-wrap: wrap;
+}
+.ui-brand__footcol-h {
+  font-weight: 800;
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+.ui-brand__footcol-b {
+  color: var(--pk-muted);
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* --- Steps ----------------------------------------------------------------- */
+.ui-brand__steps {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  max-width: 900px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ui-brand__step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 220px;
+}
+.ui-brand__step-num {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pk-radius-pill);
+  background: var(--pk-gold);
+  color: #000;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ui-brand__step-h {
+  font-weight: 700;
+  margin: 4px 0 4px;
+}
+.ui-brand__step-b {
+  color: var(--sec-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* --- Countdown ------------------------------------------------------------- */
+.ui-brand__countdown {
+  display: flex;
+  gap: 16px;
+}
+.ui-brand__count-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--sec-card);
+  border: 1px solid var(--sec-card-border);
+  border-radius: 12px;
+  padding: 16px 22px;
+  min-width: 72px;
+}
+.ui-brand__count-n {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--pk-gold);
+}
+.ui-brand__count-l {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sec-muted);
+}
+
+/* --- Message + disclaimer -------------------------------------------------- */
 .ui-brand__message {
-  margin-top: 16px;
   max-width: 60ch;
-  background: var(--brand-card-bg);
-  border: 1px solid var(--brand-card-border);
-  border-radius: var(--brand-radius);
+  background: rgba(235, 60, 60, 0.1);
+  border: 1px solid rgba(235, 60, 60, 0.5);
+  border-radius: 12px;
   padding: 16px 20px;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--brand-fg);
+  color: #ffb4b4;
 }
 .ui-brand__disclaimer {
-  margin-top: 20px;
-  max-width: 60ch;
+  max-width: 70ch;
   font-size: 12px;
   line-height: 1.5;
-  color: var(--brand-muted);
+  color: var(--sec-muted);
+}
+.ui-brand__empty {
+  margin: auto;
+  color: var(--pk-muted);
+  font-size: 14px;
 }
 
 /* --- Editor-only affordances (selection highlight + Pick Section) ---------- */
-/* Present only inside the CMS iframe; harmless in a standalone tab. */
-[data-node-id] { scroll-margin: 24px; }
-
+[data-node-id] {
+  scroll-margin: 24px;
+}
 .ui-brand__section[data-selected="true"],
 .ui-brand__card[data-selected="true"] {
-  outline: 2px solid #01699b;
+  outline: 2px solid var(--pk-sel);
   outline-offset: 2px;
 }
-
-/* Pick Section mode: the whole render invites clicking a node. */
-.ui-brand[data-pick="true"] [data-node-id] { cursor: pointer; }
+.ui-brand[data-pick="true"] [data-node-id] {
+  cursor: pointer;
+}
 .ui-brand[data-pick="true"] [data-node-id]:hover {
-  outline: 2px dashed #01699b;
+  outline: 2px dashed var(--pk-sel);
   outline-offset: 2px;
 }
 .ui-brand[data-pick="true"]::after {
@@ -207,12 +649,12 @@ body {
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #01699b;
+  background: var(--pk-sel);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
-  border-radius: 100px;
+  border-radius: var(--pk-radius-pill);
   z-index: 10;
   pointer-events: none;
 }

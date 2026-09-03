@@ -278,6 +278,36 @@ export const ELEMENT_REGISTRY: Partial<
     preview: "passthrough",
     build: fields((node) => ({ kind: "fields", data: cadenceSchema(node.label) })),
   },
+
+  // --- Schema-driven elements (built from the real layout schemas) ---------
+  // A `tabs` collection: add/remove items up to tabsConfig.maxSize. Its panel is
+  // resolved live in classifyNode; allowedChildren enables the +Add affordance
+  // (the shell builds the actual item from the collection's stored childSchema).
+  "schema-collection": {
+    type: "schema-collection",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Item",
+    allowedChildren: ["schema-item"],
+    build: collection("", "Item"),
+  },
+  // One collection item / a schema fields node: the panel comes verbatim from
+  // node.props (set at build time); these builds are just a non-empty fallback.
+  "schema-item": {
+    type: "schema-item",
+    kind: "module",
+    // Passthrough: whether an item renders as a product card is decided by its
+    // collection's noun in previewModel (products/plans/cards), not the type —
+    // so feature/bundle items aren't mistaken for cards.
+    preview: "passthrough",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "ITEM", name: node.label, fields: [] } }),
+  },
+  "schema-fields": {
+    type: "schema-fields",
+    kind: "module",
+    preview: "passthrough",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "SECTION CONTENT", name: node.label, fields: [] } }),
+  },
 };
 
 // Container child caps — the tabsConfig.maxSize analog from the real plan-picker

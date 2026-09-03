@@ -54,7 +54,11 @@ export type StructureObjectType =
   | "segment-names" // Segment Names collection under Segmentation
   | "segment-name" // a single Segment Name item
   | "survey-responses" // Survey Responses collection
-  | "survey-response"; // a single Survey Response item
+  | "survey-response" // a single Survey Response item
+  // --- Schema-driven types (built from the real layout schemas) ------------
+  | "schema-fields" // a node whose panel comes verbatim from node.props
+  | "schema-item" // one item of a schema collection (a tab)
+  | "schema-collection"; // a `tabs` collection (add/remove items up to maxSize)
 
 // The section-level authoring mode shown on Sections.
 export type SectionDesign = "Custom" | "Legacy layout" | "Intelligent authoring";
@@ -93,6 +97,15 @@ export interface TreeNode {
   // objectType default so each inserted layout keeps its own limit (e.g. a
   // single-diff plan picker caps plans at 4, multi-diff at 5). Undefined ⇒ default.
   maxChildren?: number;
+  // The layout schema this section was built from (schemaModel); documents the
+  // real `_id` so the section can be regenerated/inspected. Sections only.
+  schemaId?: string;
+  // Collection item noun for a schema-collection ("Add {itemNoun}").
+  itemNoun?: string;
+  // Item field schema for a schema-collection — the recipe "Add {itemNoun}" uses
+  // to build a fresh item (the tabs "push empty tab" analog). Raw schema fields;
+  // typed loosely to avoid a schemaModel → data type cycle.
+  childSchema?: unknown[];
   // Structure-tree authoring state: a disabled layer is dimmed + excluded from
   // the experience but preserved (toggle via the row's Disable/Enable action).
   disabled?: boolean;
@@ -895,6 +908,22 @@ export function classifyNode(
 ): ResolvedProperties {
   // Canonical nodes may carry an authored payload — use it verbatim.
   if (node.props) return node.props;
+
+  // Schema-driven collections (a real layout's `tabs`) resolve live from their
+  // children so add/remove/reorder is reflected immediately, using the noun and
+  // cap captured from the schema at build time.
+  if (node.objectType === "schema-collection") {
+    return {
+      kind: "collection",
+      data: {
+        eyebrow: node.label.toUpperCase(),
+        name: node.label,
+        itemNoun: node.itemNoun ?? "Item",
+        items: childrenToItems(node),
+        max: node.maxChildren,
+      },
+    };
+  }
 
   const label = node.label.toLowerCase();
   const parentLabel = parent?.label.toLowerCase() ?? "";

@@ -12,6 +12,7 @@
 // fresh subtree, which the shell inserts at the chosen slot.
 import type { IconName } from "./ui-lib/Icon";
 import type { StructureNode, StructureObjectType } from "./data";
+import { buildSectionFromSchema } from "./schemaModel";
 
 // Fresh, collision-proof ids for every node in a newly built subtree.
 let seq = 0;
@@ -179,6 +180,20 @@ function planPickerSection(name = "Plan Picker", maxPlans = 4): StructureNode {
   };
 }
 
+// Schema-backed section: build the full field/collection tree from the REAL
+// layout schema (so the panel exposes every field — product bullets, CTAs, etc.).
+// Falls back to the hand-built plan picker if the schema id isn't present.
+function schemaSection(
+  schemaId: string,
+  name: string,
+  fallbackMaxPlans = 4,
+): StructureNode {
+  return (
+    buildSectionFromSchema(schemaId, name, "Plan Picker") ??
+    planPickerSection(name, fallbackMaxPlans)
+  );
+}
+
 // A Footer section (content areas + options + behaviours), matching 0609.
 function footerSection(name = "SEO Footer"): StructureNode {
   const sectionId = uid("section");
@@ -224,7 +239,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-single-diff"),
-    build: () => planPickerSection("Plan Picker - Single Difference", 4),
+    build: () =>
+      schemaSection("section-ia-plan-picker-single-diff", "Plan Picker - Single Difference", 4),
   },
   {
     id: "plan-picker-multi-diff",
@@ -233,7 +249,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-multi-diff"),
-    build: () => planPickerSection("Plan Picker - Multi Difference", 5),
+    build: () =>
+      schemaSection("section-ia-plan-picker-multi-diff", "Plan Picker - Multi Difference", 5),
   },
   {
     id: "plan-picker-mini",
@@ -242,7 +259,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-mini"),
-    build: () => planPickerSection("Plan Picker - Mini Picker", 4),
+    build: () =>
+      schemaSection("section-ia-plan-picker-mini-picker", "Plan Picker - Mini Picker", 4),
   },
   {
     id: "plan-picker-dual-mini",
@@ -251,7 +269,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-dual-mini"),
-    build: () => planPickerSection("Plan Picker - Dual Mini Picker", 4),
+    build: () =>
+      schemaSection("section-ia-plan-picker-dual-mini-picker", "Plan Picker - Dual Mini Picker", 4),
   },
   {
     id: "plan-picker-graphic-radio",
@@ -260,7 +279,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-graphic-radio"),
-    build: () => planPickerSection("Plan Picker - Graphic Radio", 4),
+    build: () =>
+      schemaSection("section-ia-plan-picker-graphic-radio", "Plan Picker - Graphic Radio", 4),
   },
   {
     id: "plan-picker-plan-builder",
@@ -273,7 +293,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
       mobile: "plan-picker-plan-builder-mobile.png",
       ui: "plan-picker-plan-builder-ui.png",
     },
-    build: () => planPickerSection("Plan Picker - Plan Builder", 6),
+    build: () =>
+      schemaSection("section-ia-plan-builder", "Plan Picker - Plan Builder", 6),
   },
   {
     id: "plan-picker-cta",
@@ -282,7 +303,8 @@ export const LAYOUT_CATALOG: LayoutDef[] = [
     group: "Plan Pickers",
     icon: "grid",
     preview: dm("plan-picker-cta"),
-    build: () => planPickerSection("Plan Picker with CTAs", 4),
+    build: () =>
+      schemaSection("section-ia-plan-picker-cta", "Plan Picker with CTAs", 4),
   },
 
   // ---- Content -------------------------------------------------------------

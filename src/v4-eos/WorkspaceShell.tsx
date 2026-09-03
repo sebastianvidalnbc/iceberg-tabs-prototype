@@ -42,6 +42,7 @@ import { collectVariationNodes, derivePreviewModel } from "./previewModel";
 import { collectInvalidFields } from "./validate";
 import { LayoutPicker } from "./regions/LayoutPicker";
 import { createChildNode, getLayoutDef } from "./layouts";
+import { buildSchemaChild } from "./schemaModel";
 
 // Per-experience Explorer memory: which Structure nodes are expanded and which
 // object is selected. Keeping this keyed by experience (Variant or Widget
@@ -422,11 +423,15 @@ export function WorkspaceShell({
   const handleAddChild = useCallback(
     (parentId: string, childType: StructureObjectType) => {
       if (!selectedExperienceId) return;
-      const child = createChildNode(childType);
       const setter = isPage ? setPageMemory : setWidgetMemory;
       setter((prev) => {
         const cur = prev[selectedExperienceId];
         if (!cur) return prev;
+        // Schema-driven collections build their item from the schema captured on
+        // the parent (childSchema); everything else uses the registry factory.
+        const parent = findNodeById(cur.structure, parentId);
+        const child =
+          (parent && buildSchemaChild(parent)) ?? createChildNode(childType);
         const structure = appendChild(cur.structure, parentId, child);
         const expanded = new Set(cur.expanded).add(parentId);
         return {
