@@ -717,7 +717,7 @@ export function Properties({
     // shadcn/Tailwind. Dark panel surface.
     <aside
       aria-label="Properties"
-      className="ui-ws__region w-[460px] max-w-full bg-[var(--color-bg-panel)] text-foreground max-[900px]:w-full"
+      className="ui-ws__region w-[460px] max-w-full border-l border-[var(--color-border-default)] bg-[var(--color-bg-panel)] text-foreground max-[900px]:w-full"
     >
       <div className="flex shrink-0 items-center border-b border-border px-4 py-2">
         <span className="text-[13px] font-semibold text-foreground">
