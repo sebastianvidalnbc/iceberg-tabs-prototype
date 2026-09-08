@@ -127,6 +127,7 @@ body {
   --preview-editor-selection: #01699b;
   --preview-editor-hover: rgba(1, 105, 155, 0.55);
   --preview-editor-highlight: #01699b;
+  --preview-editor-radius: 100px; /* editor pill (NOT a brand token) */
 
   /* === PAGE COMPOSITION (horizontal rhythm) =============================== */
   /* Horizontal gutters are [VERIFIED] from Commerce Nav variants (Desktop px56 /
@@ -876,30 +877,37 @@ body {
   font-size: 14px;
 }
 
-/* --- Editor-only affordances (click-to-select + highlight mode) ------------ */
+/* ==========================================================================
+   PREVIEW EDITOR OVERLAY  (Iceberg authoring affordances — NOT Peacock brand)
+   --------------------------------------------------------------------------
+   Selection / hover / pick-mode outlines drawn OVER the customer render. This
+   block is intentionally isolated from the brand styles above and uses ONLY the
+   --preview-editor-* tokens — never a --pk-* brand token — so the customer-facing
+   render stays pure. Everything here is `outline`/overlay based (no `border`,
+   `background`, or layout properties on brand elements) so toggling selection
+   never shifts the composition. See the token block on `.ui-brand`.
+   ========================================================================== */
 [data-node-id] {
   scroll-margin: 24px;
+  cursor: pointer; /* click-to-select is always on */
 }
-/* Click-to-select is ALWAYS on: any element with a node id is clickable, shows a
-   subtle hover outline, and a solid outline when selected. */
-[data-node-id] {
-  cursor: pointer;
-}
+/* Hover affordance (outside pick mode): subtle dashed outline on the primary
+   selectable blocks. Outline (not border) => zero layout impact. */
 .ui-brand__card:hover:not([data-selected="true"]),
 .ui-brand__features li[data-node-id]:hover:not([data-selected="true"]) {
   outline: 2px dashed var(--preview-editor-hover);
   outline-offset: 2px;
 }
 .ui-brand__features li[data-node-id] {
-  border-radius: 6px;
+  border-radius: 6px; /* rounds the overlay outline corners, not a brand style */
 }
-.ui-brand__section[data-selected="true"],
-.ui-brand__card[data-selected="true"],
-.ui-brand__features li[data-selected="true"] {
+/* Selection: solid outline on ANY selectable node (generic so every element
+   type — cards, features, sections, and future kinds — gets the same treatment). */
+.ui-brand [data-node-id][data-selected="true"] {
   outline: 2px solid var(--preview-editor-selection);
   outline-offset: 2px;
 }
-/* Highlight mode: outline EVERY clickable element so they're all discoverable. */
+/* Highlight / pick mode: outline EVERY clickable element so all are discoverable. */
 .ui-brand[data-pick="true"] [data-node-id]:hover {
   outline: 2px dashed var(--preview-editor-highlight);
   outline-offset: 2px;
@@ -915,7 +923,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
-  border-radius: var(--pk-radius-pill);
+  border-radius: var(--preview-editor-radius);
   z-index: 10;
   pointer-events: none;
 }
