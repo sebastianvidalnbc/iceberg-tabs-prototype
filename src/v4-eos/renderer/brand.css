@@ -53,7 +53,6 @@ body {
   --pk-inverse: #000000; /* [VERIFIED] content/brand-inverse (label on gold) */
   /* --- Colour: surfaces --------------------------------------------------- */
   --pk-ink: #000000; /* [OBSERVED] nav/page bg pure black (Commerce Nav)    */
-  --pk-ink-2: #0c0c0f; /* [UNVERIFIED] elevation                            */
   --pk-card: #121216; /* [UNVERIFIED] card surface — no verified card node   */
   --pk-card-border: rgba(255, 255, 255, 0.14); /* [UNVERIFIED]              */
   /* --- Colour: content ---------------------------------------------------- */
@@ -63,12 +62,9 @@ body {
   /* --- Colour: secondary action (Sign In) --------------------------------- */
   --pk-action-2: rgba(50, 53, 56, 0.64); /* [VERIFIED] action-secondary
     #323538 @ ~64% (real face adds material blur radius 100)                 */
-  --pk-blue: #069de0; /* [UNVERIFIED] feather blue                           */
-  --pk-error: #eb3c3c; /* [UNVERIFIED]                                       */
 
   /* --- Radii -------------------------------------------------------------- */
   --pk-radius-pill: 100px; /* [VERIFIED] pill buttons/nav (Web Button)      */
-  --pk-radius-card: 24px; /* [UNVERIFIED] no verified card node yet          */
 
   /* --- Plan card (LIGHT card on black) ------------------------------------ */
   /* [VERIFIED] IA Plan Picker "Plan Picker Card Now" (file roOR88JWhOcpVLuXQGzfgG,
@@ -599,26 +595,6 @@ body {
   font: var(--pk-type-legal);
   color: var(--pk-plan-card-fg);
 }
-/* Primary CTA — Commerce UI Kit WebButtonPrimary: brand gradient, black
-   uppercase Peacock-Sans label (14/20 bold), pill radius. */
-.ui-brand__cta {
-  display: block;
-  width: 100%;
-  text-align: center;
-  background: var(--pk-gradient);
-  color: var(--pk-inverse);
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 20px;
-  text-transform: uppercase;
-  padding: 14px 24px;
-  border-radius: var(--pk-radius-pill);
-}
-.ui-brand__cta--lg {
-  width: auto;
-  padding: 16px 44px;
-}
-
 /* --- Hero / banner --------------------------------------------------------- */
 .ui-brand__section[data-kind="hero"] {
   padding: 96px var(--pk-gutter); /* [PROTOTYPE-LOCAL] tall hero rhythm */
