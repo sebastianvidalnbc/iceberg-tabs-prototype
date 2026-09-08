@@ -161,16 +161,29 @@ body {
 .ui-brand__nav {
   display: flex;
   align-items: center;
-  gap: 12px; /* [APPROX] button group gap */
+  gap: 16px; /* [VERIFIED] Tablet button-group gap (Desktop assumed same) */
 }
-/* Tablet/Mobile nav: 72px height is [VERIFIED] (Commerce Nav Tablet/Mobile
-   variants); the reduced horizontal padding is [PROTOTYPE-LOCAL] pending the
-   verified small-screen nav spec (finalized in Phase 10, which may hide Sign In
-   / collapse to a menu). */
+/* Commerce Nav responsive — VERIFIED against Web/Commerce Nav variant set
+   45799:659 (Signed Out): Desktop 1440 h88 px56 · Tablet 768 h72 px32 gap16 ·
+   Mobile 375 h72 px16 gap8. Every variant keeps Sign In + Get Started as
+   compact pill buttons (no hamburger / no collapsed menu). Breakpoints key off
+   the verified variant frame widths (768 → Tablet, 375 → Mobile). */
 @media (max-width: 768px) {
   .ui-brand__header {
-    height: 72px; /* [VERIFIED] Commerce Nav Tablet/Mobile */
-    padding: 0 24px; /* [PROTOTYPE-LOCAL] */
+    height: 72px; /* [VERIFIED] Tablet */
+    padding: 0 32px; /* [VERIFIED] Tablet px32 */
+  }
+}
+/* Mobile spec VALUES are [VERIFIED] (Mobile variant 47009:3458: px16, gap8). The
+   variant is drawn at 375; the ≤480 THRESHOLD is [PROTOTYPE-LOCAL] so real phone
+   widths (390/414/430) — and the app's own 390px Mobile device preset — receive
+   the mobile treatment rather than the 32px Tablet padding. */
+@media (max-width: 480px) {
+  .ui-brand__header {
+    padding: 0 16px; /* [VERIFIED] Mobile px16 */
+  }
+  .ui-brand__nav {
+    gap: 8px; /* [VERIFIED] Mobile gap8 */
   }
 }
 
@@ -351,12 +364,16 @@ body {
 }
 
 /* --- Plan-picker cards (faithful to mini-picker styles.ts) ------------------ */
+/* Plan-picker card row. No verified plan-picker *responsive* spec exists, so
+   this uses an INTRINSIC grid (auto-fit + minmax) rather than flex-wrap: columns
+   are driven by available width, not invented @media breakpoints. Cards fold
+   3→2→1 automatically as the preview device shrinks. [PROTOTYPE-LOCAL layout]. */
 .ui-brand__cards {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 384px));
   justify-content: center;
   align-items: stretch;
   gap: 20px;
