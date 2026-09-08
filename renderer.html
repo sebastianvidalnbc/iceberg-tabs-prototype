@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Iceberg V4 · Preview</title>
     <!-- Brand type only. The preview render is customer output, not CMS chrome.
-         Peacock ships "Peacock Sans TF" (proprietary); we load Figtree as the
-         closest free stand-in and fall back to it when the licensed face isn't
-         installed locally. Weights map to Peacock's Book (400) / Bold (700). -->
+         Peacock ships "Peacock Sans TF" (proprietary) — we deliberately DO NOT
+         bundle, load, or reference it. Instead we load Plus Jakarta Sans, a
+         free Google-hosted geometric-humanist sans, as a PROTOTYPE SUBSTITUTE
+         chosen for its wide proportions, tall x-height and strong 700/800
+         display weights (closest open-source match to Peacock Sans's
+         character). It is a stand-in, not the real face. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
   </head>

@@ -1,16 +1,23 @@
 /* Customer-facing brand render (Peacock) — the CONTENT shown inside the preview
-   iframe. Self-contained on purpose: it declares its OWN Peacock design system,
-   with tokens taken DIRECTLY from the Peacock Global "Commerce UI Kit" Figma
-   (colours, type scale, button + navigation primitives), and never consumes the
-   CMS's Eos tokens. Peacock is DARK-FIRST on a pure-black canvas with a gold
-   BRAND GRADIENT primary CTA and uppercase Peacock Sans labels. Every layout
-   inherits these tokens so it renders like a real Peacock screen.
+   iframe. Self-contained on purpose: it declares its OWN Peacock design system
+   and never consumes the CMS's Eos tokens. Peacock is DARK-FIRST on a pure-black
+   canvas with a gold BRAND GRADIENT primary CTA and uppercase labels.
 
-   Figma sources:
-   • Colours/system   node 43369:459
-   • Buttons          node 57695:44747  (Primary = brand-gradient, black label)
-   • Typography       node 63956:33500  (Peacock Sans TF; title-l 32/40, …)
-   • Navigation       node 45799:659    (black bar, Sign In + Get Started) */
+   PROVENANCE (Commerce UI Kit, file EpM4nZGcDrbLmGhl2et7TUqW):
+   Each token below is tagged so we never pretend an invented value is canonical.
+     [VERIFIED]   read directly from a Commerce UI Kit node via Figma MCP.
+     [OBSERVED]   read from a rendered Commerce screenshot (not a bound token).
+     [UNVERIFIED] transcribed/eyeballed; NOT yet confirmed against a Figma node.
+   Verified nodes so far:
+     • Web Button    43240:4373  → WebButtonPrimary 59078:3556 (brand-gradient,
+                                    black label), WebButtonSecondary 59078:3568
+                                    (#323538 @64% + material blur).
+     • Commerce Nav  45799:659   → Signed Out / Desktop 88, Tablet/Mobile 72.
+     • Checkmark     44540:975   (24×24, Notifications canvas 43369:459).
+   Corrected: brand.css previously cited 43369:459 as "Colours/system" and
+   57695:44747 as "Buttons"; the live file shows 43369:459 = Notifications and
+   the current buttons live on 43240:4373. A verified Colours/system + Typography
+   node is still OUTSTANDING (see Phase 5). */
 
 :root {
   color-scheme: dark;
@@ -22,41 +29,104 @@ body,
   height: 100%;
 }
 body {
-  font-family: "Peacock Sans TF", "Figtree", -apple-system, BlinkMacSystemFont,
+  /* PROTOTYPE FONT SUBSTITUTE for Peacock Sans TF (proprietary — deliberately
+     NOT bundled or referenced). Plus Jakarta Sans is a free, Google-hosted
+     geometric-humanist sans chosen for its wide proportions, tall x-height,
+     strong 700/800 display weights and clean bold headlines — the closest
+     open-source stand-in for Peacock Sans's character. This is a substitute,
+     not the real face. Loaded in renderer.html. */
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, sans-serif;
 }
 
 .ui-brand {
-  /* --- Peacock design tokens (from the Commerce UI Kit) ------------------- */
-  /* content/brand + brand-gradient (primary CTA), content/brand-inverse. */
-  --pk-gold: #fccc12;
-  --pk-gradient: linear-gradient(90deg, #ffe000 0%, #fccc12 50%, #ffa800 100%);
-  --pk-inverse: #000000; /* text on gold                     */
-  /* background/primary = pure black; surfaces are subtle elevations. */
-  --pk-ink: #000000;
-  --pk-ink-2: #0c0c0f;
-  --pk-card: #121216; /* branded card surface on black     */
-  --pk-card-border: rgba(255, 255, 255, 0.14);
-  --pk-white: #ffffff; /* content/primary                  */
-  --pk-muted: #a4a5a7; /* content/secondary                */
-  --pk-muted-2: #6f7075;
-  /* action-secondary = #323538 @ ~64% + material blur (Sign In pill). */
-  --pk-action-2: rgba(50, 53, 56, 0.64);
-  --pk-blue: #069de0; /* brand blue (feather)             */
-  --pk-error: #eb3c3c;
-  --pk-sel: #01699b;
+  /* === PEACOCK BRAND TOKENS (customer-facing Commerce roles) ============== */
+  /* --- Colour: brand / gradient (primary CTA) --------------------------- */
+  --pk-gold: #fccc12; /* [VERIFIED] brand-gradient/02 (WebButtonPrimary)   */
+  --pk-gradient: linear-gradient(
+    180deg,
+    #ffe000 0%,
+    #fccc12 50%,
+    #ffa800 100%
+  ); /* [VERIFIED] background/brand-gradient 01/02/03; VERTICAL (180deg) per
+        Commerce Nav 45799:660 WebButtonPrimary background                    */
+  --pk-inverse: #000000; /* [VERIFIED] content/brand-inverse (label on gold) */
+  /* --- Colour: surfaces --------------------------------------------------- */
+  --pk-ink: #000000; /* [OBSERVED] nav/page bg pure black (Commerce Nav)    */
+  --pk-ink-2: #0c0c0f; /* [UNVERIFIED] elevation                            */
+  --pk-card: #121216; /* [UNVERIFIED] card surface — no verified card node   */
+  --pk-card-border: rgba(255, 255, 255, 0.14); /* [UNVERIFIED]              */
+  /* --- Colour: content ---------------------------------------------------- */
+  --pk-white: #ffffff; /* [VERIFIED] content/primary (WebButtonSecondary)   */
+  --pk-muted: #a4a5a7; /* [UNVERIFIED] content/secondary — not yet read     */
+  --pk-muted-2: #6f7075; /* [UNVERIFIED]                                     */
+  /* --- Colour: secondary action (Sign In) --------------------------------- */
+  --pk-action-2: rgba(50, 53, 56, 0.64); /* [VERIFIED] action-secondary
+    #323538 @ ~64% (real face adds material blur radius 100)                 */
+  --pk-blue: #069de0; /* [UNVERIFIED] feather blue                           */
+  --pk-error: #eb3c3c; /* [UNVERIFIED]                                       */
 
-  /* Radii + Peacock type scale (Desktop Large). */
-  --pk-radius-card: 24px;
-  --pk-radius-pill: 100px;
-  --pk-display-s: 104px; /* display/display-s 104/112        */
-  --pk-heading-s: 56px; /* heading/heading-s 56/64          */
-  --pk-heading-xs: 48px; /* heading/heading-xs 48/56         */
-  --pk-title-xl: 40px; /* title/title-xl 40/48             */
-  --pk-title-l: 32px; /* title/title-l 32/40              */
-  --pk-title-m: 28px; /* title/title-m 28/32              */
-  --pk-body-xl: 20px; /* body/body-xl 20/28              */
-  --pk-body-m: 16px; /* body/body-m 16/20              */
+  /* --- Radii -------------------------------------------------------------- */
+  --pk-radius-pill: 100px; /* [VERIFIED] pill buttons/nav (Web Button)      */
+  --pk-radius-card: 24px; /* [UNVERIFIED] no verified card node yet          */
+
+  /* --- Plan card (LIGHT card on black) ------------------------------------ */
+  /* [VERIFIED] IA Plan Picker "Plan Picker Card Now" (file roOR88JWhOcpVLuXQGzfgG,
+     Plan Card 11051:8463) — the live, tokenised, multi-brand plan card. The card
+     is a WHITE surface (bound var color/background/secondary #ffffff) on a black
+     section, radius 36, padding 40, dark text, 24px checks, a stacked price block
+     (savings eyebrow → strikethrough → offer price → details) and a full-width
+     WebButtonPrimary CTA. (This supersedes the earlier homepage-screenshot
+     gray-box/flat-CHOOSE treatment.) */
+  --pk-plan-card-bg: #ffffff; /* [VERIFIED] color/background/secondary        */
+  --pk-plan-card-fg: #000000; /* [VERIFIED] title/price black on light card   */
+  --pk-plan-card-muted: #494b4e; /* [VERIFIED] light/content/secondary       */
+  --pk-plan-radius: 36px; /* [VERIFIED] Plan Card rounded-[36px]              */
+  --pk-plan-pad: 40px; /* [VERIFIED] Plan Card 40px padding                   */
+
+  /* === TYPE SCALE — VERIFIED "Toolkit Typography Specimen" ================= */
+  /* Section 63956:33500 → Desktop Styles frame 63956:33547, read via Figma MCP
+     (get_design_context, exact size/line-height/weight per named style).
+     Real face is "Peacock Sans TF": Book weight = 350, Bold = 700. We render
+     with the Plus Jakarta Sans PROTOTYPE SUBSTITUTE (see renderer.html),
+     mapping Book→400 (no 350 cut is loaded) and Bold→700 — geometry is verified,
+     the typeface is a stand-in. Each role is a CSS `font` shorthand
+     (weight size/line-height family); apply with `font: var(--pk-type-*)`.
+     Letter-spacing / casing a role needs (eyebrow) is set on the consuming rule.
+     Style → node lineage:
+       display   Hero Title 33564 104/112 Bold   heading-md Heading Medium 33559 48/56
+       hero      Hero Title 33562  72/80  Bold   heading-sm Heading Small  33558 40/48
+       heading   Supplemental 33560 56/64 Bold   title-lg   Title Large    33556 28/32
+       title     Title 33554        24/32  Bold   title-sm  Title 33555     20/24
+       body-lg   Body Large 33552   20/28  Book   body      Body 33551      16/20
+       body-sm   Body Small 33550   14/16  Book   legal     Legal 33548     12/16
+       eyebrow   Card Title 33549   15/15  Bold uppercase +1px (specimen fill is
+                 blue #069DE0; brand eyebrows use content/brand gold — see rule) */
+  --pk-font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --pk-type-display: 700 104px/112px var(--pk-font); /* [VERIFIED] Hero Title / display-s */
+  --pk-type-hero: 700 72px/80px var(--pk-font); /* [VERIFIED] Hero Title              */
+  --pk-type-title-xl: 700 32px/40px var(--pk-font); /* [VERIFIED] title-l (plan title) */
+  --pk-type-heading: 700 56px/64px var(--pk-font); /* [VERIFIED] Supplemental / heading-s */
+  --pk-type-heading-md: 700 48px/56px var(--pk-font); /* [VERIFIED] Heading Medium       */
+  --pk-type-heading-sm: 700 40px/48px var(--pk-font); /* [VERIFIED] Heading Small        */
+  --pk-type-title-lg: 700 28px/32px var(--pk-font); /* [VERIFIED] Title Large          */
+  --pk-type-title: 700 24px/32px var(--pk-font); /* [VERIFIED] Title                  */
+  --pk-type-title-sm: 700 20px/24px var(--pk-font); /* [VERIFIED] Title (small)        */
+  --pk-type-body-lg: 400 20px/28px var(--pk-font); /* [VERIFIED] Body Large (Book→400) */
+  --pk-type-body: 400 16px/20px var(--pk-font); /* [VERIFIED] Body (Book→400)       */
+  --pk-type-body-sm: 400 14px/16px var(--pk-font); /* [VERIFIED] Body Small (Book→400) */
+  --pk-type-legal: 400 12px/16px var(--pk-font); /* [VERIFIED] Legal (Book→400)      */
+  --pk-type-eyebrow: 700 15px/15px var(--pk-font); /* [VERIFIED] Card Title (uppercase)*/
+  --pk-type-label: 700 10px/16px var(--pk-font); /* [VERIFIED] client/small/label    */
+
+  /* === EDITOR OVERLAY TOKENS (NOT Peacock — Iceberg authoring only) ======= */
+  /* Selection / hover / pick-mode affordances drawn OVER the brand render.
+     Intentionally NOT in the --pk-* namespace so customer-facing brand tokens
+     stay pure. See Phase 12. Iceberg blue, matches the CMS selection colour. */
+  --preview-editor-selection: #01699b;
+  --preview-editor-hover: rgba(1, 105, 155, 0.55);
+  --preview-editor-highlight: #01699b;
 
   font-family: inherit;
   background: var(--pk-ink);
@@ -66,67 +136,148 @@ body {
   flex-direction: column;
 }
 
-/* --- Brand chrome (navigation) — Commerce UI Kit node 45799:659 ------------- */
+/* --- Brand chrome (navigation) — Commerce Nav 45799:660 -------------------- */
+/* Signed Out / Desktop: h88, px56, background/primary black, space-between.
+   [VERIFIED]. Tablet/Mobile (72px) handled in Phase 10. */
 .ui-brand__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
-  background: #000;
+  height: 88px; /* [VERIFIED] nav 45799:660 */
+  padding: 0 56px; /* [VERIFIED] nav px56 */
+  background: var(--pk-ink);
   position: sticky;
   top: 0;
   z-index: 5;
 }
-/* peacock wordmark: white lowercase + the colored feather-dot glyph. */
-.ui-brand__logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-  color: var(--pk-white);
-  text-transform: lowercase;
-}
-.ui-brand__logo::after {
-  content: "";
-  width: 4px;
-  height: 18px;
-  border-radius: 2px;
-  /* the three feather dots (blue / gold / green) */
-  background: linear-gradient(
-    180deg,
-    var(--pk-blue) 0 30%,
-    var(--pk-gold) 35% 65%,
-    #4caf50 70% 100%
-  );
+/* Real Peacock wordmark — official SVG exported from Commerce Nav 45799:660
+   (.Web/Logo → Wordmark 47100:3994, "color - white"): white wordmark + the
+   authentic multicolour feather. Rendered at the nav's verified 100px width. */
+.ui-brand__logo-img {
+  display: block;
+  width: 100px; /* [VERIFIED] .Web/Logo width */
+  height: auto;
 }
 .ui-brand__nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 12px; /* [APPROX] button group gap */
 }
-/* Peacock label style: uppercase, bold, 14/20, no tracking. */
-.ui-brand__link,
-.ui-brand__btn {
-  font-size: 14px;
+/* Tablet/Mobile nav: 72px height is [VERIFIED] (Commerce Nav Tablet/Mobile
+   variants); the reduced horizontal padding is [PROTOTYPE-LOCAL] pending the
+   verified small-screen nav spec (finalized in Phase 10, which may hide Sign In
+   / collapse to a menu). */
+@media (max-width: 768px) {
+  .ui-brand__header {
+    height: 72px; /* [VERIFIED] Commerce Nav Tablet/Mobile */
+    padding: 0 24px; /* [PROTOTYPE-LOCAL] */
+  }
+}
+
+/* === COMMERCE WEB BUTTON (preview-local) =================================== */
+/* Faithful reconstruction of the Commerce UI Kit Web Button. Node lineage +
+   verified/approx notes live in components/CommerceWebButton.tsx. Semantic
+   <button>; hover/active are CSS-driven. */
+.pk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* [APPROX] icon/label gap */
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700; /* [VERIFIED] Bold label */
+  text-transform: uppercase; /* [VERIFIED] uppercase label */
+  letter-spacing: 0; /* [VERIFIED] client/small/label ls 0 */
+  white-space: nowrap;
+  border-radius: var(--pk-radius-pill); /* [VERIFIED] pill */
+  transition: filter 0.15s ease, background 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.pk-btn:focus-visible {
+  outline: 2px solid var(--pk-white);
+  outline-offset: 2px;
+}
+/* --- sizes ([APPROX] heights from the Commerce button set) --------------- */
+.pk-btn--compact {
+  min-height: 32px; /* [VERIFIED] nav 45799:660 (8+16+8) */
+  padding: 8px 16px; /* [VERIFIED] nav px16 py8 */
+  font-size: 10px; /* [VERIFIED] compact label 10/16 */
+  line-height: 16px;
+}
+.pk-btn--tablet-mobile {
+  min-height: 40px;
+  padding: 0 20px;
+  font-size: 12px; /* [APPROX] */
+  line-height: 16px;
+}
+.pk-btn--desktop {
+  min-height: 48px;
+  padding: 0 24px;
+  font-size: 14px; /* [APPROX] */
   line-height: 20px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 10px 20px;
-  border-radius: var(--pk-radius-pill);
 }
-/* Sign In = secondary (translucent dark + material blur). */
-.ui-brand__link {
-  color: var(--pk-white);
-  background: var(--pk-action-2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-/* Get Started = primary (brand gradient, black label). */
-.ui-brand__btn {
+/* --- primary ([VERIFIED] brand-gradient + #000 label) -------------------- */
+.pk-btn--primary {
   background: var(--pk-gradient);
   color: var(--pk-inverse);
+}
+.pk-btn--primary:hover {
+  filter: brightness(1.06); /* [APPROX] */
+}
+.pk-btn--primary:active {
+  filter: brightness(0.95); /* [APPROX] */
+}
+.pk-btn--primary.pk-btn--outline {
+  /* [APPROX] outline treatment */
+  background: transparent;
+  color: var(--pk-gold);
+  box-shadow: inset 0 0 0 1px var(--pk-gold);
+}
+/* --- secondary ([VERIFIED] action-secondary #323538@64% + material blur) - */
+.pk-btn--secondary {
+  background: var(--pk-action-2); /* [VERIFIED] action-secondary #323538@64% */
+  color: rgba(255, 255, 255, 0.8); /* [VERIFIED] content/action-secondary cc  */
+  backdrop-filter: blur(50px); /* [VERIFIED] nav backdrop-blur-50 (effect r100) */
+  -webkit-backdrop-filter: blur(50px);
+}
+.pk-btn--secondary:hover {
+  background: rgba(80, 84, 88, 0.72); /* [APPROX] */
+}
+.pk-btn--secondary.pk-btn--outline {
+  /* [APPROX] outline treatment */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+/* --- tertiary ([VERIFIED] text button, #fff @ ~80% label) --------------- */
+.pk-btn--tertiary {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8); /* [VERIFIED] content/action-secondary cc */
+}
+.pk-btn--tertiary:hover {
+  color: var(--pk-white);
+}
+/* --- disabled ----------------------------------------------------------- */
+.pk-btn:disabled {
+  opacity: 0.4; /* [APPROX] */
+  cursor: not-allowed;
+  filter: none;
+  pointer-events: none;
+}
+/* --- block (full-width, e.g. product-card CTA) -------------------------- */
+.pk-btn--block {
+  display: flex;
+  width: 100%;
+}
+.pk-btn__icon {
+  display: inline-flex;
+  flex: none;
+}
+.pk-btn__icon svg {
+  width: 20px; /* [APPROX] icon size */
+  height: 20px;
 }
 
 /* --- Section shell + per-background theming --------------------------------- */
@@ -176,25 +327,25 @@ body {
   max-width: 760px;
 }
 .ui-brand__section-eyebrow {
+  /* [VERIFIED] Card Title style 33549: 15/15 Bold uppercase, letter-spacing 1px.
+     Specimen fill is Feather blue #069DE0; customer commerce eyebrows use the
+     brand content colour (content/brand #FCCC12 gold), so we keep gold here. */
+  font: var(--pk-type-eyebrow);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 700;
+  letter-spacing: 1px;
   color: var(--pk-gold);
   margin: 0;
 }
 .ui-brand__title {
-  font-size: var(--pk-title-xl);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  /* [VERIFIED] Heading Small 40/48 Bold, letter-spacing 0 (specimen ls 0). */
+  font: var(--pk-type-heading-sm);
+  letter-spacing: 0;
   margin: 0;
   color: var(--sec-fg);
 }
 .ui-brand__subtitle {
-  font-size: var(--pk-body-xl);
-  line-height: 1.4;
+  /* [VERIFIED] Body Large 20/28 Book. */
+  font: var(--pk-type-body-lg);
   color: var(--sec-muted);
   margin: 0;
 }
@@ -214,56 +365,75 @@ body {
 .ui-brand__card-li {
   display: flex;
 }
+/* [VERIFIED] IA "Plan Picker Card Now" (11051:8463): white card, radius 36,
+   padding 40, description block (eyebrow+title+features) and pricing block
+   (savings+price+details+CTA) stacked with 24px gaps. */
 .ui-brand__card {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 28px;
-  width: 340px;
+  gap: 24px; /* [VERIFIED] gap between description & pricing blocks */
+  width: 384px; /* [VERIFIED] 400px card (content 320 + 2×40) — trimmed slightly for 3-up */
   max-width: 100%;
-  padding: 32px;
-  background: var(--sec-card);
-  border: 1px solid var(--sec-card-border);
-  border-radius: var(--pk-radius-card);
+  padding: var(--pk-plan-pad); /* [VERIFIED] 40px */
+  background: var(--pk-plan-card-bg);
+  color: var(--pk-plan-card-fg);
+  border: 0;
+  border-radius: var(--pk-plan-radius); /* [VERIFIED] 36px */
   text-align: left;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .ui-brand__card[data-featured="true"] {
-  border-color: var(--pk-gold);
-  box-shadow: 0 0 0 1px var(--pk-gold);
+  /* Real design keeps the same white card; the badge is the only emphasis. */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 .ui-brand__badge {
+  /* [VERIFIED] status/recommended pill sits at the TOP-LEFT of the card
+     (IA "Current Plan" / "Recommended" 11051:8513, x40 y-16). Gold for Peacock. */
   position: absolute;
-  top: -12px;
-  left: 32px;
+  top: -14px;
+  left: var(--pk-plan-pad);
   background: var(--pk-gold);
   color: #000;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 5px 12px;
+  letter-spacing: 0.04em;
+  padding: 5px 14px;
   border-radius: var(--pk-radius-pill);
+  white-space: nowrap;
 }
 .ui-brand__card-top {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px; /* [VERIFIED] title-block → features gap */
+}
+.ui-brand__card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* [VERIFIED] eyebrow → title gap */
 }
 .ui-brand__card-title {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.ui-brand__card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--pk-gold), #ff8a3c);
-  flex: none;
+.ui-brand__card-eyebrow {
+  /* [VERIFIED] card-title label 15/15 uppercase +1px, light/content/secondary. */
+  font: var(--pk-type-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--pk-plan-card-muted);
+  margin: 0;
 }
-/* Plans / Bundles category toggle (segmented control). */
+/* Plans / Bundles category switcher (segmented control).
+   [FROM SCREENSHOT] Peacock Homepage Working File (4699:34053): a dark rounded
+   capsule with a white active pill (black label) and a muted inactive label.
+   [PEACOCK-SPECIFIC COMPOSITION] — the IA Plan Picker's own selector is a
+   Monthly/Annual *billing-cadence* control (Toggle 11027:8332 / "Billing Cadence
+   CTA" tiles), a different concept; no standalone verified Plans/Bundles
+   segmented component exists, so this stays a documented composition. */
 .ui-brand__cat-toggle {
   display: inline-flex;
   align-self: center;
@@ -271,7 +441,7 @@ body {
   padding: 4px;
   margin: 0 auto 28px;
   border-radius: var(--pk-radius-pill);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1); /* [FROM SCREENSHOT] dark capsule */
 }
 .ui-brand__cat-tab {
   appearance: none;
@@ -280,34 +450,38 @@ body {
   padding: 8px 22px;
   border-radius: var(--pk-radius-pill);
   background: transparent;
-  color: var(--pk-muted);
+  color: var(--pk-muted); /* [VERIFIED] content/secondary #A4A5A7 (inactive) */
   font-family: inherit;
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
   transition: background 0.15s ease, color 0.15s ease;
 }
+.ui-brand__cat-tab:hover:not([data-active="true"]) {
+  color: var(--pk-white);
+}
 .ui-brand__cat-tab[data-active="true"] {
+  /* [FROM SCREENSHOT] white active pill, black label. */
   background: var(--pk-white);
   color: var(--pk-inverse);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 .ui-brand__cat-empty {
   text-align: center;
   color: var(--pk-muted);
-  font-size: var(--pk-body-m);
+  font: var(--pk-type-body); /* [VERIFIED] Body 16/20 */
 }
 
 .ui-brand__name {
-  font-size: var(--pk-title-m);
-  line-height: 1.14;
-  font-weight: 700;
+  /* [VERIFIED] title-l 32/40 Bold, black on the white card. */
+  font: var(--pk-type-title-xl);
   margin: 0;
-  color: var(--sec-fg);
+  color: var(--pk-plan-card-fg);
 }
 .ui-brand__desc {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--sec-muted);
+  /* [VERIFIED] body-m 16/20; muted dark tagline. */
+  font: var(--pk-type-body);
+  color: var(--pk-plan-card-muted);
   margin: 0;
 }
 .ui-brand__features {
@@ -316,38 +490,80 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px; /* [VERIFIED] _Lists 8px row gap */
 }
 .ui-brand__features li {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: var(--pk-body-m);
-  line-height: 1.4;
-  color: var(--sec-fg);
+  align-items: center; /* [VERIFIED] IA _Lists rows are items-center */
+  gap: 8px; /* [VERIFIED] 8px icon→label gap */
+  font: var(--pk-type-body); /* [VERIFIED] body-m 16/20 */
+  color: var(--pk-plan-card-fg);
 }
+/* Feature check: the VERIFIED Commerce checkmark vector (44540:975) blackened to
+   match the white plan card (IA renders a dark check, not the green notification
+   variant). Native icon box 24×24; glyph ~20px for row density. */
 .ui-brand__feature-icon {
-  color: var(--pk-gold);
   flex: none;
   display: inline-flex;
-  margin-top: 1px;
+  align-items: center;
+}
+.ui-brand__check {
+  display: block;
+  height: 20px; /* [VERIFIED] 24px box; ~20px glyph */
+  width: auto;
+  filter: brightness(0); /* [VERIFIED] dark check on white card */
 }
 .ui-brand__feature-text {
   flex: 1;
 }
-.ui-brand__price {
-  font-size: 22px;
-  font-weight: 800;
-  margin: 4px 0 0;
-  color: var(--sec-fg);
-}
-.ui-brand__cadence {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sec-muted);
-}
+
+/* [VERIFIED] Pricing block (11051:8478/8479): stacked savings eyebrow →
+   strikethrough + offer price → offer details, then a full-width WebButtonPrimary
+   CTA (rendered by <CommerceWebButton>). Bound to existing card data. */
 .ui-brand__card-bottom {
   display: flex;
+  flex-direction: column;
+  gap: 24px; /* [VERIFIED] pricing → CTA gap */
+}
+.ui-brand__pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* [VERIFIED] pricing inner gap */
+}
+.ui-brand__price-savings {
+  /* [VERIFIED] "Save 30%" — card-title label 15/15 uppercase +1px, #494b4e. */
+  font: var(--pk-type-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--pk-plan-card-muted);
+}
+.ui-brand__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px; /* [VERIFIED] strikethrough ↔ price gap 8 */
+}
+.ui-brand__price-strike {
+  /* [VERIFIED] strikethrough £XX.XX 14px, #494b4e. */
+  font: var(--pk-type-body-sm);
+  color: var(--pk-plan-card-muted);
+  text-decoration: line-through;
+}
+.ui-brand__price {
+  /* [VERIFIED] offer price amount — title-s 24/32. */
+  font: var(--pk-type-title);
+  margin: 0;
+  color: var(--pk-plan-card-fg);
+}
+.ui-brand__cadence {
+  /* [VERIFIED] "/month" 14/16 alongside the amount. */
+  font: var(--pk-type-body-sm);
+  color: var(--pk-plan-card-fg);
+  font-weight: 400;
+}
+.ui-brand__price-details {
+  /* [VERIFIED] offer details — body-xs 12/16. */
+  font: var(--pk-type-legal);
+  color: var(--pk-plan-card-fg);
 }
 /* Primary CTA — Commerce UI Kit WebButtonPrimary: brand gradient, black
    uppercase Peacock-Sans label (14/20 bold), pill radius. */
@@ -375,8 +591,8 @@ body {
   --sec-bg: radial-gradient(120% 140% at 50% -10%, #2a2350 0%, #12111c 55%, #0b0b10 100%);
 }
 .ui-brand__section[data-kind="hero"] .ui-brand__title {
-  font-size: var(--pk-heading-s);
-  line-height: 1.1;
+  /* [VERIFIED] Supplemental Title / heading-s 56/64 Bold. */
+  font: var(--pk-type-heading);
 }
 .ui-brand__hero-cta,
 .ui-brand__banner-cta {
@@ -395,7 +611,8 @@ body {
   align-items: flex-start;
 }
 .ui-brand__section[data-kind="banner"] .ui-brand__title {
-  font-size: var(--pk-title-l);
+  /* [VERIFIED] Title Large 28/32 Bold (banner is a compact promo). */
+  font: var(--pk-type-title-lg);
 }
 
 /* --- FAQ accordion --------------------------------------------------------- */
@@ -617,8 +834,7 @@ body {
 }
 .ui-brand__disclaimer {
   max-width: 70ch;
-  font-size: 12px;
-  line-height: 1.5;
+  font: var(--pk-type-legal); /* [VERIFIED] Legal 12/16 Book */
   color: var(--sec-muted);
 }
 .ui-brand__empty {
@@ -638,7 +854,7 @@ body {
 }
 .ui-brand__card:hover:not([data-selected="true"]),
 .ui-brand__features li[data-node-id]:hover:not([data-selected="true"]) {
-  outline: 2px dashed rgba(1, 105, 155, 0.55);
+  outline: 2px dashed var(--preview-editor-hover);
   outline-offset: 2px;
 }
 .ui-brand__features li[data-node-id] {
@@ -647,12 +863,12 @@ body {
 .ui-brand__section[data-selected="true"],
 .ui-brand__card[data-selected="true"],
 .ui-brand__features li[data-selected="true"] {
-  outline: 2px solid var(--pk-sel);
+  outline: 2px solid var(--preview-editor-selection);
   outline-offset: 2px;
 }
 /* Highlight mode: outline EVERY clickable element so they're all discoverable. */
 .ui-brand[data-pick="true"] [data-node-id]:hover {
-  outline: 2px dashed var(--pk-sel);
+  outline: 2px dashed var(--preview-editor-highlight);
   outline-offset: 2px;
 }
 .ui-brand[data-pick="true"]::after {
@@ -661,7 +877,7 @@ body {
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--pk-sel);
+  background: var(--preview-editor-highlight);
   color: #fff;
   font-size: 12px;
   font-weight: 600;

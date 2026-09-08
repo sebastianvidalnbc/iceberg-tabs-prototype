@@ -5,6 +5,12 @@ import type {
   PreviewSection,
   PreviewItem,
 } from "../previewModel";
+import { CommerceWebButton } from "./components/CommerceWebButton";
+// Real Peacock wordmark exported from Commerce Nav 45799:660 (.Web/Logo →
+// Wordmark 47100:3994). Official asset — white wordmark + gradient feather.
+import peacockLogo from "./assets/peacock-wordmark.svg";
+// Verified Commerce checkmark (44540:975, 24×24, green-500 #05AC3F).
+import commerceCheck from "./assets/commerce-check.svg";
 
 // Customer-facing brand render (Peacock), living INSIDE the preview iframe. It
 // renders the WHOLE variant as a vertical stack of sections (like a Figma frame
@@ -13,20 +19,20 @@ import type {
 // (b) receive a Pick Section click that selects it. Styling inherits the real
 // Peacock design system from brand.css (dark canvas, gold CTA, branded cards).
 
-// A checkmark glyph for feature bullets (the real render uses the Peacock icon
-// set; a check reads correctly for every feature icon name).
+// Feature-bullet check — the VERIFIED Commerce checkmark asset (Notifications
+// canvas 43369:459 → _Viewing Notification Icon → Type=Checkmark 44540:975,
+// 24×24, glyph fill primitives/brand/green-500 #05AC3F). Real vector, not a
+// hand-drawn glyph. NOTE: this is the notification success check (green) — the
+// only verified check asset available; a plan-picker-specific feature icon is
+// not yet verified, so its colour/style may change once that source arrives.
 function Check() {
   return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" className="ui-brand__check">
-      <path
-        d="M20 6L9 17l-5-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <img
+      className="ui-brand__check"
+      src={commerceCheck}
+      alt=""
+      aria-hidden="true"
+    />
   );
 }
 
@@ -53,9 +59,13 @@ function BrandCard({
       >
         {card.badge ? <span className="ui-brand__badge">{card.badge}</span> : null}
         <div className="ui-brand__card-top">
-          <div className="ui-brand__card-title">
-            {card.titleIcon ? <span className="ui-brand__card-icon" aria-hidden="true" /> : null}
-            <h3 className="ui-brand__name">{card.title}</h3>
+          <div className="ui-brand__card-head">
+            {card.eyebrow ? (
+              <p className="ui-brand__card-eyebrow">{card.eyebrow}</p>
+            ) : null}
+            <div className="ui-brand__card-title">
+              <h3 className="ui-brand__name">{card.title}</h3>
+            </div>
           </div>
           {card.description ? <p className="ui-brand__desc">{card.description}</p> : null}
           {card.features.length > 0 ? (
@@ -82,18 +92,27 @@ function BrandCard({
               ))}
             </ul>
           ) : null}
-          {card.price ? (
-            <p className="ui-brand__price">
-              {card.price}
-              {card.priceCadence ? (
-                <span className="ui-brand__cadence"> / {card.priceCadence}</span>
-              ) : null}
-            </p>
-          ) : null}
         </div>
-        {card.cta ? (
+        {card.price || card.cta ? (
           <div className="ui-brand__card-bottom">
-            <span className="ui-brand__cta">{card.cta}</span>
+            {/* [VERIFIED] IA pricing block: offer price (amount + cadence) then a
+                full-width WebButtonPrimary CTA. Savings/strikethrough/details
+                rows render only when that data exists. */}
+            {card.price ? (
+              <div className="ui-brand__pricing">
+                <p className="ui-brand__price-row">
+                  <span className="ui-brand__price">{card.price}</span>
+                  {card.priceCadence ? (
+                    <span className="ui-brand__cadence">/{card.priceCadence}</span>
+                  ) : null}
+                </p>
+              </div>
+            ) : null}
+            {card.cta ? (
+              <CommerceWebButton buttonType="primary" size="desktop" block>
+                {card.cta}
+              </CommerceWebButton>
+            ) : null}
           </div>
         ) : null}
       </article>
@@ -324,13 +343,17 @@ function BrandSection({
 
       {kind === "hero" ? (
         <div className="ui-brand__hero-cta">
-          <span className="ui-brand__cta ui-brand__cta--lg">Get Started</span>
+          <CommerceWebButton buttonType="primary" size="desktop">
+            Get Started
+          </CommerceWebButton>
         </div>
       ) : null}
 
       {kind === "banner" ? (
         <div className="ui-brand__banner-cta">
-          <span className="ui-brand__cta">Learn more</span>
+          <CommerceWebButton buttonType="primary" size="desktop">
+            Learn more
+          </CommerceWebButton>
         </div>
       ) : null}
 
@@ -367,10 +390,14 @@ export function BrandRender({
   return (
     <div className="ui-brand" data-pick={pickMode ? "true" : undefined}>
       <header className="ui-brand__header">
-        <span className="ui-brand__logo">peacock</span>
+        <img className="ui-brand__logo-img" src={peacockLogo} alt="Peacock" />
         <div className="ui-brand__nav">
-          <span className="ui-brand__link">Sign In</span>
-          <span className="ui-brand__btn">Get Started</span>
+          <CommerceWebButton buttonType="secondary" size="compact">
+            Sign In
+          </CommerceWebButton>
+          <CommerceWebButton buttonType="primary" size="compact">
+            Get Started
+          </CommerceWebButton>
         </div>
       </header>
 
