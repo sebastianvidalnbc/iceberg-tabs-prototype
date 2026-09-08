@@ -128,6 +128,17 @@ body {
   --preview-editor-hover: rgba(1, 105, 155, 0.55);
   --preview-editor-highlight: #01699b;
 
+  /* === PAGE COMPOSITION (horizontal rhythm) =============================== */
+  /* Horizontal gutters are [VERIFIED] from Commerce Nav variants (Desktop px56 /
+     Tablet px32 / Mobile px16) and shared by every section so each section's
+     left/right edge lines up with the nav. Content is capped at the [VERIFIED]
+     1440 Commerce design-frame width. Vertical section rhythm (--pk-section-y)
+     is [PROTOTYPE-LOCAL] — the kit has no verified page-grid/spacing spec.
+     Gutter + rhythm are overridden per breakpoint alongside the nav. */
+  --pk-gutter: 56px; /* [VERIFIED] nav Desktop px56 */
+  --pk-content-max: 1440px; /* [VERIFIED] Commerce design frame width */
+  --pk-section-y: 56px; /* [PROTOTYPE-LOCAL] vertical rhythm */
+
   font-family: inherit;
   background: var(--pk-ink);
   color: var(--pk-white);
@@ -144,7 +155,7 @@ body {
   align-items: center;
   justify-content: space-between;
   height: 88px; /* [VERIFIED] nav 45799:660 */
-  padding: 0 56px; /* [VERIFIED] nav px56 */
+  padding: 0 var(--pk-gutter); /* [VERIFIED] shared page gutter (nav px56) */
   background: var(--pk-ink);
   position: sticky;
   top: 0;
@@ -169,9 +180,12 @@ body {
    compact pill buttons (no hamburger / no collapsed menu). Breakpoints key off
    the verified variant frame widths (768 → Tablet, 375 → Mobile). */
 @media (max-width: 768px) {
+  .ui-brand {
+    --pk-gutter: 32px; /* [VERIFIED] Tablet px32 (nav + all sections) */
+    --pk-section-y: 44px; /* [PROTOTYPE-LOCAL] tighter tablet rhythm */
+  }
   .ui-brand__header {
     height: 72px; /* [VERIFIED] Tablet */
-    padding: 0 32px; /* [VERIFIED] Tablet px32 */
   }
 }
 /* Mobile spec VALUES are [VERIFIED] (Mobile variant 47009:3458: px16, gap8). The
@@ -179,8 +193,9 @@ body {
    widths (390/414/430) — and the app's own 390px Mobile device preset — receive
    the mobile treatment rather than the 32px Tablet padding. */
 @media (max-width: 480px) {
-  .ui-brand__header {
-    padding: 0 16px; /* [VERIFIED] Mobile px16 */
+  .ui-brand {
+    --pk-gutter: 16px; /* [VERIFIED] Mobile px16 (nav + all sections) */
+    --pk-section-y: 32px; /* [PROTOTYPE-LOCAL] tighter mobile rhythm */
   }
   .ui-brand__nav {
     gap: 8px; /* [VERIFIED] Mobile gap8 */
@@ -302,7 +317,7 @@ body {
   --sec-card-border: var(--pk-card-border);
   background: var(--sec-bg);
   color: var(--sec-fg);
-  padding: 56px 48px;
+  padding: var(--pk-section-y) var(--pk-gutter);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -378,6 +393,7 @@ body {
   align-items: stretch;
   gap: 20px;
   width: 100%;
+  max-width: var(--pk-content-max); /* [VERIFIED] cap at 1440 design frame */
 }
 .ui-brand__card-li {
   display: flex;
@@ -604,7 +620,7 @@ body {
 
 /* --- Hero / banner --------------------------------------------------------- */
 .ui-brand__section[data-kind="hero"] {
-  padding: 96px 48px;
+  padding: 96px var(--pk-gutter); /* [PROTOTYPE-LOCAL] tall hero rhythm */
   --sec-bg: radial-gradient(120% 140% at 50% -10%, #2a2350 0%, #12111c 55%, #0b0b10 100%);
 }
 .ui-brand__section[data-kind="hero"] .ui-brand__title {
@@ -616,7 +632,7 @@ body {
   display: flex;
 }
 .ui-brand__section[data-kind="banner"] {
-  padding: 32px 48px;
+  padding: 32px var(--pk-gutter); /* [PROTOTYPE-LOCAL] compact banner rhythm */
   flex-direction: row;
   justify-content: space-between;
   gap: 24px;
@@ -752,7 +768,7 @@ body {
 /* --- Footer ---------------------------------------------------------------- */
 .ui-brand__section[data-kind="footer"] {
   --sec-bg: #000;
-  padding: 48px;
+  padding: 48px var(--pk-gutter); /* [PROTOTYPE-LOCAL] footer rhythm */
 }
 .ui-brand__footcols {
   display: flex;
