@@ -156,17 +156,18 @@ function PropertyControl({
 // Dense two-column layout: a fixed label column and a control column. Kept
 // local to V2 for the prototype (promote to src/ui later if reused).
 
-// Icon/asset picker: a small preview swatch, the asset name, and a no-op
-// Remove. When empty, shows a "Choose…" affordance.
+// Icon/asset picker: a preview tile, the asset name, and a no-op Remove. When
+// empty, shows a "Choose…" affordance. The tile itself is the well — no outer
+// container box wraps it (avoid nesting a bordered box inside a bordered box).
 function AssetPicker({ value }: { value: string }) {
   const empty = value.trim() === "";
   return (
-    <div className="flex items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] p-1.5">
+    <div className="flex items-center gap-2.5">
       <span
         aria-hidden
-        className="grid size-8 shrink-0 place-items-center rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-muted-foreground"
+        className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] text-muted-foreground"
       >
-        <Icon name="image" size={16} />
+        <Icon name="image" size={18} />
       </span>
       <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
         {empty ? "No asset selected" : value}
@@ -430,7 +431,7 @@ function FeatureIconTile({
           <button
             type="button"
             aria-label={has ? `Feature icon: ${value}. Change icon` : "Choose a feature icon"}
-            className="grid size-11 place-items-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="grid size-11 place-items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             {has ? (
               <MSym name={value} size={22} />
@@ -919,7 +920,7 @@ function CollectionBody({
           {items.map((item, i) => (
             <li
               key={item.id}
-              className="group/item flex items-center gap-1 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] py-1 pl-2.5 pr-1"
+              className="group/item flex items-center gap-1 rounded-sm border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] py-1 pl-2.5 pr-1"
             >
               <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
                 {item.label}
