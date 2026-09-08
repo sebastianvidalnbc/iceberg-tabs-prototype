@@ -546,6 +546,36 @@
 .ui-preview__controls { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); flex: 1 1 auto; min-width: 0; }
 .ui-preview__controls .ui-preview__field { flex: 1 1 0; }
 .ui-preview__status { margin-left: auto; display: inline-flex; align-items: center; }
+/* Right cluster on the first toolbar row: live a11y score + LIVE badge. */
+.ui-preview__meta { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-2); }
+.ui-preview__meta .ui-preview__status { margin-left: 0; }
+
+/* Accessibility "semáforo" — live, colour-coded a11y readout next to the
+   preview CTAs. Tri-state via [data-state]. Tinted surface + status colour so
+   it reads as a dashboard gauge without shouting. */
+.ui-a11y {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 var(--space-2) 0 var(--space-2);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid transparent;
+  white-space: nowrap;
+  user-select: none;
+}
+.ui-a11y__icon { flex: none; }
+.ui-a11y__body { display: inline-flex; flex-direction: column; justify-content: center; gap: 1px; line-height: 1; }
+.ui-a11y__top { display: inline-flex; align-items: baseline; gap: var(--space-1); }
+.ui-a11y__status { font-size: 9px; font-weight: var(--fw-bold); letter-spacing: 0.08em; text-transform: uppercase; }
+.ui-a11y__score { font-size: 13px; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.ui-a11y__score b { font-weight: var(--fw-bold); }
+.ui-a11y__max { font-weight: var(--fw-medium); opacity: 0.65; }
+.ui-a11y__locale { font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.8; }
+
+.ui-a11y[data-state="pass"] { background: var(--color-status-success-bg); border-color: color-mix(in srgb, var(--color-status-success) 22%, transparent); color: var(--color-status-success); }
+.ui-a11y[data-state="warn"] { background: var(--color-status-warning-bg); border-color: color-mix(in srgb, var(--color-status-warning) 22%, transparent); color: var(--color-status-warning); }
+.ui-a11y[data-state="fail"] { background: var(--color-status-danger-bg); border-color: color-mix(in srgb, var(--color-status-danger) 22%, transparent); color: var(--color-status-danger); }
 /* Canvas fills the pane edge to edge (no surrounding matte/margin); the iframe
    itself carries the rounded corners so the preview reads as one clean surface. */
 .ui-preview__canvas { flex: 1; min-height: 0; background: var(--color-bg-subtle); display: grid; place-items: center; color: var(--color-text-muted); }

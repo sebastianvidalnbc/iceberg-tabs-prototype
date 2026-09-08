@@ -4,6 +4,7 @@ import type { PreviewModel } from "../previewModel";
 import { Button } from "../ui-lib/Button";
 import { Select } from "../ui-lib/Select";
 import { Badge } from "../ui-lib/Badge";
+import { Icon } from "../ui-lib/Icon";
 import {
   CMS_SOURCE,
   PREVIEW_SOURCE,
@@ -59,6 +60,50 @@ const SIZE_OPTIONS = [
 // The standalone renderer document the iframe loads. BASE_URL is
 // "/iceberg-v4-eos/" in both dev (via the config middleware) and prod.
 const RENDERER_URL = `${import.meta.env.BASE_URL}renderer.html`;
+
+// Live accessibility score — the real editor's "semáforo": a colour-coded
+// readout of the page's a11y rate for the current locale. Tri-state by ratio
+// (green pass / amber review / red fail). The prototype has no a11y engine, so
+// the score is representative; the component is fully driven by props so a real
+// audit result can flow straight in.
+function AccessibilityScore({
+  score = 100,
+  max = 100,
+  region = "US",
+  locale = "en-US",
+}: {
+  score?: number;
+  max?: number;
+  region?: string;
+  locale?: string;
+}) {
+  const pct = max > 0 ? score / max : 0;
+  const state = pct >= 1 ? "pass" : pct >= 0.9 ? "warn" : "fail";
+  const statusLabel = state === "pass" ? "Pass" : state === "warn" ? "Review" : "Fail";
+  return (
+    <div
+      className="ui-a11y"
+      data-state={state}
+      role="status"
+      aria-label={`Accessibility ${statusLabel}: ${score} of ${max}. Locale ${region} ${locale}.`}
+      title={`Accessibility ${statusLabel} — ${score}/${max} · ${region}:${locale}`}
+    >
+      <Icon name="accessibility" size={16} className="ui-a11y__icon" />
+      <span className="ui-a11y__body">
+        <span className="ui-a11y__top">
+          <span className="ui-a11y__status">{statusLabel}</span>
+          <span className="ui-a11y__score">
+            <b>{score}</b>
+            <span className="ui-a11y__max">/{max}</span>
+          </span>
+        </span>
+        <span className="ui-a11y__locale">
+          {region}·{locale}
+        </span>
+      </span>
+    </div>
+  );
+}
 
 // Live preview status — the tri-state the real editor shows. ENABLED = green
 // LIVE (postMessage patches flowing); LOADING = iframe (re)loading; DISABLED =
@@ -161,11 +206,16 @@ export function LivePreview({
               >
                 Preview In Tab
               </Button>
-              <span className="ui-preview__status">
-                {status === "live" && <Badge variant="success">LIVE</Badge>}
-                {status === "loading" && <Badge variant="warning">LOADING</Badge>}
-                {status === "disabled" && <Badge variant="default">DISABLED</Badge>}
-              </span>
+              <div className="ui-preview__meta">
+                {hasContent && (
+                  <AccessibilityScore score={100} max={100} region="US" locale="en-US" />
+                )}
+                <span className="ui-preview__status">
+                  {status === "live" && <Badge variant="success">LIVE</Badge>}
+                  {status === "loading" && <Badge variant="warning">LOADING</Badge>}
+                  {status === "disabled" && <Badge variant="default">DISABLED</Badge>}
+                </span>
+              </div>
             </div>
             <div className="ui-preview__toolbar-row">
               <Button

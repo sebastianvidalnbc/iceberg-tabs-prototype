@@ -55,7 +55,8 @@ export type IconName =
   | "qa-notes"
   | "settings"
   | "css"
-  | "json-ld";
+  | "json-ld"
+  | "accessibility";
 
 // IconName → Material Symbols ligature. Documented mapping (Phase 4 audit):
 //   Nav destinations use the closest Material Symbol to each Iceberg concept;
@@ -107,6 +108,7 @@ const LIGATURES: Record<IconName, string> = {
   settings: "settings", // Settings
   css: "water_drop", // CSS (droplet, matches real editor)
   "json-ld": "account_tree", // JSON-LD (hierarchy)
+  accessibility: "accessibility_new", // A11y score chip
 };
 
 export function Icon({
