@@ -83,7 +83,7 @@ export function PropertyRow({
 
 // Rows container.
 export function PropertyRows({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col gap-3">{children}</div>;
+  return <div className="flex flex-col gap-4">{children}</div>;
 }
 
 // A titled, collapsible section (§21). Headless sections render flush. An
