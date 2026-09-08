@@ -719,8 +719,10 @@ export function Properties({
       aria-label="Properties"
       className="ui-ws__region w-[460px] max-w-full bg-[var(--color-bg-panel)] text-foreground max-[900px]:w-full"
     >
+      {/* Same treatment as the Explorer's PAGES / STRUCTURE headers (PanelHeader
+          eyebrow): they're peers in the panel-title hierarchy. */}
       <div className="flex shrink-0 items-center border-b border-border px-4 py-2">
-        <span className="text-[13px] font-semibold text-foreground">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
           Properties
         </span>
       </div>

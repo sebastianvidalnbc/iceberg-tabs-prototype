@@ -36,7 +36,7 @@ export function PanelHeader({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-2",
+        "flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2",
         className,
       )}
     >
