@@ -547,6 +547,25 @@ function InlineFeatureItem({
             )}
           </div>
         )}
+        {/* Inline remove: a subtle divider + red trash, vertically centered on
+            the field row (matches the compact feature-row spec). */}
+        <div className="flex h-11 shrink-0 items-center gap-1.5">
+          <span
+            aria-hidden
+            className="h-6 w-px bg-[var(--color-border-subtle)]"
+          />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={!removable}
+            title={removable ? "Remove feature" : "At least one feature required"}
+            aria-label="Remove feature"
+            onClick={onRemove}
+            className="text-[var(--color-status-danger)] hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] disabled:text-muted-foreground"
+          >
+            <MSym name="delete" size={18} />
+          </Button>
+        </div>
       </div>
       {extraFields.length > 0 && (
         <PropertyRows>
@@ -561,19 +580,6 @@ function InlineFeatureItem({
           ))}
         </PropertyRows>
       )}
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="xs"
-          disabled={!removable}
-          title={removable ? "Remove feature" : "At least one feature required"}
-          onClick={onRemove}
-          className="text-muted-foreground hover:text-[var(--color-status-danger)]"
-        >
-          <MSym name="delete" size={15} />
-          Remove
-        </Button>
-      </div>
     </div>
   );
 }
