@@ -533,7 +533,7 @@
 
 /* Live Preview — neutral central workspace hosting the Peacock preview pane. */
 .ui-ws-preview { background: var(--color-bg-canvas); align-items: stretch; }
-.ui-ws-preview__inner { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: var(--space-4); background: var(--color-bg-surface); border: var(--border-width) solid var(--color-border-default); border-radius: var(--radius-md); box-shadow: var(--elevation-1); overflow: hidden; }
+.ui-ws-preview__inner { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--color-bg-surface); overflow: hidden; }
 
 /* Reusable Peacock preview pane (recreated from V1 visuals, token-driven). */
 .ui-preview { display: flex; flex-direction: column; min-height: 0; flex: 1; user-select: none; }
