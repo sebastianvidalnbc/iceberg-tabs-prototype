@@ -72,11 +72,13 @@ export function TreeRow({
       className={cn(
         "group relative flex h-7 cursor-pointer items-center gap-1 rounded-sm pr-1 text-[13px] leading-none",
         "text-foreground/90 transition-colors",
-        "hover:bg-accent",
+        // --row-bg tracks the row's current background so the trailing menu's
+        // fade mask can blend the label into whatever fill is showing.
+        "hover:bg-accent [--row-bg:var(--color-bg-panel)] hover:[--row-bg:var(--color-bg-hover)]",
         // Fluid rows grow to content and always fill the pane width (so the
         // selection/hover fill spans the full — possibly scrolled — width).
         fluid && "w-max min-w-full",
-        selected && "bg-[var(--color-bg-selected)] text-foreground",
+        selected && "bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground",
         isDragging && "opacity-40",
         isOver && "before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:content-['']",
         disabled && "opacity-55",
@@ -123,7 +125,18 @@ export function TreeRow({
       {trailing != null && (
         <span
           className={cn(
-            "ml-auto flex shrink-0 items-center gap-1 pl-1 transition-opacity",
+            // Pinned to the right edge of the scroll viewport (4px clear of the
+            // 10px scrollbar) so the overflow menu is always in the same spot,
+            // regardless of label length or horizontal scroll. It sits on the
+            // row fill (--row-bg) and a gradient fade to its left dissolves the
+            // label underneath so long names stay readable.
+            // right-0 pins the container to the viewport edge; pr-3.5 (14px)
+            // insets the icon to 4px clear of the 10px scrollbar while the solid
+            // fill still covers the label all the way to the edge.
+            "sticky right-0 z-10 ml-auto flex shrink-0 items-center gap-1 pl-1 pr-3.5 transition-opacity",
+            "[background:var(--row-bg)]",
+            "before:pointer-events-none before:absolute before:right-full before:top-0 before:h-full before:w-8 before:content-['']",
+            "before:bg-[linear-gradient(to_right,transparent,var(--row-bg))]",
             // Show the overflow menu only on hover, when the row is selected, or
             // while its menu is open (so the dropdown doesn't vanish mid-use).
             "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
