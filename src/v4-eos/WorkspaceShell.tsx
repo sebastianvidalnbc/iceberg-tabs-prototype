@@ -574,27 +574,31 @@ export function WorkspaceShell({
               />
 
               {/* QA tools — available in QA states; disabled by default (matches
-                  the real editor's greyed QA Review / QA Notes). */}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled
-                title="QA Review"
-                aria-label="QA Review"
-                onClick={() => {}}
-              >
-                <Icon name="qa-review" size={18} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled
-                title="QA Notes"
-                aria-label="QA Notes"
-                onClick={() => {}}
-              >
-                <Icon name="qa-notes" size={18} />
-              </Button>
+                  the real editor's greyed QA Review / QA Notes). Icon-only CTAs
+                  use the instant .ui-cta-tip tooltip (same treatment as the rail),
+                  not the delayed native title. */}
+              <span className="ui-cta-tip" data-tip="QA Review">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled
+                  aria-label="QA Review"
+                  onClick={() => {}}
+                >
+                  <Icon name="qa-review" size={18} />
+                </Button>
+              </span>
+              <span className="ui-cta-tip" data-tip="QA Notes">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled
+                  aria-label="QA Notes"
+                  onClick={() => {}}
+                >
+                  <Icon name="qa-notes" size={18} />
+                </Button>
+              </span>
 
               <span
                 aria-hidden
@@ -602,33 +606,36 @@ export function WorkspaceShell({
               />
 
               {/* Metadata / config tools. */}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="CSS"
-                aria-label="CSS"
-                onClick={() => {}}
-              >
-                <Icon name="css" size={18} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="JSON-LD"
-                aria-label="JSON-LD"
-                onClick={() => {}}
-              >
-                <Icon name="json-ld" size={18} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Settings"
-                aria-label="Settings"
-                onClick={() => {}}
-              >
-                <Icon name="settings" size={18} />
-              </Button>
+              <span className="ui-cta-tip" data-tip="CSS">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="CSS"
+                  onClick={() => {}}
+                >
+                  <Icon name="css" size={18} />
+                </Button>
+              </span>
+              <span className="ui-cta-tip" data-tip="JSON-LD">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="JSON-LD"
+                  onClick={() => {}}
+                >
+                  <Icon name="json-ld" size={18} />
+                </Button>
+              </span>
+              <span className="ui-cta-tip" data-tip="Settings">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Settings"
+                  onClick={() => {}}
+                >
+                  <Icon name="settings" size={18} />
+                </Button>
+              </span>
             </div>
           )}
         </div>

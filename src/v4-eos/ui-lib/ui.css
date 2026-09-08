@@ -546,6 +546,39 @@
 .ui-preview__controls { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); flex: 1 1 auto; min-width: 0; }
 .ui-preview__controls .ui-preview__field { flex: 1 1 0; }
 .ui-preview__status { margin-left: auto; display: inline-flex; align-items: center; }
+/* Instant tooltip for icon-only CTAs (editor action bar). Same dark-pill
+   treatment as the rail's label tooltip, positioned BELOW the control. Shown on
+   hover AND keyboard focus; the button itself carries aria-label so this is a
+   decorative visual. Disabled buttons set pointer-events:none, so hover falls
+   through to this wrapper and the tip still appears. */
+.ui-cta-tip { position: relative; display: inline-flex; }
+.ui-cta-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  padding: 4px var(--space-2);
+  background: var(--color-toast-bg);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--elevation-2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+  z-index: 30;
+}
+.ui-cta-tip:hover::after,
+.ui-cta-tip:focus-within::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* Right cluster on the first toolbar row: live a11y score + LIVE badge. */
 .ui-preview__meta { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-2); }
 .ui-preview__meta .ui-preview__status { margin-left: 0; }
