@@ -12,6 +12,7 @@
     "build:v1": "tsc -b && vite build",
     "build:v2": "tsc -b && vite build --config vite.v2.config.ts",
     "build:v4": "tsc -b && vite build --config vite.v4.config.ts",
+    "deploy:v4": "bash scripts/deploy-v4.sh",
     "preview:v1": "vite preview",
     "preview:v2": "vite preview --config vite.v2.config.ts",
     "preview:v4": "vite preview --config vite.v4.config.ts"
