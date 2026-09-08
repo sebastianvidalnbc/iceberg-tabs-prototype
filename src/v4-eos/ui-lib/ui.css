@@ -537,10 +537,18 @@
 
 /* Reusable Peacock preview pane (recreated from V1 visuals, token-driven). */
 .ui-preview { display: flex; flex-direction: column; min-height: 0; flex: 1; user-select: none; }
-.ui-preview__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); }
-.ui-preview__field { display: inline-flex; align-items: center; }
+.ui-preview__toolbar { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); }
+.ui-preview__toolbar-row { display: flex; align-items: center; gap: var(--space-3); min-height: 32px; }
+.ui-preview__open { font-weight: var(--fw-semibold); }
+.ui-preview__field { display: flex; align-items: center; min-width: 0; }
+/* Second-row controls (MVT / audience / size) fill the right of the row as an
+   equal-width group on a single line. */
+.ui-preview__controls { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); flex: 1 1 auto; min-width: 0; }
+.ui-preview__controls .ui-preview__field { flex: 1 1 0; }
 .ui-preview__status { margin-left: auto; display: inline-flex; align-items: center; }
-.ui-preview__canvas { flex: 1; min-height: 0; margin: var(--space-3); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-bg-preview-canvas); display: grid; place-items: center; color: var(--color-text-muted); }
+/* Canvas fills the pane edge to edge (no surrounding matte/margin); the iframe
+   itself carries the rounded corners so the preview reads as one clean surface. */
+.ui-preview__canvas { flex: 1; min-height: 0; background: var(--color-bg-subtle); display: grid; place-items: center; color: var(--color-text-muted); }
 .ui-preview__label { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.08em; font-weight: var(--fw-semibold); }
 
 /* Per-Variant preview state — visibly changes as Variants are switched. */

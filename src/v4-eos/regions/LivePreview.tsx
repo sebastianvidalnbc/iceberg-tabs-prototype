@@ -152,56 +152,63 @@ export function LivePreview({
       <div className="ui-ws-preview__inner">
         <div className="ui-preview">
           <div className="ui-preview__toolbar">
-            <Button
-              variant="tertiary"
-              size="sm"
-              onClick={() => window.open(RENDERER_URL, "_blank", "noopener")}
-            >
-              Preview In Tab
-            </Button>
-            <Button
-              variant={pickMode ? "primary" : "tertiary"}
-              size="sm"
-              onClick={() => setPickMode((v) => !v)}
-              aria-pressed={pickMode}
-              title="Click any element in the preview to select it. Toggle to outline every clickable element."
-            >
-              {pickMode ? "Highlighting…" : "Highlight elements"}
-            </Button>
-            {variations.length > 0 && (
-              <label className="ui-preview__field">
-                <span className="ui-visually-hidden">Variation (MVT)</span>
-                <Select
-                  size="sm"
-                  value={mvtOverride}
-                  onChange={onMvtChange}
-                  options={mvtOptions}
-                />
-              </label>
-            )}
-            <label className="ui-preview__field">
-              <span className="ui-visually-hidden">Audience</span>
-              <Select
+            <div className="ui-preview__toolbar-row">
+              <Button
+                variant="tertiary"
                 size="sm"
-                value={audience}
-                onChange={setAudience}
-                options={AUDIENCE_OPTIONS}
-              />
-            </label>
-            <label className="ui-preview__field">
-              <span className="ui-visually-hidden">Preview size</span>
-              <Select
+                className="ui-preview__open"
+                onClick={() => window.open(RENDERER_URL, "_blank", "noopener")}
+              >
+                Preview In Tab
+              </Button>
+              <span className="ui-preview__status">
+                {status === "live" && <Badge variant="success">LIVE</Badge>}
+                {status === "loading" && <Badge variant="warning">LOADING</Badge>}
+                {status === "disabled" && <Badge variant="default">DISABLED</Badge>}
+              </span>
+            </div>
+            <div className="ui-preview__toolbar-row">
+              <Button
+                variant={pickMode ? "primary" : "tertiary"}
                 size="sm"
-                value={size}
-                onChange={setSize}
-                options={SIZE_OPTIONS}
-              />
-            </label>
-            <span className="ui-preview__status">
-              {status === "live" && <Badge variant="success">LIVE</Badge>}
-              {status === "loading" && <Badge variant="warning">LOADING</Badge>}
-              {status === "disabled" && <Badge variant="default">DISABLED</Badge>}
-            </span>
+                onClick={() => setPickMode((v) => !v)}
+                aria-pressed={pickMode}
+                title="Click any element in the preview to select it. Toggle to outline every clickable element."
+              >
+                {pickMode ? "Highlighting…" : "Highlight elements"}
+              </Button>
+              <div className="ui-preview__controls">
+                {variations.length > 0 && (
+                  <label className="ui-preview__field">
+                    <span className="ui-visually-hidden">Variation (MVT)</span>
+                    <Select
+                      size="sm"
+                      value={mvtOverride}
+                      onChange={onMvtChange}
+                      options={mvtOptions}
+                    />
+                  </label>
+                )}
+                <label className="ui-preview__field">
+                  <span className="ui-visually-hidden">Audience</span>
+                  <Select
+                    size="sm"
+                    value={audience}
+                    onChange={setAudience}
+                    options={AUDIENCE_OPTIONS}
+                  />
+                </label>
+                <label className="ui-preview__field">
+                  <span className="ui-visually-hidden">Preview size</span>
+                  <Select
+                    size="sm"
+                    value={size}
+                    onChange={setSize}
+                    options={SIZE_OPTIONS}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
           <div className="ui-preview__canvas" data-mode={hasContent ? "frame" : undefined}>
             {hasContent ? (

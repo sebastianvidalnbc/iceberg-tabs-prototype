@@ -531,9 +531,8 @@
   display: flex;
   align-items: stretch;
   justify-content: center;
-  padding: var(--space-3);
-  border-style: solid;
-  border-color: var(--color-border-subtle);
+  /* No padding/border: the iframe fills the pane. Device presets (tablet/mobile)
+     center a narrower frame and the subtle canvas backdrop shows on the sides. */
 }
 .ui-preview__canvas[data-mode="frame"] .ui-preview__frame {
   display: flex;
