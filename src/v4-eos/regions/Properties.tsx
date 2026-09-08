@@ -859,7 +859,7 @@ function FieldsBody({
           </Button>
         )}
       </ObjectHeader>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         {groups.map((group, i) => (
           <GroupSection
             key={group.header ?? i}
