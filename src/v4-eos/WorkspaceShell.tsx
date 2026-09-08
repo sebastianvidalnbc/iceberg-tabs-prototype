@@ -605,8 +605,24 @@ export function WorkspaceShell({
             onDoubleClick={() => setExplorerWidth(280)}
             className="group relative z-10 cursor-col-resize select-none"
           >
-            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--color-border-default)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
-            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100" style={{ background: "var(--color-action-primary)" }} />
+            {/* Divider line — same weight/colour as the Properties panel's. */}
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
+            {/* Grabber affordance: a 2×3-dot pill centred on the divider so it
+                reads as a draggable handle. Pointer events bubble to the parent
+                so grabbing it starts the resize. */}
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-1/2 flex h-7 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] shadow-[var(--elevation-1)] transition-colors group-hover:border-[var(--color-action-primary)]"
+            >
+              <span className="grid grid-cols-2 gap-[3px]">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="size-[3px] rounded-full bg-[var(--color-text-muted)] transition-colors group-hover:bg-[var(--color-action-primary)]"
+                  />
+                ))}
+              </span>
+            </span>
           </div>
           <LivePreview
             variant={activeExperience}
