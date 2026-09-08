@@ -785,27 +785,27 @@ function PropertiesBody({
   // A product card also gets its feature bullets inline (the real `tabs` field
   // renders inside the card's form), editable + add/remove.
   return (
-    <>
-      <FieldsBody
-        key={nodeId}
-        data={resolved.data}
-        overridesForNode={overridesForNode}
-        invalidFields={invalidFields}
-        onEdit={onEdit}
-      />
-      <InlineFeatureCollections
-        variant={variant}
-        productId={nodeId}
-        resolve={(id) => {
-          const r = resolveNode(id);
-          return r.kind === "fields" ? r.data : null;
-        }}
-        overridesFor={(id) => findNodeById(variant.structure, id)?.content ?? {}}
-        onEditField={onEditField}
-        onAddChild={onAddChild}
-        onRemoveChild={onRemoveChild}
-      />
-    </>
+    <FieldsBody
+      key={nodeId}
+      data={resolved.data}
+      overridesForNode={overridesForNode}
+      invalidFields={invalidFields}
+      onEdit={onEdit}
+      footer={
+        <InlineFeatureCollections
+          variant={variant}
+          productId={nodeId}
+          resolve={(id) => {
+            const r = resolveNode(id);
+            return r.kind === "fields" ? r.data : null;
+          }}
+          overridesFor={(id) => findNodeById(variant.structure, id)?.content ?? {}}
+          onEditField={onEditField}
+          onAddChild={onAddChild}
+          onRemoveChild={onRemoveChild}
+        />
+      }
+    />
   );
 }
 
@@ -818,11 +818,15 @@ function FieldsBody({
   overridesForNode,
   invalidFields,
   onEdit,
+  footer,
 }: {
   data: ObjectProperties;
   overridesForNode: Record<string, string>;
   invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
+  // Extra sections rendered inside the same divided flow (e.g. a product card's
+  // inline feature collections), so they get the same between-section divider.
+  footer?: React.ReactNode;
 }) {
   const { eyebrow, name } = data;
   const groups: PropertyGroup[] = useMemo(
@@ -859,7 +863,7 @@ function FieldsBody({
           </Button>
         )}
       </ObjectHeader>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col divide-y divide-[var(--color-border-subtle)]">
         {groups.map((group, i) => (
           <GroupSection
             key={group.header ?? i}
@@ -871,6 +875,7 @@ function FieldsBody({
             onEdit={onEdit}
           />
         ))}
+        {footer}
       </div>
     </>
   );

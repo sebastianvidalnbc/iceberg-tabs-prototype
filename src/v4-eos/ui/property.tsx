@@ -107,14 +107,14 @@ export function PropertySection({
   }
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
-      <div className="flex items-center gap-2 pt-3 pb-1.5">
+      <div className="flex items-center gap-2 py-2">
         <CollapsibleTrigger className="group flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
           <MSym name="chevron_right" size={18} className="shrink-0 transition-transform group-data-[state=open]:rotate-90" />
           <span className="truncate">{header}</span>
         </CollapsibleTrigger>
         {action}
       </div>
-      <CollapsibleContent className="pt-1 pb-1">{children}</CollapsibleContent>
+      <CollapsibleContent className="pt-1 pb-2">{children}</CollapsibleContent>
     </Collapsible>
   );
 }
