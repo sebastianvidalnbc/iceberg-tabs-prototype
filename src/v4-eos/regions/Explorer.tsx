@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Panel, PanelHeader, SearchInput } from "@/v4-eos/ui/panel";
 import { TreeRow } from "@/v4-eos/ui/tree-row";
 import { RowActionsMenu } from "@/v4-eos/ui/row-actions";
@@ -437,12 +437,38 @@ export function Explorer({
   const routeLabel = findRouteLabel(collectionTree, selectedRouteId);
   const structureEmptyNoun = context === "widget" ? "widget config" : "variant";
 
+  // Pages / Structure split (percentage of the Explorer height for the Pages
+  // pane). Default is intentionally compact so Structure gets more room.
+  const PAGES_DEFAULT_PCT = 30;
+  const [pagesPct, setPagesPct] = useState(PAGES_DEFAULT_PCT);
+  const beginPagesResize = (e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const container = e.currentTarget.parentElement;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const onMove = (ev: PointerEvent) => {
+      const pct = ((ev.clientY - rect.top) / rect.height) * 100;
+      setPagesPct(Math.min(80, Math.max(15, pct)));
+    };
+    const onUp = () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.body.style.cursor = "";
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    document.body.style.cursor = "row-resize";
+  };
+
   return (
     // Keep the shell grid contract (.ui-ws__region) on the outer element; the
     // panel internals are fully shadcn/Tailwind (§8). Dark panel surface.
     <Panel className="ui-ws__region" aria-label="Explorer">
-      {/* Collection pane */}
-      <div className="flex min-h-0 flex-[0_1_42%] flex-col">
+      {/* Collection pane (PAGES) — resizable height. */}
+      <div
+        className="flex min-h-0 shrink-0 grow-0 flex-col"
+        style={{ flexBasis: `${pagesPct}%` }}
+      >
         <PanelHeader
           eyebrow={collectionHeader}
           actions={
@@ -465,8 +491,36 @@ export function Explorer({
           />
         </ScrollArea>
       </div>
-      {/* Structure pane */}
-      <div className="flex min-h-0 flex-[1_1_58%] flex-col border-t border-[var(--color-border-strong)]">
+      {/* Draggable divider between Pages and Structure. Same line weight/colour
+          as the column dividers, with a horizontal 3×2-dot grabber centred on it
+          (sits just above the Structure header). Net zero height (negative
+          margins) so the panes stay flush; the 6px box is the grab target. */}
+      <div
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize pages panel"
+        title="Drag to resize"
+        onPointerDown={beginPagesResize}
+        onDoubleClick={() => setPagesPct(PAGES_DEFAULT_PCT)}
+        className="group relative z-10 -my-[3px] h-1.5 shrink-0 cursor-row-resize select-none"
+      >
+        <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
+        <span
+          aria-hidden
+          className="absolute left-1/2 top-1/2 flex h-4 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] shadow-[var(--elevation-1)] transition-colors group-hover:border-[var(--color-action-primary)]"
+        >
+          <span className="grid grid-flow-col grid-rows-2 gap-[3px]">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span
+                key={i}
+                className="size-[3px] rounded-full bg-[var(--color-text-muted)] transition-colors group-hover:bg-[var(--color-action-primary)]"
+              />
+            ))}
+          </span>
+        </span>
+      </div>
+      {/* Structure pane — fills the remaining height. */}
+      <div className="flex min-h-0 flex-1 flex-col">
         <PanelHeader
           eyebrow="Structure"
           sub={activeExperience ? activeExperience.name : routeLabel ?? "—"}
