@@ -152,7 +152,6 @@ export function LivePreview({
       <div className="ui-ws-preview__inner">
         <div className="ui-preview">
           <div className="ui-preview__toolbar">
-            <span className="ui-preview__gear" aria-hidden="true" />
             <Button
               variant="tertiary"
               size="sm"
