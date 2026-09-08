@@ -38,6 +38,11 @@ export interface PreviewCard {
   features: PreviewFeature[];
   price?: string;
   priceCadence?: string;
+  // Verified IA pricing-block extras (all optional; render only when authored).
+  priceStrike?: string; // "Strike Through Price" — struck-out original price
+  priceSavings?: string; // "Offer Detail" — savings eyebrow (e.g. "Save 30%")
+  priceCadenceText?: string; // "Price Cadence and Subtext" — e.g. "/month"
+  priceDetails?: string; // "Offer Detail Description" — small offer copy
   cta?: string;
 }
 
@@ -233,12 +238,26 @@ function buildCard(
 
   let price: string | undefined;
   let priceCadence: string | undefined;
+  // Verified IA pricing-block extras (Plan Card 11051:8479 fields).
+  let priceStrike: string | undefined;
+  let priceSavings: string | undefined;
+  let priceCadenceText: string | undefined;
+  let priceDetails: string | undefined;
   const clist = childByType(product, "price-cadence", "cadence");
   const firstCad = clist?.children?.[0];
   if (firstCad) {
     const cm = fieldsForNode(firstCad, clist ?? null);
     price = pick(cm, ["Offer Price", "Strikethrough Price"]);
     priceCadence = firstCad.label;
+    priceStrike = pick(cm, ["Strike Through Price", "Strikethrough Price"]);
+    priceSavings = pick(cm, ["Offer Detail"]);
+    priceCadenceText = pick(cm, ["Price Cadence and Subtext"]);
+    const det = pick(cm, [
+      "Offer Detail Description RTE",
+      "Offer Detail Description",
+      "Offer Price Description RTE",
+    ]);
+    priceDetails = det ? stripHtml(det) : undefined;
   }
 
   return {
@@ -251,6 +270,10 @@ function buildCard(
     features,
     price,
     priceCadence,
+    priceStrike,
+    priceSavings,
+    priceCadenceText,
+    priceDetails,
     cta,
   };
 }

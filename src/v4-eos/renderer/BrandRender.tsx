@@ -93,19 +93,44 @@ function BrandCard({
             </ul>
           ) : null}
         </div>
-        {card.price || card.cta ? (
+        {card.price ||
+        card.priceStrike ||
+        card.priceSavings ||
+        card.priceDetails ||
+        card.cta ? (
           <div className="ui-brand__card-bottom">
-            {/* [VERIFIED] IA pricing block: offer price (amount + cadence) then a
-                full-width WebButtonPrimary CTA. Savings/strikethrough/details
-                rows render only when that data exists. */}
-            {card.price ? (
+            {/* [VERIFIED] IA pricing block (Plan Card 11051:8479): savings eyebrow
+                → strikethrough + offer price + cadence → offer details, then the
+                full-width WebButtonPrimary CTA. Each row renders only when the
+                corresponding field is authored. */}
+            {card.price ||
+            card.priceStrike ||
+            card.priceSavings ||
+            card.priceDetails ? (
               <div className="ui-brand__pricing">
-                <p className="ui-brand__price-row">
-                  <span className="ui-brand__price">{card.price}</span>
-                  {card.priceCadence ? (
-                    <span className="ui-brand__cadence">/{card.priceCadence}</span>
-                  ) : null}
-                </p>
+                {card.priceSavings ? (
+                  <p className="ui-brand__price-savings">{card.priceSavings}</p>
+                ) : null}
+                {card.price || card.priceStrike ? (
+                  <p className="ui-brand__price-row">
+                    {card.priceStrike ? (
+                      <span className="ui-brand__price-strike">
+                        {card.priceStrike}
+                      </span>
+                    ) : null}
+                    {card.price ? (
+                      <span className="ui-brand__price">{card.price}</span>
+                    ) : null}
+                    {(card.priceCadenceText ?? card.priceCadence) ? (
+                      <span className="ui-brand__cadence">
+                        {card.priceCadenceText ?? `/${card.priceCadence}`}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : null}
+                {card.priceDetails ? (
+                  <p className="ui-brand__price-details">{card.priceDetails}</p>
+                ) : null}
               </div>
             ) : null}
             {card.cta ? (
