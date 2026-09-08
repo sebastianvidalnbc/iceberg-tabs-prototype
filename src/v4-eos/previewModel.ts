@@ -236,29 +236,31 @@ function buildCard(
 
   const features = collectFeatures(product);
 
-  let price: string | undefined;
-  let priceCadence: string | undefined;
-  // Verified IA pricing-block extras (Plan Card 11051:8479 fields).
-  let priceStrike: string | undefined;
-  let priceSavings: string | undefined;
-  let priceCadenceText: string | undefined;
-  let priceDetails: string | undefined;
+  // Price. Primary source is the product card's OWN Pricing fields (the schema
+  // single-price model, authored right on the card). Fall back to the first
+  // Price Cadence item so any cadence-authored data still renders.
   const clist = childByType(product, "price-cadence", "cadence");
   const firstCad = clist?.children?.[0];
-  if (firstCad) {
-    const cm = fieldsForNode(firstCad, clist ?? null);
-    price = pick(cm, ["Offer Price", "Strikethrough Price"]);
-    priceCadence = firstCad.label;
-    priceStrike = pick(cm, ["Strike Through Price", "Strikethrough Price"]);
-    priceSavings = pick(cm, ["Offer Detail"]);
-    priceCadenceText = pick(cm, ["Price Cadence and Subtext"]);
-    const det = pick(cm, [
+  const cm = firstCad ? fieldsForNode(firstCad, clist ?? null) : {};
+  const price =
+    pick(map, ["Offer Price"]) ??
+    pick(cm, ["Offer Price", "Strikethrough Price"]);
+  const priceStrike =
+    pick(map, ["Strike Through Price"]) ??
+    pick(cm, ["Strike Through Price", "Strikethrough Price"]);
+  const priceSavings = pick(map, ["Offer Detail"]) ?? pick(cm, ["Offer Detail"]);
+  const priceCadenceText =
+    pick(map, ["Price Cadence and Subtext"]) ??
+    pick(cm, ["Price Cadence and Subtext"]);
+  const detRaw =
+    pick(map, ["Offer Detail Description"]) ??
+    pick(cm, [
       "Offer Detail Description RTE",
       "Offer Detail Description",
       "Offer Price Description RTE",
     ]);
-    priceDetails = det ? stripHtml(det) : undefined;
-  }
+  const priceDetails = detRaw ? stripHtml(detRaw) : undefined;
+  const priceCadence = firstCad?.label;
 
   return {
     id: product.id,

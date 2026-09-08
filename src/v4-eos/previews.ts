@@ -246,9 +246,17 @@ export interface ProductValues {
   badge: boolean;
   badgeText: string;
   eyebrow: string;
+  productTitleIcon: string;
   productLogo: string;
   productTitle: string;
   productDescription: string;
+  // Pricing (schema single-price model, authored on the card).
+  offerDetail: string;
+  strikeThroughPrice: string;
+  offerPrice: string;
+  priceCadenceSubtext: string;
+  priceAria: string;
+  offerDetailDescription: string;
   primaryCta: string;
   primaryCtaText: string;
   primaryCtaHref: string;
@@ -264,8 +272,11 @@ export interface ProductValues {
 
 // Product editor. Schema-driven and identical for Select / Premium / Premium
 // Plus — the object supplies VALUES, the `product` type supplies this SCHEMA.
-// Groups: CONTENT / CTA / COMMERCE·CONFIGURATION / LEGAL. Product Features and
-// Price Cadence are NOT inlined here — they are child collections in Structure.
+// Groups: CONTENT / PRICING / CTA / COMMERCE·CONFIGURATION / LEGAL. Pricing
+// fields (Offer Price, Strike Through Price, cadence subtext, …) live on the
+// card per the schema's single-price Plan Picker product. Product Features
+// remain a child collection in Structure; any legacy Price Cadence collection
+// still feeds the preview as a fallback when the card fields are empty.
 export function productSchema(
   label: string,
   values: Partial<ProductValues> = {}
@@ -287,11 +298,35 @@ export function productSchema(
           },
           { label: "Badge Text", value: v.badgeText ?? "" },
           { label: "Eyebrow", value: v.eyebrow ?? "" },
+          { label: "Product Title Icon", value: v.productTitleIcon ?? "", kind: "asset" },
           { label: "Product Logo", value: v.productLogo ?? "", kind: "asset" },
           { label: "Product Title", value: v.productTitle ?? label, required: true },
           {
             label: "Product Description",
             value: v.productDescription ?? "",
+            kind: "textarea",
+          },
+        ],
+      },
+      {
+        header: "PRICING",
+        fields: [
+          {
+            label: "Offer Detail",
+            value: v.offerDetail ?? "",
+            helper: "Savings eyebrow, e.g. \u201cSave 30%\u201d.",
+          },
+          { label: "Strike Through Price", value: v.strikeThroughPrice ?? "" },
+          { label: "Offer Price", value: v.offerPrice ?? "" },
+          {
+            label: "Price Cadence and Subtext",
+            value: v.priceCadenceSubtext ?? "",
+            helper: "Cadence + subtext, e.g. \u201c/month\u201d.",
+          },
+          { label: "Price Aria Label", value: v.priceAria ?? "" },
+          {
+            label: "Offer Detail Description",
+            value: v.offerDetailDescription ?? "",
             kind: "textarea",
           },
         ],
