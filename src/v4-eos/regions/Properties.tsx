@@ -584,6 +584,8 @@ function InlineFeatureCollections({
   resolve,
   overridesFor,
   productId,
+  isOpen,
+  onToggleList,
   onEditField,
   onAddChild,
   onRemoveChild,
@@ -592,13 +594,16 @@ function InlineFeatureCollections({
   resolve: (id: string) => ObjectProperties | null;
   overridesFor: (id: string) => Record<string, string>;
   productId: string;
+  // Controlled collapse: state lives in the parent FieldsBody so these sections
+  // join its Expand all / Collapse all.
+  isOpen: (key: string) => boolean;
+  onToggleList: (key: string) => void;
   onEditField: (nodeId: string, label: string, value: string) => void;
   onAddChild: (parentId: string, childType: StructureObjectType) => void;
   onRemoveChild: (childId: string) => void;
 }) {
   const product = findNodeById(variant.structure, productId);
   const lists = (product?.children ?? []).filter(isFeatureListNode);
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   if (!lists.length) return null;
 
   return (
@@ -609,7 +614,7 @@ function InlineFeatureCollections({
         const childType = allowedChildType(list.objectType);
         const max = list.maxChildren ?? maxChildrenFor(list.objectType);
         const atMax = max != null && items.length >= max;
-        const open = !collapsed.has(list.id);
+        const open = isOpen(list.id);
         const canAdd = !!childType && !atMax;
         const nounLower = noun.toLowerCase();
         return (
@@ -617,26 +622,7 @@ function InlineFeatureCollections({
             key={list.id}
             header={`${list.label} · ${items.length}${max != null ? ` / ${max}` : ""}`}
             expanded={open}
-            onToggle={() =>
-              setCollapsed((prev) => {
-                const next = new Set(prev);
-                next.has(list.id) ? next.delete(list.id) : next.add(list.id);
-                return next;
-              })
-            }
-            action={
-              <Button
-                variant="default"
-                size="icon-sm"
-                className="shrink-0 rounded-full"
-                disabled={!canAdd}
-                onClick={() => childType && onAddChild(list.id, childType)}
-                title={atMax ? `Maximum of ${max} reached` : `Add ${nounLower}`}
-                aria-label={`Add ${nounLower}`}
-              >
-                <MSym name="add" size={18} />
-              </Button>
-            }
+            onToggle={() => onToggleList(list.id)}
           >
             <div className="flex flex-col">
               {items.map((item, i) => {
@@ -659,10 +645,40 @@ function InlineFeatureCollections({
                   </div>
                 );
               })}
-              {atMax && (
-                <p className="mt-3 text-[11px] text-muted-foreground">
+              {atMax ? (
+                <p
+                  className={cn(
+                    "text-[11px] text-muted-foreground",
+                    items.length > 0
+                      ? "mt-4 border-t border-[var(--color-border-subtle)] pt-4"
+                      : "mt-1"
+                  )}
+                >
                   Maximum of {max} {nounLower}s reached.
                 </p>
+              ) : (
+                <div
+                  className={cn(
+                    "flex items-center gap-2.5",
+                    items.length > 0 &&
+                      "mt-4 border-t border-[var(--color-border-subtle)] pt-4"
+                  )}
+                >
+                  <Button
+                    variant="default"
+                    size="icon-sm"
+                    className="shrink-0 rounded-full"
+                    disabled={!canAdd}
+                    onClick={() => childType && onAddChild(list.id, childType)}
+                    title={`Add ${nounLower}`}
+                    aria-label={`Add ${nounLower}`}
+                  >
+                    <MSym name="add" size={18} />
+                  </Button>
+                  <span className="text-[13px] text-muted-foreground">
+                    Add {nounLower}
+                  </span>
+                </div>
               )}
             </div>
           </PropSection>
@@ -784,6 +800,11 @@ function PropertiesBody({
   // expand/collapse memory resets to the default (all open) on each new object.
   // A product card also gets its feature bullets inline (the real `tabs` field
   // renders inside the card's form), editable + add/remove.
+  const featureListKeys = (
+    findNodeById(variant.structure, nodeId)?.children ?? []
+  )
+    .filter(isFeatureListNode)
+    .map((l) => l.id);
   return (
     <FieldsBody
       key={nodeId}
@@ -791,7 +812,8 @@ function PropertiesBody({
       overridesForNode={overridesForNode}
       invalidFields={invalidFields}
       onEdit={onEdit}
-      footer={
+      footerKeys={featureListKeys}
+      footer={({ isOpen, toggle }) => (
         <InlineFeatureCollections
           variant={variant}
           productId={nodeId}
@@ -800,11 +822,13 @@ function PropertiesBody({
             return r.kind === "fields" ? r.data : null;
           }}
           overridesFor={(id) => findNodeById(variant.structure, id)?.content ?? {}}
+          isOpen={isOpen}
+          onToggleList={toggle}
           onEditField={onEditField}
           onAddChild={onAddChild}
           onRemoveChild={onRemoveChild}
         />
-      }
+      )}
     />
   );
 }
@@ -818,15 +842,22 @@ function FieldsBody({
   overridesForNode,
   invalidFields,
   onEdit,
+  footerKeys = [],
   footer,
 }: {
   data: ObjectProperties;
   overridesForNode: Record<string, string>;
   invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
-  // Extra sections rendered inside the same divided flow (e.g. a product card's
-  // inline feature collections), so they get the same between-section divider.
-  footer?: React.ReactNode;
+  // Extra collapsible sections rendered inside the same divided flow (e.g. a
+  // product card's inline feature collections). `footerKeys` are their collapse
+  // keys so they join the Expand all / Collapse all set; `footer` receives the
+  // shared open/toggle API so their state is unified with the groups above.
+  footerKeys?: string[];
+  footer?: (api: {
+    isOpen: (key: string) => boolean;
+    toggle: (key: string) => void;
+  }) => React.ReactNode;
 }) {
   const { eyebrow, name } = data;
   const groups: PropertyGroup[] = useMemo(
@@ -834,10 +865,14 @@ function FieldsBody({
     [data.groups, data.fields]
   );
   const headers = useMemo(
-    () => groups.map((g) => g.header).filter((h): h is string => !!h),
-    [groups]
+    () => [
+      ...groups.map((g) => g.header).filter((h): h is string => !!h),
+      ...footerKeys,
+    ],
+    [groups, footerKeys]
   );
-  // Collapsed set (empty ⇒ all expanded). Only headed groups are collapsible.
+  // Collapsed set (empty ⇒ all expanded). Covers headed groups AND any footer
+  // sections (via footerKeys), so Expand all / Collapse all controls both.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const toggle = (header: string) =>
     setCollapsed((prev) => {
@@ -845,6 +880,7 @@ function FieldsBody({
       next.has(header) ? next.delete(header) : next.add(header);
       return next;
     });
+  const isOpen = (key: string) => !collapsed.has(key);
   const allCollapsed = headers.length > 0 && collapsed.size === headers.length;
   const collapseAll = () => setCollapsed(new Set(headers));
   const expandAll = () => setCollapsed(new Set());
@@ -875,7 +911,7 @@ function FieldsBody({
             onEdit={onEdit}
           />
         ))}
-        {footer}
+        {footer?.({ isOpen, toggle })}
       </div>
     </>
   );
