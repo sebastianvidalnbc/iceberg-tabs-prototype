@@ -39,7 +39,7 @@
   --color-bg-canvas: #f7f3f2;      /* app / chrome background (Surface Container Low) */
   --color-bg-surface: #fcf8f8;     /* primary surface (M3 Surface) */
   --color-bg-panel: #fcf8f8;       /* Explorer / Properties panels */
-  --color-bg-subtle: #f2edec;      /* subtle / recessed surface (Surface Container) */
+  --color-bg-subtle: #f7f3f2;      /* subtle / recessed surface (Surface Container Low) */
   --color-bg-elevated: #ffffff;    /* elevated surface: menus / popovers / dialogs (paper elevation-1) */
   --color-bg-hover: #ebe7e7;       /* hover surface (Surface Container High) */
   --color-bg-selected: #dbeaf3;    /* selected surface — Iceberg-blue tint (from brand logo) */
