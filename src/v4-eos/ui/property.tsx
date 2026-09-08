@@ -86,16 +86,20 @@ export function PropertyRows({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col gap-3">{children}</div>;
 }
 
-// A titled, collapsible section (§21). Headless sections render flush.
+// A titled, collapsible section (§21). Headless sections render flush. An
+// optional `action` renders a trailing control (e.g. an Add button) on the
+// header row — as a SIBLING of the trigger, never nested inside it.
 export function PropertySection({
   header,
   expanded,
   onToggle,
+  action,
   children,
 }: {
   header?: string;
   expanded?: boolean;
   onToggle?: () => void;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   if (!header) {
@@ -103,10 +107,13 @@ export function PropertySection({
   }
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
-      <CollapsibleTrigger className="group flex w-full items-center gap-1.5 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-        <MSym name="chevron_right" size={18} className="transition-transform group-data-[state=open]:rotate-90" />
-        {header}
-      </CollapsibleTrigger>
+      <div className="flex items-center gap-2 pt-3 pb-1.5">
+        <CollapsibleTrigger className="group flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+          <MSym name="chevron_right" size={18} className="shrink-0 transition-transform group-data-[state=open]:rotate-90" />
+          <span className="truncate">{header}</span>
+        </CollapsibleTrigger>
+        {action}
+      </div>
       <CollapsibleContent className="pt-1 pb-1">{children}</CollapsibleContent>
     </Collapsible>
   );

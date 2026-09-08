@@ -20,6 +20,12 @@ import {
   PropertySection as PropSection,
 } from "@/v4-eos/ui/property";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/v4-eos/ui/dropdown-menu";
+import { cn } from "@/v4-eos/ui/lib/utils";
+import {
   resolvePropertiesForVariant,
   resolveWidgetPropertiesForVariant,
   type AuthoringContext,
@@ -389,8 +395,98 @@ function flattenFields(data: ObjectProperties): PropertyField[] {
   return data.fields ?? [];
 }
 
-// One feature bullet: its own fields (icon + text) rendered inline, writing to
-// this feature node, plus a Remove control.
+// Curated feature-icon set. Values are Material Symbols names, so the stored
+// value IS the glyph (existing sample data uses "check", already valid).
+const FEATURE_ICONS: { value: string; label: string }[] = [
+  { value: "check", label: "Check" },
+  { value: "emoji_events", label: "Trophy" },
+  { value: "star", label: "Star" },
+  { value: "bolt", label: "Speed" },
+  { value: "live_tv", label: "Live TV" },
+  { value: "sports_soccer", label: "Sports" },
+  { value: "download", label: "Download" },
+  { value: "hd", label: "HD / 4K" },
+  { value: "closed_caption", label: "Captions" },
+  { value: "devices", label: "Devices" },
+  { value: "cloud_done", label: "Cloud" },
+  { value: "family_restroom", label: "Profiles" },
+];
+
+// The icon tile: shows the current icon and opens a picker on click. A corner
+// badge clears the icon when one is set, or hints "add" when empty. Writes the
+// chosen glyph back through onChange (the icon field was a no-op before).
+function FeatureIconTile({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const has = value.trim() !== "";
+  return (
+    <div className="relative shrink-0">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={has ? `Feature icon: ${value}. Change icon` : "Choose a feature icon"}
+            className="grid size-11 place-items-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            {has ? (
+              <MSym name={value} size={22} />
+            ) : (
+              <span className="sr-only">No icon</span>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-auto p-1.5">
+          <div className="grid grid-cols-4 gap-1">
+            {FEATURE_ICONS.map((ic) => (
+              <button
+                key={ic.value}
+                type="button"
+                title={ic.label}
+                aria-label={ic.label}
+                aria-pressed={value === ic.value}
+                onClick={() => onChange(ic.value)}
+                className={cn(
+                  "grid size-9 place-items-center rounded-sm text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                  value === ic.value &&
+                    "bg-[var(--color-bg-selected)] text-[var(--color-action-primary)]",
+                )}
+              >
+                <MSym name={ic.value} size={20} />
+              </button>
+            ))}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {has ? (
+        <button
+          type="button"
+          aria-label="Clear icon"
+          title="Clear icon"
+          onClick={() => onChange("")}
+          className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[var(--color-status-danger)] shadow-[var(--elevation-1)] transition-colors hover:bg-[var(--color-status-danger-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <MSym name="close" size={13} />
+        </button>
+      ) : (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-muted-foreground shadow-[var(--elevation-1)]"
+        >
+          <MSym name="add" size={13} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+// One feature bullet, modernized: an icon tile (with clear/add badge) + the
+// description field on one row, then a Remove control. The icon and description
+// fields are surfaced directly (no redundant per-field labels); any extra schema
+// fields fall back to standard labelled rows so nothing is lost.
 function InlineFeatureItem({
   fields,
   overrides,
@@ -404,20 +500,67 @@ function InlineFeatureItem({
   onRemove: () => void;
   removable: boolean;
 }) {
+  const iconField = fields.find(
+    (f) => f.kind === "asset" || f.label.toLowerCase().includes("icon"),
+  );
+  const textField =
+    fields.find(
+      (f) =>
+        f !== iconField &&
+        (f.kind === "textarea" || f.kind === "text" || f.kind === undefined),
+    ) ?? fields.find((f) => f !== iconField);
+  const extraFields = fields.filter((f) => f !== iconField && f !== textField);
+  const descId = useId();
+  const iconValue = iconField
+    ? overrides[iconField.label] ?? iconField.value
+    : "";
+  const textValue = textField
+    ? overrides[textField.label] ?? textField.value
+    : "";
+  const textInvalid = !!textField?.required && textValue.trim() === "";
+
   return (
-    <div className="rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] p-2.5">
-      <PropertyRows>
-        {fields.map((field) => (
-          <PropertyFieldRow
-            key={field.label}
-            field={field}
-            value={overrides[field.label] ?? field.value}
-            invalid={false}
-            onEdit={(v) => onEdit(field.label, v)}
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-start gap-3">
+        {iconField && (
+          <FeatureIconTile
+            value={iconValue}
+            onChange={(v) => onEdit(iconField.label, v)}
           />
-        ))}
-      </PropertyRows>
-      <div className="mt-2 flex justify-end">
+        )}
+        {textField && (
+          <div className="min-w-0 flex-1">
+            <TextField
+              id={descId}
+              aria-label={textField.label}
+              value={textValue}
+              onChange={(e) => onEdit(textField.label, e.target.value)}
+              invalid={textInvalid}
+              placeholder="Describe this feature…"
+              className="h-11 px-3"
+            />
+            {textInvalid && (
+              <p className="mt-1 text-[11px] leading-snug text-[var(--color-status-danger)]">
+                {textField.label} is required.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+      {extraFields.length > 0 && (
+        <PropertyRows>
+          {extraFields.map((field) => (
+            <PropertyFieldRow
+              key={field.label}
+              field={field}
+              value={overrides[field.label] ?? field.value}
+              invalid={false}
+              onEdit={(v) => onEdit(field.label, v)}
+            />
+          ))}
+        </PropertyRows>
+      )}
+      <div className="flex justify-end">
         <Button
           variant="ghost"
           size="xs"
@@ -466,6 +609,8 @@ function InlineFeatureCollections({
         const max = list.maxChildren ?? maxChildrenFor(list.objectType);
         const atMax = max != null && items.length >= max;
         const open = !collapsed.has(list.id);
+        const canAdd = !!childType && !atMax;
+        const nounLower = noun.toLowerCase();
         return (
           <PropSection
             key={list.id}
@@ -478,37 +623,46 @@ function InlineFeatureCollections({
                 return next;
               })
             }
+            action={
+              <Button
+                variant="default"
+                size="icon-sm"
+                className="shrink-0 rounded-full"
+                disabled={!canAdd}
+                onClick={() => childType && onAddChild(list.id, childType)}
+                title={atMax ? `Maximum of ${max} reached` : `Add ${nounLower}`}
+                aria-label={`Add ${nounLower}`}
+              >
+                <MSym name="add" size={18} />
+              </Button>
+            }
           >
-            <div className="flex flex-col gap-2">
-              {items.map((item) => {
+            <div className="flex flex-col">
+              {items.map((item, i) => {
                 const resolved = resolve(item.id);
                 return (
-                  <InlineFeatureItem
+                  <div
                     key={item.id}
-                    fields={resolved ? flattenFields(resolved) : []}
-                    overrides={overridesFor(item.id)}
-                    onEdit={(label, value) => onEditField(item.id, label, value)}
-                    onRemove={() => onRemoveChild(item.id)}
-                    removable={items.length > 1}
-                  />
+                    className={cn(
+                      i > 0 &&
+                        "mt-4 border-t border-[var(--color-border-subtle)] pt-4",
+                    )}
+                  >
+                    <InlineFeatureItem
+                      fields={resolved ? flattenFields(resolved) : []}
+                      overrides={overridesFor(item.id)}
+                      onEdit={(label, value) => onEditField(item.id, label, value)}
+                      onRemove={() => onRemoveChild(item.id)}
+                      removable={items.length > 1}
+                    />
+                  </div>
                 );
               })}
-              <div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={!childType || atMax}
-                  onClick={() => childType && onAddChild(list.id, childType)}
-                >
-                  <Icon name="plus" size={16} />
-                  Add {noun}
-                </Button>
-                {atMax && (
-                  <span className="ml-2 text-[11px] text-muted-foreground">
-                    Maximum of {max} reached.
-                  </span>
-                )}
-              </div>
+              {atMax && (
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  Maximum of {max} {nounLower}s reached.
+                </p>
+              )}
             </div>
           </PropSection>
         );
