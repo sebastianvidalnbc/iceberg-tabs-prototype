@@ -318,6 +318,10 @@
 .ui-ws { background: transparent; }
 /* Border reduction: columns are separated by surface tone + spacing, not rules. */
 .ui-ws__region + .ui-ws__region { border-left: 0; }
+/* …except the Properties panel keeps a left hairline so it reads as a distinct
+   tool panel against the flush, edge-to-edge preview. Specificity (0,2,1) beats
+   the reset above (0,2,0). */
+.ui-ws__region[aria-label="Properties"] { border-left: var(--border-width) solid var(--color-border-strong); }
 
 /* Contextual left navigator + Properties read as calm tool panels (white);
    the centre canvas is a subtly recessed tone so the preview reads as the
