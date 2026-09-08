@@ -534,12 +534,23 @@ export function WorkspaceShell({
       <div className="ui-ws-editor">
         <div className="ui-ws-editor__bar">
           <Breadcrumb items={crumbs} />
-          {/* Right cluster: a save gate (blocked while required fields are empty,
-              the checkValidationErrors analog) + the design-system catalog link. */}
-          <div className="ml-auto flex items-center gap-2">
-            {activeExperience && (
+          {/* Right cluster: the real Iceberg editor action set. These are all
+              secondary actions (no filled primary) — the save gate stays (Save
+              is blocked while required fields are empty, the checkValidationErrors
+              analog). Core workflow CTAs are labelled; QA + metadata tools are
+              icon buttons with tooltips to keep the bar compact. */}
+          {activeExperience && (
+            <div className="ml-auto flex items-center gap-1.5">
+              <Button variant="secondary" size="sm" onClick={() => {}}>
+                <Icon name="publish" size={16} />
+                Publish
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => {}}>
+                <Icon name="send-qa" size={16} />
+                Send To QA
+              </Button>
               <Button
-                variant={issues.length > 0 ? "outline" : "default"}
+                variant="secondary"
                 size="sm"
                 disabled={issues.length > 0}
                 title={
@@ -551,19 +562,75 @@ export function WorkspaceShell({
                 }
                 onClick={() => {}}
               >
-                <Icon name="check" size={16} />
-                {issues.length > 0 ? `Save · ${issues.length} issue${issues.length === 1 ? "" : "s"}` : "Save"}
+                <Icon name="save" size={16} />
+                {issues.length > 0
+                  ? `Save · ${issues.length} issue${issues.length === 1 ? "" : "s"}`
+                  : "Save"}
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(routes.designSystem())}
-            >
-              <Icon name="grid" size={16} />
-              Design System
-            </Button>
-          </div>
+
+              <span
+                aria-hidden
+                className="mx-0.5 h-5 w-px bg-[var(--color-border-default)]"
+              />
+
+              {/* QA tools — available in QA states; disabled by default (matches
+                  the real editor's greyed QA Review / QA Notes). */}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled
+                title="QA Review"
+                aria-label="QA Review"
+                onClick={() => {}}
+              >
+                <Icon name="qa-review" size={18} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled
+                title="QA Notes"
+                aria-label="QA Notes"
+                onClick={() => {}}
+              >
+                <Icon name="qa-notes" size={18} />
+              </Button>
+
+              <span
+                aria-hidden
+                className="mx-0.5 h-5 w-px bg-[var(--color-border-default)]"
+              />
+
+              {/* Metadata / config tools. */}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="CSS"
+                aria-label="CSS"
+                onClick={() => {}}
+              >
+                <Icon name="css" size={18} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="JSON-LD"
+                aria-label="JSON-LD"
+                onClick={() => {}}
+              >
+                <Icon name="json-ld" size={18} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Settings"
+                aria-label="Settings"
+                onClick={() => {}}
+              >
+                <Icon name="settings" size={18} />
+              </Button>
+            </div>
+          )}
         </div>
         <div
           className="ui-ws"

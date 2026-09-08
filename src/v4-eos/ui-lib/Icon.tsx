@@ -46,7 +46,16 @@ export type IconName =
   | "archive"
   | "eye"
   | "grid"
-  | "image";
+  | "image"
+  // --- Editor action-bar CTAs (real Iceberg parity) ------------------------
+  | "publish"
+  | "send-qa"
+  | "save"
+  | "qa-review"
+  | "qa-notes"
+  | "settings"
+  | "css"
+  | "json-ld";
 
 // IconName → Material Symbols ligature. Documented mapping (Phase 4 audit):
 //   Nav destinations use the closest Material Symbol to each Iceberg concept;
@@ -89,6 +98,15 @@ const LIGATURES: Record<IconName, string> = {
   flask: "science", // Optimizely (experiments) — Material Symbol (documented gap)
   "calendar-clock": "schedule", // Scheduled Pages — curated Eos glyph (clock)
   help: "help", // Help — Material Symbol (documented gap)
+  // Editor action bar (matches the real Iceberg editor CTAs)
+  publish: "cloud_upload", // Publish
+  "send-qa": "check_box", // Send To QA
+  save: "save", // Save
+  "qa-review": "shield", // QA Review
+  "qa-notes": "chat_bubble", // QA Notes
+  settings: "settings", // Settings
+  css: "water_drop", // CSS (droplet, matches real editor)
+  "json-ld": "account_tree", // JSON-LD (hierarchy)
 };
 
 export function Icon({
