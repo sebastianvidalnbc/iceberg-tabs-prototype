@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { AuthoringContext, SectionRole, StructureObjectType, VariantWorkspace } from "../data";
 import type { PreviewModel } from "../previewModel";
 import { SelectField } from "../ui/form-controls";
+import { MSym } from "../ui/msym";
 import { Badge } from "../ui-lib/Badge";
 import {
   CMS_SOURCE,
@@ -74,6 +75,67 @@ const DESIGN_WIDTHS: Record<string, number> = {
 // Sentinel for the MVT "As authored" option (Radix Select rejects "").
 const AS_AUTHORED = "__as_authored__";
 
+// Sentinel for the "no module chosen" state (Radix Select rejects "").
+const NO_MODULE = "__no_module__";
+
+// Data widgets (Retention Service) have no default visual render. The real
+// editor lets an author pick a MODULE to render the widget's JSON through
+// ("Preview JSON in Module"). These are the widget-driven modules available.
+const PREVIEW_MODULE_OPTIONS = [
+  { label: "Preview in module…", value: NO_MODULE },
+  { label: "Retention Service", value: "retention-service" },
+  { label: "In-App Offers", value: "in-app-offers" },
+  { label: "Cancel Journey", value: "cancel-journey" },
+];
+
+// Collapse a node's authored fields (groups[].fields[] | fields[]) to a plain
+// label→value map for the JSON projection.
+type LooseNode = {
+  id: string;
+  label: string;
+  objectType?: string | null;
+  children?: LooseNode[];
+  props?: { data?: { groups?: { fields?: { label: string; value: string }[] }[]; fields?: { label: string; value: string }[] } };
+};
+function nodeFields(node?: LooseNode): Record<string, string> {
+  const data = node?.props?.data;
+  if (!data) return {};
+  const groups = data.groups ?? (data.fields ? [{ fields: data.fields }] : []);
+  const out: Record<string, string> = {};
+  for (const g of groups) for (const f of g.fields ?? []) out[f.label] = f.value;
+  return out;
+}
+
+// Project the live widget Structure into the JSON the config would publish, so
+// the module preview reflects edits / add-remove in real time.
+function buildWidgetConfigJson(variant: VariantWorkspace | null): unknown {
+  const roots = (variant?.structure ?? []) as unknown as LooseNode[];
+  const find = (id: string) => roots.find((n) => n.id === id);
+  const settings = nodeFields(find("wg-widget-settings"));
+  const offersNode = find("wg-offers");
+  const surveyNode = find("wg-survey-responses");
+  const segNode = find("wg-segmentation");
+
+  const offers = (offersNode?.children ?? []).flatMap((g) =>
+    (g.children ?? []).map((o) => ({ type: g.label, ...nodeFields(o) })),
+  );
+  const surveyResponses = (surveyNode?.children ?? []).map((s) => nodeFields(s));
+  const serializeSeg = (n: LooseNode): unknown =>
+    n.children && n.children.length
+      ? { name: n.label, children: n.children.map(serializeSeg) }
+      : { name: n.label, ...nodeFields(n) };
+
+  return {
+    name: settings.Name ?? variant?.name,
+    format: settings.Format ?? "JSON",
+    widgetType: settings["Widget Type"] ?? "Retention Service",
+    journeyFlows: nodeFields(find("wg-journey-flows")),
+    offers,
+    segmentation: (segNode?.children ?? []).map(serializeSeg),
+    surveyResponses,
+  };
+}
+
 // The standalone renderer document the iframe loads. BASE_URL is
 // "/iceberg-v4-eos/" in both dev (via the config middleware) and prod.
 const RENDERER_URL = `${import.meta.env.BASE_URL}renderer.html`;
@@ -138,6 +200,8 @@ export function LivePreview({
   const isWidget = context === "widget";
   const [audience, setAudience] = useState("default");
   const [size, setSize] = useState("full");
+  // Widget context: the module chosen to render this widget's JSON through.
+  const [previewModule, setPreviewModule] = useState(NO_MODULE);
   const [ready, setReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -229,6 +293,63 @@ export function LivePreview({
   useEffect(() => {
     if (ready) postRender();
   }, [ready, postRender]);
+
+  // Widget context: data widgets (Retention Service) have no page render. Show
+  // the real "Preview JSON in Module" picker — pick a module to render the
+  // widget's live JSON through; otherwise an honest empty state.
+  if (isWidget) {
+    const moduleLabel =
+      PREVIEW_MODULE_OPTIONS.find((o) => o.value === previewModule)?.label ?? "";
+    const showModule = previewModule !== NO_MODULE;
+    const configJson = showModule
+      ? JSON.stringify(buildWidgetConfigJson(variant), null, 2)
+      : "";
+    return (
+      <section className="ui-ws__region ui-ws-preview" aria-label="Widget preview">
+        <div className="ui-ws-preview__inner">
+          <div className="ui-preview">
+            <div className="ui-preview__toolbar">
+              <div className="ui-preview__toolbar-row">
+                <div className="ui-preview__controls">
+                  <div className="ui-preview__field">
+                    <SelectField
+                      aria-label="Preview in module"
+                      value={previewModule}
+                      onValueChange={setPreviewModule}
+                      options={PREVIEW_MODULE_OPTIONS}
+                    />
+                  </div>
+                </div>
+                <div className="ui-preview__meta">
+                  <Badge variant="default">JSON</Badge>
+                  {showModule && <Badge variant="success">LIVE</Badge>}
+                </div>
+              </div>
+            </div>
+            <div className="ui-preview__canvas" data-mode={showModule ? "json" : undefined}>
+              {showModule ? (
+                <div className="ui-preview__json">
+                  <div className="ui-preview__json-head">
+                    Rendering with <strong>{moduleLabel}</strong> · live config JSON
+                  </div>
+                  <pre className="ui-preview__json-body">{configJson}</pre>
+                </div>
+              ) : (
+                <div className="ui-preview__empty">
+                  <MSym name="desktop_windows" size={40} className="ui-preview__empty-icon" />
+                  <p className="ui-preview__empty-title">No preview module selected</p>
+                  <p className="ui-preview__empty-sub">
+                    Pick a module above to render this widget’s JSON, or preview
+                    the raw config output.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="ui-ws__region ui-ws-preview" aria-label="Live preview">

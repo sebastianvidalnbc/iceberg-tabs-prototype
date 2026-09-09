@@ -308,6 +308,92 @@ export const ELEMENT_REGISTRY: Partial<
     preview: "passthrough",
     build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "SECTION CONTENT", name: node.label, fields: [] } }),
   },
+
+  // --- Widget: Retention Service config ------------------------------------
+  // Mirrors the real elements-peacock retention-service jsonSchema: Journey
+  // Flows (fields) → Offers (tabs, minSize 0) → Segmentation (objectListDropdown:
+  // Offer Type → Category Title → Segment Names) → Survey Responses (tabs,
+  // minSize 1). Collections resolve live from children; leaves carry props.
+  "widget-config": {
+    type: "widget-config",
+    kind: "module",
+    preview: "passthrough",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "WIDGET SETTINGS", name: node.label, fields: [] } }),
+  },
+  "journey-flows": {
+    type: "journey-flows",
+    kind: "module",
+    preview: "passthrough",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "JOURNEY FLOWS", name: node.label, fields: [] } }),
+  },
+  offers: {
+    type: "offers",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Offer Type",
+    allowedChildren: ["offer-group"],
+    build: collection("OFFERS", "Offer Type"),
+  },
+  "offer-group": {
+    type: "offer-group",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Offer",
+    allowedChildren: ["offer"],
+    build: collection("OFFER TYPE", "Offer"),
+  },
+  offer: {
+    type: "offer",
+    kind: "module",
+    preview: "passthrough",
+    eyebrow: "OFFER",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "OFFER", name: node.label, fields: [] } }),
+  },
+  segmentation: {
+    type: "segmentation",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Offer Type",
+    allowedChildren: ["segmentation-group"],
+    build: collection("SEGMENTATION", "Offer Type"),
+  },
+  "segmentation-group": {
+    type: "segmentation-group",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Category Title",
+    allowedChildren: ["segmentation-category"],
+    build: collection("OFFER TYPE", "Category Title"),
+  },
+  "segmentation-category": {
+    type: "segmentation-category",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Segment Name",
+    allowedChildren: ["segment-name"],
+    build: collection("CATEGORY TITLE", "Segment Name"),
+  },
+  "segment-name": {
+    type: "segment-name",
+    kind: "module",
+    preview: "passthrough",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "SEGMENT NAME", name: node.label, fields: [{ label: "Segment Name", value: node.label }] } }),
+  },
+  "survey-responses": {
+    type: "survey-responses",
+    kind: "collection",
+    preview: "passthrough",
+    itemNoun: "Response",
+    allowedChildren: ["survey-response"],
+    build: collection("SURVEY RESPONSES", "Response"),
+  },
+  "survey-response": {
+    type: "survey-response",
+    kind: "module",
+    preview: "passthrough",
+    eyebrow: "SURVEY RESPONSE",
+    build: fields((node) => node.props ?? { kind: "fields", data: { eyebrow: "SURVEY RESPONSE", name: node.label, fields: [] } }),
+  },
 };
 
 // Container child caps — the tabsConfig.maxSize analog from the real plan-picker

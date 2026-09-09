@@ -615,6 +615,19 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 .ui-preview__canvas { flex: 1; min-height: 0; background: var(--color-bg-subtle); display: grid; place-items: center; color: var(--color-text-muted); }
 .ui-preview__label { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.08em; font-weight: var(--fw-semibold); }
 
+/* Widget preview — data widgets (Retention Service) have no page render, so the
+   canvas shows either an honest empty state (no module picked) or the live
+   config JSON rendered "through" a chosen module. JSON mode is a scrollable,
+   top-aligned block; the empty state is a centred column. */
+.ui-preview__canvas[data-mode="json"] { display: block; place-items: initial; overflow: auto; }
+.ui-preview__empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); max-width: 42ch; padding: var(--space-6); text-align: center; color: var(--color-text-muted); }
+.ui-preview__empty-icon { color: var(--color-text-muted); opacity: 0.7; }
+.ui-preview__empty-title { margin: 0; font-size: var(--text-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); }
+.ui-preview__empty-sub { margin: 0; font-size: var(--text-xs); line-height: 1.5; }
+.ui-preview__json { display: flex; flex-direction: column; min-height: 100%; text-align: left; }
+.ui-preview__json-head { position: sticky; top: 0; padding: var(--space-2) var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); background: var(--color-bg-surface); border-bottom: var(--border-width) solid var(--color-border-default); }
+.ui-preview__json-body { margin: 0; padding: var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.6; color: var(--color-text-primary); white-space: pre; }
+
 /* Per-Variant preview state — visibly changes as Variants are switched. */
 .ui-preview__state { display: flex; flex-direction: column; gap: var(--space-2); max-width: 42ch; padding: var(--space-5); text-align: center; color: var(--color-text-secondary); }
 .ui-preview__state--error { color: var(--color-status-danger); }

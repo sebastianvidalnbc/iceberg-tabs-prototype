@@ -48,9 +48,12 @@ export type StructureObjectType =
   // --- Widget (retention service config) domain types --------------------
   | "widget-config" // a retention widget config root
   | "journey-flows" // Journey Flows authoring area
-  | "offers" // Offers collection (80+ items)
+  | "offers" // Offers collection (grouped by Offer Type)
+  | "offer-group" // an Offer Type group within Offers (Retention / Cross Sell / …)
   | "offer" // a single Offer
-  | "segmentation" // an Offer's Segmentation area
+  | "segmentation" // top-level Segmentation area (objectListDropdown analog)
+  | "segmentation-group" // an Offer Type group within Segmentation
+  | "segmentation-category" // a Category Title (collection of segment names)
   | "segment-names" // Segment Names collection under Segmentation
   | "segment-name" // a single Segment Name item
   | "survey-responses" // Survey Responses collection
@@ -333,10 +336,33 @@ export const DEFAULT_WIDGET_CONFIG_ID = "wg-qa-republish";
 // their objectType + an authored `props` payload so resolveWidgetPropertiesFor
 // returns them verbatim — the same pattern canonical Page nodes use.
 
-// Options reused across Offer / Survey Response forms (mirrors the V1 lists).
-const OFFER_TYPES = ["Retention", "Winback", "Acquisition"];
-const SURVEY_TYPES = ["Checkbox", "Radio", "Text"];
-const SAVE_MOMENTS = ["Offer Save", "Confirm Save", "Immediate Save"];
+// Options reused across Offer / Survey Response forms. These mirror the REAL
+// production Retention Service schema verbatim (elements-peacock
+// retention-service/schema.ts + type.ts).
+const OFFER_TYPES = ["Retention", "Cross Sell", "Downgrade", "Other"];
+const SURVEY_TYPES = ["Checkbox", "Text"];
+const SAVE_MOMENTS = ["Offer Save", "Content Save"];
+// Product/Voucher schema-switcher (isClearable → "None").
+const CODE_TYPES = ["None", "Product", "Voucher"];
+
+// Journey Flow select options (verbatim labels from the real schema). In
+// production these sit behind feature flags (default off); we surface them so
+// the widget's full architecture is visible.
+const RETENTION_JOURNEY_OPTIONS = [
+  "Reminder > Content or Dual Plan > Content",
+  "Reminder > Content or Content > Dual Plan",
+  "Reminder > Help > Benefits > Content > Offer",
+  "Reminder > Help > Benefits > Content > Dual Plan",
+  "Reminder > Content > Dual Plan or Benefits > Content > Dual Plan",
+  "Reminder > Content > Dual Plan",
+];
+const VIEWING_JOURNEY_OPTIONS = [
+  "Reminder > Help > Benefits > Content > Offer > Downgrade Offer",
+  "Reminder > Help > Benefits > Content > Dual Plan",
+  "Reminder > Benefits > Dual Plan",
+];
+const QUICK_CANCEL_OPTIONS = ["Confirm Cancel"];
+const IMMEDIATE_CANCEL_OPTIONS = ["Plan Options"];
 
 // Real Offer segment names taken from the retention config. These seed the first
 // rows so reviewers immediately recognise meaningful labels.
@@ -403,8 +429,22 @@ const makeOffer = (
 const OFFER_PATTERNS = ["SAVED1YQ", "SAVED6MQ", "SAVECCG", "WINBACK", "LOYALTY"];
 const OFFER_PLANS = ["SOLO", "DUAL", "WWE", "PREMIUM", "PLUS"];
 
+// Distribute realistic Offer Types across the seeds so the by-type grouping is
+// populated (mostly Retention, with Cross Sell / Downgrade / Other mixed in).
+// Grouping-by-type is a scannability enhancement (the real offerMappings list is
+// flat, keyed off each offer's `type`).
+const OFFER_TYPE_BY_INDEX = (i: number): string => {
+  const r = i % 7;
+  if (r === 2 || r === 5) return "Cross Sell";
+  if (r === 3) return "Downgrade";
+  if (r === 6) return "Other";
+  return "Retention";
+};
+
 const buildOffers = (): OfferData[] => {
-  const offers = REAL_SEGMENTS.map((s) => makeOffer(s));
+  const offers = REAL_SEGMENTS.map((s, i) =>
+    makeOffer(s, { type: OFFER_TYPE_BY_INDEX(i) }),
+  );
   // Deep nested example on the first offer.
   offers[0].segmentation.segmentNames = [
     "US.CANCEL.40SAVED1YQ125",
@@ -426,7 +466,11 @@ const buildOffers = (): OfferData[] => {
     const price = 199 + (i % 8) * 100;
     const pattern = OFFER_PATTERNS[i % OFFER_PATTERNS.length];
     const plan = OFFER_PLANS[i % OFFER_PLANS.length];
-    offers.push(makeOffer(`US.CANCEL.${price}${pattern}${(i % 12) + 1}${plan}`));
+    offers.push(
+      makeOffer(`US.CANCEL.${price}${pattern}${(i % 12) + 1}${plan}`, {
+        type: OFFER_TYPE_BY_INDEX(i),
+      }),
+    );
   }
   return offers;
 };
@@ -469,8 +513,12 @@ const buildSurveyResponses = (): SurveyResponseData[] =>
 
 // --- Structure-node builders: attach objectType + authored props payload -----
 
-const segmentNameNode = (offerId: string, name: string, i: number): StructureNode => ({
-  id: `${offerId}-seg-${i}`,
+const segmentNameNode = (
+  keyPrefix: string,
+  name: string,
+  i: number,
+): StructureNode => ({
+  id: `${keyPrefix}-seg-${i}`,
   label: name || `Segment ${i + 1}`,
   objectType: "segment-name",
   props: {
@@ -478,105 +526,91 @@ const segmentNameNode = (offerId: string, name: string, i: number): StructureNod
     data: {
       eyebrow: "SEGMENT NAME",
       name: name || `Segment ${i + 1}`,
-      fields: [{ label: "Name", value: name }],
+      fields: [{ label: "Segment Name", value: name }],
     },
   },
 });
 
-const segmentationNodes = (offer: OfferData): StructureNode[] => {
-  const names = offer.segmentation.segmentNames;
-  if (names.length === 0) return [];
-  const segNameChildren = names.map((n, i) => segmentNameNode(offer.id, n, i));
-  return [
-    {
-      id: `${offer.id}-segmentation`,
-      label: "Segmentation",
-      objectType: "segmentation",
-      props: {
-        kind: "fields",
-        data: {
-          eyebrow: "SEGMENTATION",
-          name: "Segmentation",
-          fields: [
-            { label: "Offer Type", value: offer.segmentation.offerType },
-            { label: "Category Title", value: offer.segmentation.categoryTitle },
-            { label: "Segment Names", value: String(names.length) },
-          ],
-        },
-      },
-      children: [
-        {
-          id: `${offer.id}-segment-names`,
-          label: "Segment Names",
-          objectType: "segment-names",
-          props: {
-            kind: "collection",
-            data: {
-              eyebrow: "SEGMENT NAMES",
-              name: "Segment Names",
-              itemNoun: "Segment Name",
-              items: segNameChildren.map((c) => ({ id: c.id, label: c.label })),
-            },
+// --- Offer (a single offerMappings tab) -------------------------------------
+// Field order/labels/controls mirror the real Peacock retention schema exactly:
+//   Type (select, required) → IF CUSTOMER IS CANCELLING: Cancellation Product
+//   Static ID (required) → AND: Segment Name (Optional) → AND: Survey Response
+//   Label Key (Optional) → THEN SHOW: Suppress default offer (toggle) +
+//   Product/Voucher (schema-switcher → Code).
+const offerNode = (offer: OfferData): StructureNode => {
+  const codeType = offer.voucherCode ? "Voucher" : offer.productVoucher ? "Product" : "None";
+  const code = codeType === "Voucher" ? offer.voucherCode : offer.productVoucher;
+  return {
+    id: offer.id,
+    label: offer.segmentName || offer.voucherCode || offer.id,
+    objectType: "offer",
+    props: {
+      kind: "fields",
+      data: {
+        eyebrow: "OFFER",
+        name: offer.segmentName || offer.voucherCode,
+        groups: [
+          {
+            fields: [
+              { label: "Type", value: offer.type, kind: "select", options: OFFER_TYPES, required: true },
+            ],
           },
-          children: segNameChildren,
-        },
-      ],
+          {
+            header: "IF CUSTOMER IS CANCELLING",
+            fields: [
+              {
+                label: "Cancellation Product Static ID",
+                value: offer.cancellationProductStaticId,
+                required: true,
+              },
+            ],
+          },
+          {
+            header: "AND",
+            fields: [{ label: "Segment Name (Optional)", value: offer.segmentName }],
+          },
+          {
+            header: "AND",
+            fields: [
+              {
+                label: "Survey Response Label Key (Optional)",
+                value: offer.surveyResponseLabelKey,
+                helper: "e.g. retention.survey.response.id.1",
+              },
+            ],
+          },
+          {
+            header: "THEN SHOW",
+            fields: [
+              {
+                label: "Suppress default offer",
+                value: offer.suppressDefaultOffer ? "true" : "false",
+                kind: "switch",
+              },
+              { label: "Product / Voucher", value: codeType, kind: "select", options: CODE_TYPES },
+              {
+                label: codeType === "Voucher" ? "Voucher Code" : "Product Static ID",
+                value: codeType === "None" ? "" : code,
+              },
+            ],
+          },
+        ],
+      },
     },
-  ];
+  };
 };
-
-const offerNode = (offer: OfferData): StructureNode => ({
-  id: offer.id,
-  label: offer.segmentName || offer.voucherCode || offer.id,
-  objectType: "offer",
-  props: {
-    kind: "fields",
-    data: {
-      eyebrow: "OFFER",
-      name: offer.segmentName || offer.voucherCode,
-      groups: [
-        { fields: [{ label: "Type", value: offer.type, kind: "select", options: OFFER_TYPES }] },
-        {
-          header: "IF CUSTOMER IS CANCELLING",
-          fields: [
-            {
-              label: "Cancellation Product Static ID",
-              value: offer.cancellationProductStaticId,
-              required: true,
-            },
-            { label: "Segment Name", value: offer.segmentName },
-            { label: "Survey Response Label Key", value: offer.surveyResponseLabelKey },
-          ],
-        },
-        {
-          header: "THEN SHOW",
-          fields: [
-            {
-              label: "Suppress default offer",
-              value: offer.suppressDefaultOffer ? "true" : "false",
-              kind: "checkbox",
-            },
-            { label: "Product / Voucher", value: offer.productVoucher },
-            { label: "Voucher Code", value: offer.voucherCode },
-          ],
-        },
-      ],
-    },
-  },
-  children: segmentationNodes(offer),
-});
 
 const surveyResponseNode = (sr: SurveyResponseData): StructureNode => ({
   id: sr.id,
-  label: sr.responseId,
+  label: sr.displayLabel || sr.responseId,
   objectType: "survey-response",
   props: {
     kind: "fields",
     data: {
       eyebrow: "SURVEY RESPONSE",
-      name: sr.responseId,
+      name: sr.displayLabel || sr.responseId,
       fields: [
-        { label: "ID", value: sr.displayOrder },
+        { label: "ID", value: sr.responseId },
         { label: "Display Label", value: sr.displayLabel },
         { label: "Display Order", value: sr.displayOrder },
         { label: "Type", value: sr.type, kind: "select", options: SURVEY_TYPES },
@@ -587,19 +621,148 @@ const surveyResponseNode = (sr: SurveyResponseData): StructureNode => ({
   },
 });
 
-// Journey Flow representative values (Widget-level scalar context).
-const RETENTION_JOURNEY_FLOW = "Reminder > Content or Dual Plan > Content";
-const QUICK_CANCEL_JOURNEY = "Confirm Cancel";
-const IMMEDIATE_CANCEL_JOURNEY = "Plan Options";
+// --- Segmentation (top-level objectListDropdown analog) ---------------------
+// segmentPriority[offerType][categoryTitle] = string[]. Represented as:
+//   Segmentation → Offer Type group → Category Title (collection) → Segment Name
+const segmentCategoryNode = (
+  groupId: string,
+  title: string,
+  names: string[],
+): StructureNode => {
+  const children = names.map((n, i) => segmentNameNode(`${groupId}-${title}`, n, i));
+  return {
+    id: `${groupId}-cat-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    label: title,
+    // Collection panel resolves live from children (registry) so add/remove of
+    // segment names reflects immediately.
+    objectType: "segmentation-category",
+    children,
+  };
+};
+
+const segmentationGroupNode = (
+  offerType: string,
+  categories: { title: string; names: string[] }[],
+): StructureNode => {
+  const groupId = `wg-seg-${offerType.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const children = categories.map((c) => segmentCategoryNode(groupId, c.title, c.names));
+  return {
+    id: groupId,
+    label: offerType,
+    objectType: "segmentation-group",
+    children,
+  };
+};
+
+// Seed segmentation from the real nested examples that previously lived on
+// individual offers, now organised at the section level by Offer Type.
+const buildSegmentationArea = (): StructureNode => {
+  const groups = [
+    segmentationGroupNode("Retention", [
+      {
+        title: "D2C",
+        names: [
+          "US.CANCEL.40SAVED1YQ125",
+          "US.CANCEL.50SAVED1YQ424",
+          "US.CANCEL.60SAVED1YQ424",
+          "US.CANCEL.70SAVED1YQ125",
+        ],
+      },
+      {
+        title: "WWE",
+        names: ["US.CANCEL.299SAVED6MQ425WWE", "US.CANCEL.299SAVED6MQ425SOLO"],
+      },
+    ]),
+    segmentationGroupNode("Cross Sell", [
+      { title: "SPORTS", names: ["US.CANCEL.CROSSSELL.SPORTS1"] },
+    ]),
+  ];
+  return {
+    id: "wg-segmentation",
+    label: "Segmentation",
+    objectType: "segmentation",
+    children: groups,
+  };
+};
+
+// Offers are grouped by Offer Type into collapsible groups (a scannability
+// enhancement borrowed from the design prototype). Order is fixed; empty groups
+// are omitted.
+const OFFER_GROUP_ORDER = ["Retention", "Cross Sell", "Downgrade", "Other"];
+const groupId = (type: string) =>
+  `wg-offers-${type.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
+const buildOfferGroups = (offers: OfferData[]): StructureNode[] =>
+  OFFER_GROUP_ORDER.flatMap((type) => {
+    const inType = offers.filter((o) => o.type === type);
+    if (inType.length === 0) return [];
+    return [
+      {
+        id: groupId(type),
+        label: type,
+        objectType: "offer-group",
+        children: inType.map(offerNode),
+      } satisfies StructureNode,
+    ];
+  });
 
 // Assemble the canonical retention config Structure once at module load.
 const RETENTION_OFFERS = buildOffers();
 const RETENTION_SURVEY_RESPONSES = buildSurveyResponses();
 
+// Widget-level settings — the real WidgetEditorMetadata "Widget Settings" +
+// "Widget Preview Settings" panel. Values are representative for the prototype.
+const buildWidgetSettingsNode = (): StructureNode => ({
+  id: "wg-widget-settings",
+  label: "Widget Settings",
+  objectType: "widget-config",
+  defaultExpanded: true,
+  props: {
+    kind: "fields",
+    data: {
+      eyebrow: "WIDGET SETTINGS",
+      name: "Widget Settings",
+      groups: [
+        {
+          fields: [
+            { label: "Name", value: "retention-service-config-us" },
+            {
+              label: "Format",
+              value: "JSON",
+              kind: "select",
+              options: ["JSON", "HTML"],
+            },
+            {
+              label: "Widget Type",
+              value: "Retention Service",
+              kind: "select",
+              options: ["Retention Service", "Segmentation", "In App Offers"],
+            },
+          ],
+        },
+        {
+          header: "OPTIONS",
+          fields: [
+            { label: "Post to Slack on Publish", value: "false", kind: "switch" },
+            { label: "No content wrapper", value: "false", kind: "switch" },
+            { label: "Protected", value: "false", kind: "switch" },
+            { label: "Secure", value: "false", kind: "switch" },
+            { label: "Lock JSON editor", value: "false", kind: "switch" },
+          ],
+        },
+      ],
+    },
+  },
+});
+
 const buildRetentionStructure = (): StructureNode[] => {
-  const offerNodes = RETENTION_OFFERS.map(offerNode);
   const surveyNodes = RETENTION_SURVEY_RESPONSES.map(surveyResponseNode);
   return [
+    // Widget Settings: the real widget metadata panel (Name / Format / Type +
+    // publish/security toggles). Sits at the top like the design prototype.
+    buildWidgetSettingsNode(),
+    // Journey Flows: four real select fields (verbatim options). In production
+    // these sit behind feature flags; surfaced here to show the full shape.
     {
       id: "wg-journey-flows",
       label: "Journey Flows",
@@ -611,45 +774,113 @@ const buildRetentionStructure = (): StructureNode[] => {
           eyebrow: "JOURNEY FLOWS",
           name: "Journey Flows",
           fields: [
-            { label: "Select Retention Journey Flow", value: RETENTION_JOURNEY_FLOW },
-            { label: "Select Quick Cancel Journey", value: QUICK_CANCEL_JOURNEY },
-            { label: "Select Immediate Cancel Journey", value: IMMEDIATE_CANCEL_JOURNEY },
+            {
+              label: "Select Retention Journey Flow",
+              value: RETENTION_JOURNEY_OPTIONS[0],
+              kind: "select",
+              options: RETENTION_JOURNEY_OPTIONS,
+              required: true,
+            },
+            {
+              label: "Select Viewing Experience Journey",
+              value: VIEWING_JOURNEY_OPTIONS[0],
+              kind: "select",
+              options: VIEWING_JOURNEY_OPTIONS,
+            },
+            {
+              label: "Select Quick Cancel Journey",
+              value: QUICK_CANCEL_OPTIONS[0],
+              kind: "select",
+              options: QUICK_CANCEL_OPTIONS,
+            },
+            {
+              label: "Select Immediate Cancel Journey",
+              value: IMMEDIATE_CANCEL_OPTIONS[0],
+              kind: "select",
+              options: IMMEDIATE_CANCEL_OPTIONS,
+            },
           ],
         },
       },
     },
+    // Offers: grouped by Offer Type (Retention / Cross Sell / Downgrade / Other),
+    // each group a collapsible collection of offers.
     {
       id: "wg-offers",
       label: "Offers",
       objectType: "offers",
-      props: {
-        kind: "collection",
-        data: {
-          eyebrow: "OFFERS",
-          name: "Offers",
-          itemNoun: "Offer",
-          items: offerNodes.map((o) => ({ id: o.id, label: o.label })),
-        },
-      },
-      children: offerNodes,
+      children: buildOfferGroups(RETENTION_OFFERS),
     },
+    // Segmentation: top-level objectListDropdown (Offer Type → Category → names).
+    buildSegmentationArea(),
+    // Survey Responses: tabs collection (minSize 1).
     {
       id: "wg-survey-responses",
       label: "Survey Responses",
       objectType: "survey-responses",
-      props: {
-        kind: "collection",
-        data: {
-          eyebrow: "SURVEY RESPONSES",
-          name: "Survey Responses",
-          itemNoun: "Response",
-          items: surveyNodes.map((s) => ({ id: s.id, label: s.label })),
-        },
-      },
       children: surveyNodes,
     },
   ];
 };
+
+// Factory for a fresh widget child when the author clicks "Add {noun}" on a
+// retention collection. Returns null for non-widget types so the generic
+// layouts.createChildNode handles page containers. New leaf nodes carry a
+// props payload (empty schema + real dropdowns) so their panel renders like the
+// seeded ones; new sub-collections start empty and resolve live from children.
+let widgetChildSeq = 0;
+const wuid = (p: string) => `${p}-new-${widgetChildSeq++}`;
+
+export function createWidgetChild(
+  type: StructureObjectType,
+): StructureNode | null {
+  switch (type) {
+    case "offer-group": {
+      // A fresh Offer Type group (empty); author renames + adds offers.
+      return {
+        id: wuid("wg-offers"),
+        label: "New offer type",
+        objectType: "offer-group",
+        children: [],
+      };
+    }
+    case "offer":
+      return {
+        ...offerNode({
+          id: wuid("of"),
+          type: "Retention",
+          cancellationProductStaticId: "",
+          segmentName: "",
+          surveyResponseLabelKey: "",
+          suppressDefaultOffer: false,
+          productVoucher: "",
+          voucherCode: "",
+          segmentation: { offerType: "Retention", categoryTitle: "", segmentNames: [] },
+        }),
+        label: "New offer",
+      };
+    case "survey-response":
+      return surveyResponseNode({
+        id: wuid("sr"),
+        responseId: "",
+        displayLabel: "New response",
+        displayOrder: "",
+        type: "Checkbox",
+        saveMoment: "Offer Save",
+        savePriority: "",
+      });
+    case "segmentation-group": {
+      const n = segmentationGroupNode("Retention", []);
+      return { ...n, id: wuid("wg-seg"), label: "New offer type" };
+    }
+    case "segmentation-category":
+      return segmentCategoryNode(wuid("wg-seg"), "New category", []);
+    case "segment-name":
+      return segmentNameNode(wuid("seg"), "New segment", 0);
+    default:
+      return null;
+  }
+}
 
 // Lightweight lookup for the Offers structure filter (label + filter keys),
 // keyed by offer node id. Keeps filtering out of the render path.
@@ -674,7 +905,7 @@ export const WIDGET_STRUCTURES: Record<string, StructureNode[]> = {
 
 // Default selected Structure node per Widget config (mirrors Variant defaults).
 export const WIDGET_DEFAULT_SELECTION: Record<string, string> = {
-  "wg-qa-republish": "wg-journey-flows",
+  "wg-qa-republish": "wg-widget-settings",
 };
 
 // The Offers collection node id (used by the shell to gate the Offers filter).
@@ -1050,15 +1281,18 @@ export function resolveWidgetPropertiesForVariant(
   nodeId: string
 ): ResolvedProperties {
   const found = findNodeWithParent(config.structure, nodeId, null);
-  if (found?.node.props) return found.node.props;
-  const label = found ? found.node.label : nodeId;
+  // Authored nodes carry their panel verbatim (props-first). Runtime-added nodes
+  // (Add Offer / Response / Category / Segment) have no props, so fall back to
+  // the element registry (classifyNode) which builds an empty schema-driven
+  // panel for the widget type — the same schema-driven path pages use.
+  if (found) return classifyNode(found.node, found.parent);
   return {
     kind: "notice",
     data: {
       eyebrow: "WIDGET AREA",
-      name: label,
+      name: nodeId,
       message: "No configured content yet.",
-      detail: "This retention widget area is not modelled in the V2 prototype yet.",
+      detail: "This retention widget area is not modelled in the prototype yet.",
     },
   };
 }

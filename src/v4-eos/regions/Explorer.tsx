@@ -141,6 +141,7 @@ function StructureLevel({
   actions,
   offerQuery,
   setOfferQuery,
+  allowInsert,
 }: {
   nodes: StructureNode[];
   parentId: string | null;
@@ -159,19 +160,32 @@ function StructureLevel({
   actions: StructureActions;
   offerQuery: string;
   setOfferQuery: (v: string) => void;
+  // Page-builder insert points ("+ Add layout"). Pages only — widgets have a
+  // fixed, schema-driven structure with no addable page layouts.
+  allowInsert: boolean;
 }) {
   const drag = useDrag((from, to) => actions.onMoveNode(parentId, from, to));
   const q = offerQuery.trim().toLowerCase();
 
-  // Filters an Offers node's children against the search query (order preserved).
+  // Does an offer node match the current Offers search?
+  const offerMatches = (c: StructureNode): boolean => {
+    const idx = WIDGET_OFFER_FILTER_INDEX[c.id];
+    if (!idx) return c.label.toLowerCase().includes(q);
+    return idx.label.toLowerCase().includes(q) || idx.keys.includes(q);
+  };
+
+  // Offers search is group-aware: filtering the Offers node drops empty Offer
+  // Type groups; filtering a group drops non-matching offers. Order preserved.
   const visibleChildren = (node: StructureNode): StructureNode[] => {
     const children = node.children ?? [];
-    if (node.id !== WIDGET_OFFERS_NODE_ID || !q) return children;
-    return children.filter((c) => {
-      const idx = WIDGET_OFFER_FILTER_INDEX[c.id];
-      if (!idx) return c.label.toLowerCase().includes(q);
-      return idx.label.toLowerCase().includes(q) || idx.keys.includes(q);
-    });
+    if (!q) return children;
+    if (node.id === WIDGET_OFFERS_NODE_ID) {
+      return children.filter((g) => (g.children ?? []).some(offerMatches));
+    }
+    if (node.objectType === "offer-group") {
+      return children.filter(offerMatches);
+    }
+    return children;
   };
 
   // Top-level lists get page-builder insert points between/around sections.
@@ -181,12 +195,15 @@ function StructureLevel({
     <>
       {nodes.map((node, index) => {
         const isOffers = node.id === WIDGET_OFFERS_NODE_ID;
+        const isOfferGroup = node.objectType === "offer-group";
         const hasChildren = !!node.children && node.children.length > 0;
-        const isOpen = expanded.has(node.id);
+        // While searching Offers, force the type groups open so matches show.
+        const isOpen =
+          expanded.has(node.id) || (!!q && isOfferGroup);
         const kids = visibleChildren(node);
         // Reorder must map to the real structure, so drag is disabled while the
         // Offers list is filtered (indices would not match).
-        const childDragDisabled = isOffers && !!q;
+        const childDragDisabled = (isOffers || isOfferGroup) && !!q;
         const grip = dragDisabled ? null : (
           <span
             {...drag.gripProps(index)}
@@ -200,7 +217,7 @@ function StructureLevel({
         );
         return (
           <div key={node.id}>
-            {isTopLevel && (
+            {isTopLevel && allowInsert && (
               <InsertLayoutBar
                 onClick={() =>
                   actions.onRequestAddLayout("before", node.id, node.label)
@@ -286,12 +303,13 @@ function StructureLevel({
                 actions={actions}
                 offerQuery={offerQuery}
                 setOfferQuery={setOfferQuery}
+                allowInsert={allowInsert}
               />
             )}
           </div>
         );
       })}
-      {isTopLevel && (
+      {isTopLevel && allowInsert && (
         <InsertLayoutBar
           onClick={() => actions.onRequestAddLayout("end", null)}
         />
@@ -311,6 +329,7 @@ function StructureTree({
   onSelect,
   onToggle,
   actions,
+  allowInsert,
 }: {
   nodes: StructureNode[];
   selectedId: string | null;
@@ -318,6 +337,7 @@ function StructureTree({
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   actions: StructureActions;
+  allowInsert: boolean;
 }) {
   const [offerQuery, setOfferQuery] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -354,6 +374,7 @@ function StructureTree({
         actions={actions}
         offerQuery={offerQuery}
         setOfferQuery={setOfferQuery}
+        allowInsert={allowInsert}
       />
     </div>
   );
@@ -537,6 +558,7 @@ export function Explorer({
               nodes={activeExperience.structure}
               selectedId={selectedStructureNodeId}
               expanded={expanded}
+              allowInsert={context === "page"}
               onSelect={onSelectStructureNode}
               onToggle={onToggleExpand}
               actions={{

@@ -12,6 +12,7 @@
 // fresh subtree, which the shell inserts at the chosen slot.
 import type { IconName } from "./ui-lib/Icon";
 import type { StructureNode, StructureObjectType } from "./data";
+import { createWidgetChild } from "./data";
 import { buildSectionFromSchema } from "./schemaModel";
 
 // Fresh, collision-proof ids for every node in a newly built subtree.
@@ -511,6 +512,11 @@ const CHILD_LABELS: Partial<Record<StructureObjectType, string>> = {
 };
 
 export function createChildNode(type: StructureObjectType): StructureNode {
+  // Retention widget children (offers / responses / segmentation) carry their
+  // own schema-driven props; delegate to the widget factory first.
+  const widgetChild = createWidgetChild(type);
+  if (widgetChild) return widgetChild;
+
   const label = CHILD_LABELS[type] ?? "New item";
   const node: StructureNode = { id: uid("new"), label, objectType: type };
   // Seed a product's title so its preview card is legible on creation, plus its

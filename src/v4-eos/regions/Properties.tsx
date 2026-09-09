@@ -913,7 +913,9 @@ function FieldsBody({
       <div className="-mx-4 flex flex-col divide-y divide-[var(--color-border-subtle)]">
         {groups.map((group, i) => (
           <GroupSection
-            key={group.header ?? i}
+            // Index-qualified: a schema may repeat a subheading (e.g. the offer
+            // form's two "AND" separators), so header alone isn't a unique key.
+            key={`${group.header ?? "group"}-${i}`}
             group={group}
             expanded={group.header ? !collapsed.has(group.header) : true}
             onToggle={group.header ? () => toggle(group.header!) : () => {}}

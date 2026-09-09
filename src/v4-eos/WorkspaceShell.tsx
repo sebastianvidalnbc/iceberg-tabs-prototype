@@ -543,6 +543,28 @@ export function WorkspaceShell({
       <div className="ui-ws-editor">
         <div className="ui-ws-editor__bar">
           <Breadcrumb items={crumbs} />
+          {/* Widget header metadata — the real Iceberg widget variant editor
+              shows Format / Widget Type / status beside the variant name. Only
+              the retention config is modelled, so values are fixed. */}
+          {!isPage && activeExperience && (
+            <div className="ml-3 flex items-center gap-1.5">
+              <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-bg-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                JSON
+              </span>
+              <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-bg-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                Retention Service
+              </span>
+              <span
+                className="inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-semibold"
+                style={{
+                  background: "var(--color-status-success-bg)",
+                  color: "var(--color-status-success)",
+                }}
+              >
+                Published
+              </span>
+            </div>
+          )}
           {/* Right cluster: the real Iceberg editor action set. These are all
               secondary actions (no filled primary) — the save gate stays (Save
               is blocked while required fields are empty, the checkValidationErrors
