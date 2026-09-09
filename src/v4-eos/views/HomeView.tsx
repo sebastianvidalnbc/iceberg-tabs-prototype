@@ -299,7 +299,7 @@ export function HomeView() {
         {/* KPI grid */}
         <section
           aria-label="Operational metrics"
-          className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {STATS.map((s) => (
             <StatCard key={s.label} {...s} />
