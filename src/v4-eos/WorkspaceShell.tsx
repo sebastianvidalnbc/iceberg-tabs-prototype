@@ -541,6 +541,20 @@ export function WorkspaceShell({
               icon buttons with tooltips to keep the bar compact. */}
           {activeExperience && (
             <div className="ml-auto flex items-center gap-1.5">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    `${import.meta.env.BASE_URL}renderer.html`,
+                    "_blank",
+                    "noopener",
+                  )
+                }
+              >
+                <Icon name="preview" size={16} />
+                Preview
+              </Button>
               <Button variant="secondary" size="sm" onClick={() => {}}>
                 <Icon name="publish" size={16} />
                 Publish

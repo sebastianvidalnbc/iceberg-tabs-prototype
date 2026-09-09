@@ -28,8 +28,8 @@ const PREVIEW_BASE = `${import.meta.env.BASE_URL}layout-previews/`;
 function ExperimentBadge() {
   return (
     <span
-      className="rounded-[3px] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-white"
-      style={{ backgroundColor: "#7C3AED" }}
+      className="rounded-[3px] px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-white"
+      style={{ backgroundColor: "var(--color-status-experiment)" }}
     >
       Experiment
     </span>
@@ -69,7 +69,7 @@ function PreviewPane({ layout }: { layout: LayoutDef | null }) {
   return (
     <div className="flex h-full flex-col gap-4 p-5">
       <div className="flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-foreground">{layout.name}</h3>
+        <h3 className="text-[16px] font-semibold text-foreground">{layout.name}</h3>
         {layout.experiment && <ExperimentBadge />}
       </div>
       <p className="text-[12px] leading-snug text-muted-foreground">
@@ -192,7 +192,7 @@ export function LayoutPicker({
                 )}
                 {grouped.map(({ group, layouts }) => (
                   <section key={group} className="flex flex-col gap-0.5">
-                    <h4 className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">
+                    <h4 className="px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-secondary)]">
                       {group}
                     </h4>
                     {layouts.map((l) => {

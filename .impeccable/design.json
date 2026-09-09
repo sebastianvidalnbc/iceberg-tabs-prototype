@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T13:30:00Z",
+  "title": "Design System: Iceberg Authoring Chrome",
+  "extensions": {
+    "colorMeta": {
+      "iceberg-blue": { "role": "primary", "displayName": "Iceberg Blue", "canonical": "#01699b", "tonalRamp": ["#031f2e", "#04324a", "#014b73", "#01699b", "#2a86b4", "#5aa4ca", "#8fbdd5", "#c7dfec"] },
+      "surface": { "role": "neutral", "displayName": "Surface", "canonical": "#fcf8f8", "tonalRamp": ["#1c1b1b", "#3a3838", "#5a5757", "#807c7c", "#a8a3a3", "#d1cccb", "#ebe7e7", "#fcf8f8"] },
+      "surface-container-low": { "role": "neutral", "displayName": "Surface Container Low", "canonical": "#f7f3f2" },
+      "surface-container-high": { "role": "neutral", "displayName": "Surface Container High", "canonical": "#ebe7e7" },
+      "selected": { "role": "primary", "displayName": "Selected (blue tint)", "canonical": "#dbeaf3" },
+      "text-primary": { "role": "neutral", "displayName": "On Surface", "canonical": "#1c1b1b" },
+      "text-secondary": { "role": "neutral", "displayName": "On Surface Variant", "canonical": "#45474a" },
+      "text-muted": { "role": "neutral", "displayName": "Muted", "canonical": "#76777a" },
+      "success": { "role": "tertiary", "displayName": "Success Green", "canonical": "#146c43" },
+      "warning": { "role": "tertiary", "displayName": "Warning Amber", "canonical": "#8a5a00" },
+      "danger": { "role": "tertiary", "displayName": "Error Red", "canonical": "#ba1a1a" },
+      "experiment": { "role": "tertiary", "displayName": "Experiment Violet", "canonical": "#6d40a8", "tonalRamp": ["#20123a", "#2f1a54", "#452778", "#5a339a", "#6d40a8", "#8b62c0", "#b394d9", "#e4d5f5"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Largest in-tool voice: preview state titles, catalog specimen headings." },
+      "headline": { "displayName": "Headline", "purpose": "Dialog titles and empty-state leads." },
+      "title": { "displayName": "Title", "purpose": "Object names and primary row emphasis." },
+      "body": { "displayName": "Body", "purpose": "Default UI text, tree rows, field values." },
+      "caption": { "displayName": "Caption", "purpose": "Helper text, counts, dropdown labels." },
+      "label": { "displayName": "Label / Eyebrow", "purpose": "Panel and section titles: 11px uppercase, +0.06em." },
+      "icon": { "displayName": "Icon (Material Symbols)", "purpose": "Material Symbols Outlined glyphs across the editor." }
+    },
+    "shadows": [
+      { "name": "elevation-1", "value": "0 1px 3px 1px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3)", "purpose": "Floating layers: menus, popovers, dialogs, tooltips, grabber pills." },
+      { "name": "elevation-2", "value": "0 2px 6px 2px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3)", "purpose": "Highest floating layers." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(1,105,155,0.30)", "purpose": "Keyboard focus indicator (Iceberg Blue at 30%)." }
+    ],
+    "motion": [
+      { "name": "motion-fast", "value": "120ms", "purpose": "Tooltips, hovers, small state changes." },
+      { "name": "motion-normal", "value": "160ms", "purpose": "Default UI transitions." },
+      { "name": "motion-slow", "value": "240ms", "purpose": "Larger reveals." },
+      { "name": "ease-standard", "value": "ease-out", "purpose": "Default easing for all state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "properties-collapse", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single most decisive action (e.g. a confirming Save).",
+      "html": "<button class=\"ds-btn-primary\">Save</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:none; border-radius:100px; background:#01699b; color:#fff; font:600 13px Inter,sans-serif; cursor:pointer; transition:background 120ms ease-out; } .ds-btn-primary:hover { background:#004b73; } .ds-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(1,105,155,0.30); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default editor action-bar CTA (Publish, Send To QA, Save).",
+      "html": "<button class=\"ds-btn-secondary\">Publish</button>",
+      "css": ".ds-btn-secondary { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px solid rgba(0,0,0,0.22); border-radius:100px; background:#fcf8f8; color:#1c1b1b; font:600 13px Inter,sans-serif; cursor:pointer; transition:background 120ms ease-out; } .ds-btn-secondary:hover { background:#f7f3f2; } .ds-btn-secondary:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(1,105,155,0.30); }"
+    },
+    {
+      "name": "Ghost Icon Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Icon-only tool action with an instant tooltip (CSS, JSON-LD, Settings).",
+      "html": "<button class=\"ds-btn-ghost\" aria-label=\"Settings\"><svg width=\"18\" height=\"18\" viewBox=\"0 -960 960 960\" fill=\"currentColor\"><path d=\"M433-80l-16-128q-13-5-24.5-12T370-235l-119 50L138-320l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L138-640l113-135 119 50q11-8 23-15t24-12l16-128h94l16 128q13 5 24.5 12t22.5 15l119-50 113 135-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-113 135-118-50q-11 8-23 15t-24 12L527-80h-94Zm49-260q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Z\"/></svg></button>",
+      "css": ".ds-btn-ghost { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:none; border-radius:100px; background:transparent; color:#1c1b1b; cursor:pointer; transition:background 120ms ease-out; } .ds-btn-ghost:hover { background:#ebe7e7; } .ds-btn-ghost:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(1,105,155,0.30); }"
+    },
+    {
+      "name": "Panel Header (Eyebrow)",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Panel/section title: 11px uppercase eyebrow, muted. Peers look identical.",
+      "html": "<div class=\"ds-panel-head\"><span class=\"ds-eyebrow\">Properties</span></div>",
+      "css": ".ds-panel-head { display:flex; align-items:center; padding:8px 12px; border-bottom:1px solid rgba(0,0,0,0.12); background:#fcf8f8; } .ds-eyebrow { font:600 11px Inter,sans-serif; letter-spacing:0.06em; text-transform:uppercase; color:#76777a; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Quiet outlined well: surface fill, subtle hairline, blue focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Product title\" />",
+      "css": ".ds-input { height:32px; padding:0 12px; width:220px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; background:#fcf8f8; color:#1c1b1b; font:400 13px Inter,sans-serif; } .ds-input::placeholder { color:#76777a; } .ds-input:focus-visible { outline:none; border-color:#8fbdd5; box-shadow:0 0 0 3px rgba(1,105,155,0.30); }"
+    },
+    {
+      "name": "Structure Tree Row (selected)",
+      "kind": "custom",
+      "refersTo": "tree-row-selected",
+      "description": "28px row; selection shown by fill AND a left blue accent bar.",
+      "html": "<div class=\"ds-tree-row\"><span class=\"ds-accent\"></span><svg class=\"ds-chev\" width=\"16\" height=\"16\" viewBox=\"0 -960 960 960\" fill=\"currentColor\"><path d=\"M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z\"/></svg><span class=\"ds-label\">Premium</span></div>",
+      "css": ".ds-tree-row { position:relative; display:flex; align-items:center; gap:4px; height:28px; padding:0 8px 0 12px; border-radius:8px; background:#dbeaf3; color:#1c1b1b; font:400 13px Inter,sans-serif; } .ds-accent { position:absolute; left:0; top:50%; width:2px; height:16px; transform:translateY(-50%); border-radius:100px; background:#01699b; } .ds-chev { color:#76777a; transform:rotate(90deg); } .ds-label { white-space:nowrap; }"
+    },
+    {
+      "name": "Accessibility Semáforo",
+      "kind": "chip",
+      "refersTo": "badge-live",
+      "description": "Live tri-state a11y readout (Pass/Review/Fail → green/amber/red) with score + locale.",
+      "html": "<div class=\"ds-a11y\"><svg width=\"16\" height=\"16\" viewBox=\"0 -960 960 960\" fill=\"currentColor\"><path d=\"M480-528q-30 0-51-21t-21-51q0-30 21-51t51-21q30 0 51 21t21 51q0 30-21 51t-51 21ZM360-40v-520q-60-5-121-14t-119-22l16-78q73 17 147.5 25.5T480-640q42 0 116.5-8.5T744-674l16 78q-58 13-119 22t-121 14v520h-80v-240h-80v240h-80Z\"/></svg><span class=\"ds-a11y-body\"><span class=\"ds-a11y-top\"><span class=\"ds-a11y-status\">Pass</span><span class=\"ds-a11y-score\"><b>100</b><span class=\"ds-a11y-max\">/100</span></span></span><span class=\"ds-a11y-locale\">US·en-US</span></span></div>",
+      "css": ".ds-a11y { display:inline-flex; align-items:center; gap:8px; height:30px; padding:0 8px; border-radius:12px; border:1px solid rgba(20,108,67,0.22); background:#e6f2ea; color:#146c43; } .ds-a11y-body { display:inline-flex; flex-direction:column; justify-content:center; gap:1px; line-height:1; } .ds-a11y-top { display:inline-flex; align-items:baseline; gap:4px; } .ds-a11y-status { font:700 9px Inter,sans-serif; letter-spacing:0.08em; text-transform:uppercase; } .ds-a11y-score { font:600 13px Inter,sans-serif; } .ds-a11y-max { font-weight:500; opacity:0.65; } .ds-a11y-locale { font:400 9px Inter,sans-serif; letter-spacing:0.04em; text-transform:uppercase; opacity:0.8; }"
+    },
+    {
+      "name": "Instant Tooltip",
+      "kind": "custom",
+      "refersTo": "button-ghost",
+      "description": "Dark instant tooltip for icon-only CTAs and the nav rail; no native-title delay.",
+      "html": "<span class=\"ds-tip\" data-tip=\"CSS\"><button class=\"ds-btn-ghost\" aria-label=\"CSS\"><svg width=\"18\" height=\"18\" viewBox=\"0 -960 960 960\" fill=\"currentColor\"><path d=\"M480-80q-106 0-193-83T200-451q0-104 65.5-193T434-830q-9 62 4 112t42 82q29 32 67.5 51.5T636-560q59 0 96-38.5t39-96.5q57 45 91 113t34 151q0 118-87 201T480-80Z\"/></svg></button></span>",
+      "css": ".ds-tip { position:relative; display:inline-flex; } .ds-tip::after { content:attr(data-tip); position:absolute; top:calc(100% + 4px); left:50%; transform:translateX(-50%) translateY(-4px); padding:4px 8px; background:#2f3133; color:#fff; font:500 12px Inter,sans-serif; white-space:nowrap; border-radius:8px; box-shadow:0 1px 3px 1px rgba(0,0,0,0.15),0 1px 2px 0 rgba(0,0,0,0.3); opacity:0; pointer-events:none; transition:opacity 120ms ease-out, transform 120ms ease-out; z-index:30; } .ds-tip:hover::after, .ds-tip:focus-within::after { opacity:1; transform:translateX(-50%) translateY(0); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Workbench",
+    "overview": "Iceberg's editor is a calm, precise authoring surface where the work — the live Peacock page — is the hero and the chrome recedes around it. Built on Eos (Material 3) in a warm-neutral light scheme, with a single brand accent (Iceberg Blue) reserved for meaning. It is an Operate-mode tool: scanability, consistency, and a stable spine outrank expression; personality lives in precise details. Hierarchy is tonal, not bordered — a short warm-neutral surface ladder carries depth so panels read as inset sheets, flat at rest, with shadow only where a layer truly floats. This system dresses the authoring chrome only; the Peacock customer preview is a separate, isolated world.",
+    "keyCharacteristics": [
+      "Warm-neutral M3 surfaces with a single blue accent used sparingly.",
+      "Tone-and-space hierarchy over borders; hairlines only where needed.",
+      "Flat at rest; shadow only for floating layers.",
+      "Dense, consistent, keyboard-reachable Operate-mode ergonomics.",
+      "Material Symbols iconography throughout."
+    ],
+    "rules": [
+      { "name": "The Iceberg Blue Rule", "body": "The blue appears only on action, selection, links, tabs, and focus — never as a decorative fill. Its rarity is what makes it read as actionable.", "section": "colors" },
+      { "name": "The Two-System Rule", "body": "These tokens dress the authoring chrome only. The customer preview is Peacock's world; it must never adopt these tokens, and this chrome must never adopt Peacock's.", "section": "colors" },
+      { "name": "The Eyebrow Rule", "body": "Panel/section titles that are peers look identical — 11px semibold uppercase, +0.06em, muted — so PAGES, STRUCTURE, and PROPERTIES read as one level.", "section": "typography" },
+      { "name": "The Tonal-First Rule", "body": "Reach for a tone step or spacing before a border, and a border before a shadow. Resting surfaces never carry a shadow; a shadow means this floats.", "section": "elevation" },
+      { "name": "The Pill-CTA Rule", "body": "Interactive buttons are fully pill; content containers are softly rounded (8–16px). The two never swap.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do separate hierarchy with the surface ladder + spacing before reaching for a border, and a border before a shadow.",
+      "Do reserve Iceberg Blue (#01699b) for action, selection, and focus only.",
+      "Do keep editor action-bar CTAs secondary; use a filled primary only for the single decisive action.",
+      "Do render panel/section titles as 11px uppercase eyebrows.",
+      "Do use Material Symbols for every icon.",
+      "Do signal selection with a redundant cue (fill + accent bar), never color alone."
+    ],
+    "donts": [
+      "Don't nest a bordered container inside another bordered container.",
+      "Don't let the editor chrome resemble the Peacock customer UI, or import Peacock tokens into it (and vice-versa).",
+      "Don't use pure #ffffff body text or pure-black borders; use the token roles.",
+      "Don't put a shadow on a resting surface.",
+      "Don't introduce a second accent hue."
+    ]
+  }
+}

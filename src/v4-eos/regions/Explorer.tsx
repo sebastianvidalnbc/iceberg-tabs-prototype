@@ -106,7 +106,6 @@ interface StructureActions {
 function InsertLayoutBar({ onClick }: { onClick: () => void }) {
   return (
     <div className="group/ins flex items-center gap-2 px-3 py-1">
-      <span className="h-px flex-1 bg-[var(--color-border-subtle)] transition-colors group-hover/ins:bg-[var(--color-action-primary-border)]" />
       <button
         type="button"
         onClick={onClick}

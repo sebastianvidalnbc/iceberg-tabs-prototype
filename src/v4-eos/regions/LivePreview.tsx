@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AuthoringContext, SectionRole, StructureObjectType, VariantWorkspace } from "../data";
 import type { PreviewModel } from "../previewModel";
-import { Button } from "../ui-lib/Button";
-import { Select } from "../ui-lib/Select";
+import { SelectField } from "../ui/form-controls";
 import { Badge } from "../ui-lib/Badge";
-import { Icon } from "../ui-lib/Icon";
 import {
   CMS_SOURCE,
   PREVIEW_SOURCE,
@@ -57,6 +55,9 @@ const SIZE_OPTIONS = [
   { label: "Mobile", value: "mobile" },
 ];
 
+// Sentinel for the MVT "As authored" option (Radix Select rejects "").
+const AS_AUTHORED = "__as_authored__";
+
 // The standalone renderer document the iframe loads. BASE_URL is
 // "/iceberg-v4-eos/" in both dev (via the config middleware) and prod.
 const RENDERER_URL = `${import.meta.env.BASE_URL}renderer.html`;
@@ -69,7 +70,7 @@ const RENDERER_URL = `${import.meta.env.BASE_URL}renderer.html`;
 function AccessibilityScore({
   score = 100,
   max = 100,
-  region = "US",
+  region = "USA",
   locale = "en-US",
 }: {
   score?: number;
@@ -80,27 +81,20 @@ function AccessibilityScore({
   const pct = max > 0 ? score / max : 0;
   const state = pct >= 1 ? "pass" : pct >= 0.9 ? "warn" : "fail";
   const statusLabel = state === "pass" ? "Pass" : state === "warn" ? "Review" : "Fail";
+  const localeLabel = `${region}-${locale.toUpperCase()}`;
   return (
     <div
       className="ui-a11y"
       data-state={state}
       role="status"
       aria-label={`Accessibility ${statusLabel}: ${score} of ${max}. Locale ${region} ${locale}.`}
-      title={`Accessibility ${statusLabel} — ${score}/${max} · ${region}:${locale}`}
+      title={`Accessibility ${statusLabel} — ${score}/${max} · ${localeLabel}`}
     >
-      <Icon name="accessibility" size={16} className="ui-a11y__icon" />
-      <span className="ui-a11y__body">
-        <span className="ui-a11y__top">
-          <span className="ui-a11y__status">{statusLabel}</span>
-          <span className="ui-a11y__score">
-            <b>{score}</b>
-            <span className="ui-a11y__max">/{max}</span>
-          </span>
-        </span>
-        <span className="ui-a11y__locale">
-          {region}·{locale}
-        </span>
+      <span className="ui-a11y__status">{statusLabel}</span>
+      <span className="ui-a11y__score">
+        {score}/{max}
       </span>
+      <span className="ui-a11y__locale">{localeLabel}</span>
     </div>
   );
 }
@@ -128,7 +122,6 @@ export function LivePreview({
   const isWidget = context === "widget";
   const [audience, setAudience] = useState("default");
   const [size, setSize] = useState("full");
-  const [pickMode, setPickMode] = useState(false);
   const [ready, setReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -137,8 +130,10 @@ export function LivePreview({
   const hasContent = variant != null && previewModel.sections.length > 0;
 
   // MVT/A-B dropdown options: "As authored" + one per variation in the experience.
+  // Radix Select forbids an empty-string item value, so "As authored" carries a
+  // sentinel that maps back to "" (the mvtOverride default) at the boundary.
   const mvtOptions = [
-    { label: "As authored", value: "" },
+    { label: "As authored", value: AS_AUTHORED },
     ...variations.map((v) => ({
       label: v.section ? `${v.section} · ${v.label}` : v.label,
       value: v.id,
@@ -157,7 +152,9 @@ export function LivePreview({
       model: previewModel,
       audience,
       selectedId,
-      pickMode,
+      // Click-to-select is always on; the removed "Highlight elements" toggle
+      // used to drive an outline-all mode — no longer surfaced.
+      pickMode: false,
     };
     win.postMessage(msg, "*");
     // Mirror the model so a standalone "Preview In Tab" window can render it.
@@ -166,7 +163,7 @@ export function LivePreview({
     } catch {
       /* ignore */
     }
-  }, [previewModel, audience, selectedId, pickMode]);
+  }, [previewModel, audience, selectedId]);
 
   // Listen for messages from the iframe: ready (push the model), and Pick
   // Section clicks (select the node, then exit pick mode).
@@ -198,65 +195,45 @@ export function LivePreview({
         <div className="ui-preview">
           <div className="ui-preview__toolbar">
             <div className="ui-preview__toolbar-row">
-              <Button
-                variant="tertiary"
-                size="sm"
-                className="ui-preview__open"
-                onClick={() => window.open(RENDERER_URL, "_blank", "noopener")}
-              >
-                Preview In Tab
-              </Button>
+              <div className="ui-preview__controls">
+                {variations.length > 0 && (
+                  <div className="ui-preview__field">
+                    <SelectField
+                      aria-label="Variation (MVT)"
+                      value={mvtOverride || AS_AUTHORED}
+                      onValueChange={(val) =>
+                        onMvtChange(val === AS_AUTHORED ? "" : val)
+                      }
+                      options={mvtOptions}
+                    />
+                  </div>
+                )}
+                <div className="ui-preview__field">
+                  <SelectField
+                    aria-label="Audience"
+                    value={audience}
+                    onValueChange={setAudience}
+                    options={AUDIENCE_OPTIONS}
+                  />
+                </div>
+                <div className="ui-preview__field">
+                  <SelectField
+                    aria-label="Preview size"
+                    value={size}
+                    onValueChange={setSize}
+                    options={SIZE_OPTIONS}
+                  />
+                </div>
+              </div>
               <div className="ui-preview__meta">
                 {hasContent && (
-                  <AccessibilityScore score={100} max={100} region="US" locale="en-US" />
+                  <AccessibilityScore score={100} max={100} region="USA" locale="en-US" />
                 )}
                 <span className="ui-preview__status">
                   {status === "live" && <Badge variant="success">LIVE</Badge>}
                   {status === "loading" && <Badge variant="warning">LOADING</Badge>}
                   {status === "disabled" && <Badge variant="default">DISABLED</Badge>}
                 </span>
-              </div>
-            </div>
-            <div className="ui-preview__toolbar-row">
-              <Button
-                variant={pickMode ? "primary" : "tertiary"}
-                size="sm"
-                onClick={() => setPickMode((v) => !v)}
-                aria-pressed={pickMode}
-                title="Click any element in the preview to select it. Toggle to outline every clickable element."
-              >
-                {pickMode ? "Highlighting…" : "Highlight elements"}
-              </Button>
-              <div className="ui-preview__controls">
-                {variations.length > 0 && (
-                  <label className="ui-preview__field">
-                    <span className="ui-visually-hidden">Variation (MVT)</span>
-                    <Select
-                      size="sm"
-                      value={mvtOverride}
-                      onChange={onMvtChange}
-                      options={mvtOptions}
-                    />
-                  </label>
-                )}
-                <label className="ui-preview__field">
-                  <span className="ui-visually-hidden">Audience</span>
-                  <Select
-                    size="sm"
-                    value={audience}
-                    onChange={setAudience}
-                    options={AUDIENCE_OPTIONS}
-                  />
-                </label>
-                <label className="ui-preview__field">
-                  <span className="ui-visually-hidden">Preview size</span>
-                  <Select
-                    size="sm"
-                    value={size}
-                    onChange={setSize}
-                    options={SIZE_OPTIONS}
-                  />
-                </label>
               </div>
             </div>
           </div>

@@ -77,18 +77,32 @@ export function SwitchField({
   return <ShadSwitch checked={checked} onCheckedChange={onCheckedChange} />;
 }
 
+type SelectFieldOption = string | { label: string; value: string };
+
+const normalizeOption = (o: SelectFieldOption) =>
+  typeof o === "string" ? { label: o, value: o } : o;
+
+// The single app dropdown (light shadcn/Radix Select). Used by the Properties
+// panel AND the preview toolbar so every dropdown looks and behaves the same.
+// Accepts plain strings (label === value) or { label, value } pairs.
 export function SelectField({
   id,
   value,
   onValueChange,
   options,
   invalid,
+  placeholder = "Select…",
+  triggerClassName,
+  "aria-label": ariaLabel,
 }: {
   id?: string;
   value: string;
   onValueChange?: (v: string) => void;
-  options: string[];
+  options: SelectFieldOption[];
   invalid?: boolean;
+  placeholder?: string;
+  triggerClassName?: string;
+  "aria-label"?: string;
 }) {
   return (
     <ShadSelect value={value || undefined} onValueChange={onValueChange}>
@@ -96,16 +110,20 @@ export function SelectField({
         id={id}
         size="sm"
         aria-invalid={invalid || undefined}
-        className={cn(FIELD, "w-full")}
+        aria-label={ariaLabel}
+        className={cn(FIELD, "w-full", triggerClassName)}
       >
-        <SelectValue placeholder="Select…" />
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {options.map((opt) => (
-          <SelectItem key={opt} value={opt} className="text-[13px]">
-            {opt}
-          </SelectItem>
-        ))}
+        {options.map((raw) => {
+          const opt = normalizeOption(raw);
+          return (
+            <SelectItem key={opt.value} value={opt.value} className="text-[13px]">
+              {opt.label}
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </ShadSelect>
   );

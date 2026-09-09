@@ -260,7 +260,7 @@
 .ui-menu { position: fixed; z-index: var(--z-dropdown); min-width: 168px; background: var(--color-bg-elevated); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-1); }
 .ui-menu__item {
   display: flex; align-items: center; gap: var(--space-2); width: 100%; text-align: left;
-  border: 0; background: none; padding: var(--space-2) var(--space-3); border-radius: 5px;
+  border: 0; background: none; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
   font-size: var(--text-md); color: var(--color-text-primary); cursor: pointer;
 }
 .ui-menu__item:hover:not(:disabled) { background: var(--color-bg-selected); color: var(--color-action-primary); }
@@ -275,7 +275,7 @@
 .ui-tooltip-wrap { position: relative; display: inline-flex; }
 .ui-popover { position: fixed; z-index: var(--z-dropdown); background: var(--color-bg-elevated); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-3); min-width: 200px; }
 
-.ui-dialog__backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); background: rgba(16, 24, 40, 0.4); display: grid; place-items: center; padding: var(--space-4); }
+.ui-dialog__backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); background: var(--color-scrim); display: grid; place-items: center; padding: var(--space-4); }
 .ui-dialog { background: var(--color-bg-elevated); border-radius: var(--radius-md); box-shadow: var(--elevation-2); padding: var(--space-5); max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: var(--space-3); }
 .ui-dialog__title { margin: 0; font-size: var(--text-lg); font-weight: var(--fw-semibold); color: var(--color-text-primary); }
 .ui-dialog__desc { margin: 0; font-size: var(--text-md); color: var(--color-text-secondary); line-height: var(--lh-normal); }
@@ -539,12 +539,11 @@
 .ui-preview { display: flex; flex-direction: column; min-height: 0; flex: 1; user-select: none; }
 .ui-preview__toolbar { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); }
 .ui-preview__toolbar-row { display: flex; align-items: center; gap: var(--space-3); min-height: 32px; }
-.ui-preview__open { font-weight: var(--fw-semibold); }
 .ui-preview__field { display: flex; align-items: center; min-width: 0; }
-/* Second-row controls (MVT / audience / size) fill the right of the row as an
-   equal-width group on a single line. */
-.ui-preview__controls { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); flex: 1 1 auto; min-width: 0; }
-.ui-preview__controls .ui-preview__field { flex: 1 1 0; }
+/* Controls (MVT / audience / size) sit at the left of the single toolbar row as
+   a comfortable-width group; the a11y + status pills are pushed to the right. */
+.ui-preview__controls { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.ui-preview__controls .ui-preview__field { flex: 0 1 168px; }
 .ui-preview__status { margin-left: auto; display: inline-flex; align-items: center; }
 /* Instant tooltip for icon-only CTAs (editor action bar). Same dark-pill
    treatment as the rail's label tooltip, positioned BELOW the control. Shown on
@@ -586,29 +585,26 @@
 /* Accessibility "semáforo" — live, colour-coded a11y readout next to the
    preview CTAs. Tri-state via [data-state]. Tinted surface + status colour so
    it reads as a dashboard gauge without shouting. */
+/* Accessibility "semáforo" — a single-line status pill:
+   PASS · 100/100 · USA-EN-US. One hue (status colour); weight and a muted
+   locale carry the hierarchy. Baseline-aligned so the bold score anchors the
+   smaller label and locale. */
 .ui-a11y {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 30px;
-  padding: 0 var(--space-2) 0 var(--space-2);
-  border-radius: var(--radius-md);
-  border: var(--border-width) solid transparent;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
   user-select: none;
 }
-.ui-a11y__icon { flex: none; }
-.ui-a11y__body { display: inline-flex; flex-direction: column; justify-content: center; gap: 1px; line-height: 1; }
-.ui-a11y__top { display: inline-flex; align-items: baseline; gap: var(--space-1); }
-.ui-a11y__status { font-size: 9px; font-weight: var(--fw-bold); letter-spacing: 0.08em; text-transform: uppercase; }
-.ui-a11y__score { font-size: 13px; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
-.ui-a11y__score b { font-weight: var(--fw-bold); }
-.ui-a11y__max { font-weight: var(--fw-medium); opacity: 0.65; }
-.ui-a11y__locale { font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.8; }
+.ui-a11y__status { font-size: var(--text-xs); font-weight: var(--fw-medium); letter-spacing: 0.04em; text-transform: uppercase; }
+.ui-a11y__score { font-size: var(--text-md); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.ui-a11y__locale { font-size: var(--text-xs); font-weight: var(--fw-medium); letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.72; }
 
-.ui-a11y[data-state="pass"] { background: var(--color-status-success-bg); border-color: color-mix(in srgb, var(--color-status-success) 22%, transparent); color: var(--color-status-success); }
-.ui-a11y[data-state="warn"] { background: var(--color-status-warning-bg); border-color: color-mix(in srgb, var(--color-status-warning) 22%, transparent); color: var(--color-status-warning); }
-.ui-a11y[data-state="fail"] { background: var(--color-status-danger-bg); border-color: color-mix(in srgb, var(--color-status-danger) 22%, transparent); color: var(--color-status-danger); }
+.ui-a11y[data-state="pass"] { background: var(--color-status-success-bg); color: var(--color-status-success); }
+.ui-a11y[data-state="warn"] { background: var(--color-status-warning-bg); color: var(--color-status-warning); }
+.ui-a11y[data-state="fail"] { background: var(--color-status-danger-bg); color: var(--color-status-danger); }
 /* Canvas fills the pane edge to edge (no surrounding matte/margin); the iframe
    itself carries the rounded corners so the preview reads as one clean surface. */
 .ui-preview__canvas { flex: 1; min-height: 0; background: var(--color-bg-subtle); display: grid; place-items: center; color: var(--color-text-muted); }

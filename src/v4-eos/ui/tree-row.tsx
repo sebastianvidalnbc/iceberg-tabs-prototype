@@ -78,7 +78,9 @@ export function TreeRow({
         // Fluid rows grow to content and always fill the pane width (so the
         // selection/hover fill spans the full — possibly scrolled — width).
         fluid && "w-max min-w-full",
-        selected && "bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground",
+        // Selection is a full-bleed band: square corners so it reads as a row
+        // highlight spanning the pane, not a rounded chip.
+        selected && "rounded-none bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground",
         isDragging && "opacity-40",
         isOver && "before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:content-['']",
         disabled && "opacity-55",

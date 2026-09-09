@@ -271,7 +271,7 @@
   font: inherit;
   cursor: pointer;
 }
-.ui-topbar__env:hover { background: rgba(39, 89, 150, 0.06); }
+.ui-topbar__env:hover { background: color-mix(in srgb, var(--color-action-primary) 6%, transparent); }
 .ui-topbar__env:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ui-topbar__env-label {
   font-size: var(--text-sm);
