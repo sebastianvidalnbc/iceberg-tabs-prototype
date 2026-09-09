@@ -394,6 +394,20 @@ body {
 }
 .ui-brand__card-li {
   display: flex;
+  flex-direction: column;
+  gap: 16px; /* card → per-card legal gap */
+}
+/* Keep the card itself equal-height across the row; the legal sits below it. */
+.ui-brand__card-li > .ui-brand__card {
+  flex: 1;
+}
+/* [VERIFIED] Per-card legal fine print, OUTSIDE and BELOW the card. Legal type
+   12/16 Book, muted; slight inset so it reads as annotation, not card content. */
+.ui-brand__card-legal {
+  margin: 0;
+  padding: 0 8px;
+  font: var(--pk-type-legal);
+  color: var(--sec-muted);
 }
 /* [VERIFIED] IA "Plan Picker Card Now" (11051:8463): white card, radius 36,
    padding 40, description block (eyebrow+title+features) and pricing block

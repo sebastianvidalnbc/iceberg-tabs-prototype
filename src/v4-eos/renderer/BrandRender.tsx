@@ -141,6 +141,9 @@ function BrandCard({
           </div>
         ) : null}
       </article>
+      {/* [VERIFIED] Per-card legal (schema "Description - Legal" / "Legal
+          Description") renders OUTSIDE and BELOW the card as fine print. */}
+      {card.legal ? <p className="ui-brand__card-legal">{card.legal}</p> : null}
     </li>
   );
 }

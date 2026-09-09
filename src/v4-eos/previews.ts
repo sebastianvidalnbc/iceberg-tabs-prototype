@@ -490,6 +490,9 @@ export const OBJECT_PROPERTIES: Record<string, ObjectProperties> = {
     productTitle: "Premium",
     productDescription:
       "Stream hit movies, bingeworthy shows, and live sports — plus new series the day after they air.",
+    legal: "Custom",
+    legalDescription:
+      "Compatible device and internet connection required. Auto-renews monthly at the then-current price until canceled. Live sports subject to regional and blackout restrictions. Terms apply.",
   }),
   // Spanish voucher error message → Voucher Error
   "sv-voucher-error": {

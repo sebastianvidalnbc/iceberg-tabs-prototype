@@ -14,6 +14,7 @@
 // an on-brand section (plan-picker cards, hero, banner, FAQ, rail, grid, …).
 import {
   classifyNode,
+  OBJECT_PROPERTIES,
   type ResolvedProperties,
   type StructureNode,
   type VariantWorkspace,
@@ -44,6 +45,9 @@ export interface PreviewCard {
   priceCadenceText?: string; // "Price Cadence and Subtext" — e.g. "/month"
   priceDetails?: string; // "Offer Detail Description" — small offer copy
   cta?: string;
+  // "Description - Legal" / "Legal Description" — per-plan fine print rendered
+  // OUTSIDE and BELOW the card (real IA plan-picker per-card legal block).
+  legal?: string;
 }
 
 // A generic tile/row used by non-plan-picker layouts (FAQ Q/A, rail/grid tiles,
@@ -129,7 +133,14 @@ function fieldsForNode(
   parent: StructureNode | null,
 ): Record<string, string> {
   const base = flattenFields(classifyNode(node, parent));
-  return { ...base, ...(node.content ?? {}) };
+  // Layer authored sample values (OBJECT_PROPERTIES[nodeId]) the way the
+  // Properties panel does, so preview copy matches what the author sees/edits —
+  // e.g. the Premium card's description and per-card legal fine print. Instance
+  // `content` overrides win last (live edits).
+  const authored = OBJECT_PROPERTIES[node.id]
+    ? flattenFields({ kind: "fields", data: OBJECT_PROPERTIES[node.id] })
+    : {};
+  return { ...base, ...authored, ...(node.content ?? {}) };
 }
 
 function pick(map: Record<string, string>, labels: string[]): string | undefined {
@@ -262,6 +273,14 @@ function buildCard(
   const priceDetails = detRaw ? stripHtml(detRaw) : undefined;
   const priceCadence = firstCad?.label;
 
+  // Per-card legal (fine print under the card). The sample Product schema uses a
+  // "Legal" type select (None/Standard/Custom) gating a "Legal Description"
+  // textarea; schema-built layouts use the "Description - Legal" rich-text field.
+  // Render whenever copy is authored and the type isn't explicitly "None".
+  const legalRaw = pick(map, ["Legal Description", "Description - Legal"]);
+  const legal =
+    legalRaw && map["Legal"] !== "None" ? stripHtml(legalRaw) : undefined;
+
   return {
     id: product.id,
     title,
@@ -277,6 +296,7 @@ function buildCard(
     priceCadenceText,
     priceDetails,
     cta,
+    legal,
   };
 }
 
