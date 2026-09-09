@@ -16,13 +16,22 @@ export function ObjectHeader({
   eyebrow,
   name,
   children,
+  bleed,
 }: {
   eyebrow: string;
   name: string;
   children?: React.ReactNode;
+  // When set, the bottom divider runs edge-to-edge of the p-4 panel (Figma-style
+  // section anchoring). Content stays inset via px-4.
+  bleed?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-[var(--color-border-subtle)] pb-3">
+    <div
+      className={cn(
+        "flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-[var(--color-border-subtle)] pb-3",
+        bleed && "-mx-4 px-4",
+      )}
+    >
       <span className="basis-full text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {eyebrow}
       </span>
@@ -56,13 +65,13 @@ export function PropertyRow({
         "grid items-start gap-x-3 gap-y-1",
         stacked
           ? "grid-cols-1"
-          : "grid-cols-[150px_minmax(0,1fr)] max-[900px]:grid-cols-1",
+          : "grid-cols-[130px_minmax(0,1fr)] max-[900px]:grid-cols-1",
       )}
     >
       <label
         htmlFor={htmlFor}
         className={cn(
-          "min-w-0 break-words pt-1.5 text-[12px] font-medium leading-snug text-muted-foreground",
+          "min-w-0 break-words pt-1.5 text-[12px] font-normal leading-snug text-muted-foreground",
           stacked && "pt-0",
         )}
       >
@@ -103,12 +112,12 @@ export function PropertySection({
   children: React.ReactNode;
 }) {
   if (!header) {
-    return <section>{children}</section>;
+    return <section className="px-4">{children}</section>;
   }
   return (
-    <Collapsible open={expanded} onOpenChange={onToggle}>
+    <Collapsible open={expanded} onOpenChange={onToggle} className="px-4">
       <div className="flex items-center gap-2 py-2">
-        <CollapsibleTrigger className="group flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+        <CollapsibleTrigger className="group flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
           <MSym name="chevron_right" size={18} className="shrink-0 transition-transform group-data-[state=open]:rotate-90" />
           <span className="truncate">{header}</span>
         </CollapsibleTrigger>

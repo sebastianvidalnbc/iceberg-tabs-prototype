@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AuthoringContext, SectionRole, StructureObjectType, VariantWorkspace } from "../data";
 import type { PreviewModel } from "../previewModel";
 import { SelectField } from "../ui/form-controls";
@@ -47,13 +47,29 @@ const AUDIENCE_OPTIONS = [
 ];
 
 // Device presets mirror the real editor's device-selector (Default / Laptop /
-// Tablet / Mobile). The value maps to a max-width class on the iframe frame.
+// Tablet / Mobile). Each maps to a TRUE viewport width the iframe renders at;
+// the frame is then scaled to fit the preview column (see DESIGN_WIDTHS) so the
+// customer render keeps its real published proportions instead of being squashed
+// into the narrow column at 1:1 (which made everything look ~2× too big).
 const SIZE_OPTIONS = [
   { label: "Full Size", value: "full" },
   { label: "Laptop", value: "laptop" },
   { label: "Tablet", value: "tablet" },
   { label: "Mobile", value: "mobile" },
 ];
+
+// The viewport width (px) each preset renders the iframe document at. "Full" is
+// the VERIFIED Commerce design frame (1440) — the exact width brand.css is built
+// against (--pk-content-max 1440, 56px gutters, 384px plan cards), so the plan
+// picker sits 3-across as designed. It is then scaled down to fit the column.
+// Narrower devices only scale down when the column is smaller than the device
+// (otherwise they show 1:1, centred).
+const DESIGN_WIDTHS: Record<string, number> = {
+  full: 1440,
+  laptop: 1024,
+  tablet: 834,
+  mobile: 390,
+};
 
 // Sentinel for the MVT "As authored" option (Radix Select rejects "").
 const AS_AUTHORED = "__as_authored__";
@@ -124,6 +140,31 @@ export function LivePreview({
   const [size, setSize] = useState("full");
   const [ready, setReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Measure the available canvas so we can scale a real desktop-width iframe to
+  // fit it (device-preview zoom). ResizeObserver keeps it correct as the author
+  // drags the Explorer/Properties dividers.
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const measure = () =>
+      setCanvasSize({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Fit the desktop-width iframe into the column. scale ≤ 1 (never upscale). The
+  // sizer takes the SCALED (visual) box so flex centring works; the frame keeps
+  // its true design dimensions and is transform-scaled inside it.
+  const designW = DESIGN_WIDTHS[size] ?? 1280;
+  const fitScale =
+    canvasSize.w > 0 ? Math.min(1, canvasSize.w / designW) : 1;
+  const sizerW = Math.round(designW * fitScale);
+  const frameH = fitScale > 0 ? Math.round(canvasSize.h / fitScale) : canvasSize.h;
 
   const audienceLabel =
     AUDIENCE_OPTIONS.find((o) => o.value === audience)?.label ?? "Default";
@@ -237,16 +278,32 @@ export function LivePreview({
               </div>
             </div>
           </div>
-          <div className="ui-preview__canvas" data-mode={hasContent ? "frame" : undefined}>
+          <div
+            ref={canvasRef}
+            className="ui-preview__canvas"
+            data-mode={hasContent ? "frame" : undefined}
+          >
             {hasContent ? (
-              <div className={`ui-preview__frame ui-preview__frame--${size}`}>
-                <iframe
-                  ref={iframeRef}
-                  className="ui-preview__iframe"
-                  title="Live preview"
-                  src={RENDERER_URL}
-                  onLoad={() => setReady(false)}
-                />
+              <div
+                className="ui-preview__sizer"
+                style={{ width: sizerW || undefined, height: canvasSize.h || undefined }}
+              >
+                <div
+                  className="ui-preview__frame"
+                  style={{
+                    width: designW,
+                    height: frameH || undefined,
+                    transform: `scale(${fitScale})`,
+                  }}
+                >
+                  <iframe
+                    ref={iframeRef}
+                    className="ui-preview__iframe"
+                    title="Live preview"
+                    src={RENDERER_URL}
+                    onLoad={() => setReady(false)}
+                  />
+                </div>
                 {audience !== "default" && (
                   <p className="ui-preview__audience-overlay">
                     <Badge variant="info">{audienceLabel} audience</Badge>

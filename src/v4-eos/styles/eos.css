@@ -538,27 +538,29 @@
   /* No padding/border: the iframe fills the pane. Device presets (tablet/mobile)
      center a narrower frame and the subtle canvas backdrop shows on the sides. */
 }
-.ui-preview__canvas[data-mode="frame"] .ui-preview__frame {
-  display: flex;
-  height: 100%;
+/* The sizer holds the SCALED (visual) box so the flex canvas can centre it; the
+   frame keeps its true design width/height (set inline) and is transform-scaled
+   inside the sizer. overflow:hidden clips the scaled frame to the visual box. */
+.ui-preview__canvas[data-mode="frame"] .ui-preview__sizer {
   position: relative;
+  flex: none;
+  overflow: hidden;
+}
+.ui-preview__canvas[data-mode="frame"] .ui-preview__frame {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
 }
 .ui-preview__iframe {
-  flex: 1;
   width: 100%;
   height: 100%;
-  min-height: 480px;
   border: 0;
   border-radius: 0;
   background: #fff;
   display: block;
 }
-/* Device presets reframe the iframe wrapper (widths mirror the real editor's
-   device-selector presets). */
-.ui-preview__frame--full { max-width: 100%; width: 100%; }
-.ui-preview__frame--laptop { max-width: 1024px; }
-.ui-preview__frame--tablet { max-width: 834px; }
-.ui-preview__frame--mobile { max-width: 390px; }
 .ui-preview__audience-overlay {
   position: absolute;
   top: 12px;

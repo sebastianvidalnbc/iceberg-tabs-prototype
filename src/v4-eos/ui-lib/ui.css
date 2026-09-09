@@ -478,6 +478,11 @@
 }
 .ui-ws-nav + .ui-ws__region { border-left: 0; }
 .ui-ws-nav__brand { display: flex; align-items: center; justify-content: center; width: 100%; padding: var(--space-3) 0; border-bottom: var(--border-width) solid var(--nav-border); }
+/* The Iceberg mark doubles as a Home link. Reset the button chrome, keep the
+   divider, and give it the same hover/focus affordance as the rail items. */
+button.ui-ws-nav__brand--link { -webkit-appearance: none; appearance: none; border-top: 0; border-left: 0; border-right: 0; background: transparent; cursor: pointer; color: inherit; transition: background var(--motion-fast) var(--ease-standard); }
+button.ui-ws-nav__brand--link:hover { background: var(--nav-hover-bg); }
+button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ui-ws-nav__mark { width: 22px; height: 22px; border-radius: var(--radius-sm); background: var(--nav-fg-strong); flex: none; }
 .ui-ws-nav__list { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2) var(--space-1); display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); }
 /* Each item stacks a semantic icon above a compact centered label. Full tile is

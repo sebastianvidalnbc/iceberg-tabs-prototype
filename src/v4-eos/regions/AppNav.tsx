@@ -1,6 +1,7 @@
 import { V2_APP_NAV, type AuthoringContext } from "../data";
 import { Icon, type IconName } from "../ui-lib/Icon";
 import { IcebergLogo } from "../ui-lib/IcebergLogo";
+import { routes, navigate } from "../browse";
 
 // Distinct icon per nav destination, keyed by the V2 nav label. Any unmapped
 // item falls back to its initial letter (see lookup in the render).
@@ -19,8 +20,9 @@ const NAV_ICONS: Record<string, IconName> = {
 };
 
 interface AppNavProps {
-  // The active authoring context; the bound nav item is shown as current.
-  context: AuthoringContext;
+  // The active authoring context; the bound nav item is shown as current. "home"
+  // marks the dashboard landing, where no product-nav item is current.
+  context: AuthoringContext | "home";
   // Invoked when an actionable (context-bound) nav item is clicked. The shell
   // decides what this means: in the editor it swaps the in-editor dataset; in
   // the browse levels it navigates to that context's list via a hash route.
@@ -39,9 +41,15 @@ interface AppNavProps {
 export function AppNav({ context, onSelectContext }: AppNavProps) {
   return (
     <nav className="ui-ws__region ui-ws-nav" aria-label="Primary">
-      <div className="ui-ws-nav__brand" aria-label="Iceberg">
+      <button
+        type="button"
+        className="ui-ws-nav__brand ui-ws-nav__brand--link"
+        aria-label="Iceberg home"
+        title="Home"
+        onClick={() => navigate(routes.home())}
+      >
         <IcebergLogo height={26} />
-      </div>
+      </button>
       <div className="ui-ws-nav__list">
         {V2_APP_NAV.map((item) => {
           const actionable = item.context !== undefined;

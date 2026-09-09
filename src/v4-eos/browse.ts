@@ -250,6 +250,7 @@ export function findPageForVariant(
 //                                 author came from. A legacy 2-segment form
 //                                 (#/editor/:id) is still parsed as page context.
 export type V2Route =
+  | { view: "home" }
   | { view: "pages" }
   | { view: "variants"; pageId: string }
   | { view: "widgets" }
@@ -257,6 +258,7 @@ export type V2Route =
   | { view: "design-system" };
 
 export const routes = {
+  home: () => "#/home",
   pages: () => "#/pages",
   variants: (pageId: string) => `#/pages/${pageId}`,
   widgets: () => "#/widgets",
@@ -265,10 +267,12 @@ export const routes = {
   designSystem: () => "#/design-system",
 };
 
-// Parse a location.hash into a V2Route. Unknown/empty → the Pages list.
+// Parse a location.hash into a V2Route. Unknown/empty → the Home dashboard (the
+// landing users reach by clicking the Iceberg mark).
 export function parseRoute(hash: string): V2Route {
   const clean = hash.replace(/^#\/?/, "");
   const [head, seg1, seg2] = clean.split("/");
+  if (head === "home") return { view: "home" };
   if (head === "design-system") return { view: "design-system" };
   if (head === "editor" && seg1) {
     // #/editor/:context/:id when the first segment is a known context;
@@ -280,7 +284,8 @@ export function parseRoute(hash: string): V2Route {
   }
   if (head === "widgets") return { view: "widgets" };
   if (head === "pages" && seg1) return { view: "variants", pageId: seg1 };
-  return { view: "pages" };
+  if (head === "pages") return { view: "pages" };
+  return { view: "home" };
 }
 
 export function navigate(hash: string) {

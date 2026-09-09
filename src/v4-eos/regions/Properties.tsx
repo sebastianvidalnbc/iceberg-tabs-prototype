@@ -156,25 +156,44 @@ function PropertyControl({
 // Dense two-column layout: a fixed label column and a control column. Kept
 // local to V2 for the prototype (promote to src/ui later if reused).
 
-// Icon/asset picker: a preview tile, the asset name, and a no-op Remove. When
-// empty, shows a "Choose…" affordance. The tile itself is the well — no outer
-// container box wraps it (avoid nesting a bordered box inside a bordered box).
+// Asset picker, quieted down. Empty state is a single compact "Choose image"
+// affordance — no placeholder tile, no "No asset selected" filler. When set, a
+// small thumbnail + filename + an unobtrusive × to clear. One element per state,
+// no nested containers (§ eliminate container-in-container).
 function AssetPicker({ value }: { value: string }) {
   const empty = value.trim() === "";
+  if (empty) {
+    return (
+      <button
+        type="button"
+        onClick={() => {}}
+        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        <MSym name="add_photo_alternate" size={16} />
+        Choose image…
+      </button>
+    );
+  }
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2">
       <span
         aria-hidden
-        className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] text-muted-foreground"
+        className="grid size-7 shrink-0 place-items-center overflow-hidden rounded bg-[var(--color-bg-subtle)] text-muted-foreground"
       >
-        <Icon name="image" size={18} />
+        <Icon name="image" size={15} />
       </span>
       <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
-        {empty ? "No asset selected" : value}
+        {value}
       </span>
-      <Button variant="ghost" size="sm" onClick={() => {}}>
-        {empty ? "Choose…" : "Remove"}
-      </Button>
+      <button
+        type="button"
+        aria-label="Remove asset"
+        title="Remove"
+        onClick={() => {}}
+        className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        <MSym name="close" size={16} />
+      </button>
     </div>
   );
 }
@@ -413,9 +432,10 @@ const FEATURE_ICONS: { value: string; label: string }[] = [
   { value: "family_restroom", label: "Profiles" },
 ];
 
-// The icon tile: shows the current icon and opens a picker on click. A corner
-// badge clears the icon when one is set, or hints "add" when empty. Writes the
-// chosen glyph back through onChange (the icon field was a no-op before).
+// The icon tile: a single quiet control that shows the current glyph (or a muted
+// "add" hint when empty) and opens a picker on click. No floating corner badges
+// — clearing lives inside the picker as a "Remove icon" row. Writes the chosen
+// glyph back through onChange.
 function FeatureIconTile({
   value,
   onChange,
@@ -425,62 +445,52 @@ function FeatureIconTile({
 }) {
   const has = value.trim() !== "";
   return (
-    <div className="relative shrink-0">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label={has ? `Feature icon: ${value}. Change icon` : "Choose a feature icon"}
-            className="grid size-11 place-items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            {has ? (
-              <MSym name={value} size={22} />
-            ) : (
-              <span className="sr-only">No icon</span>
-            )}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-auto p-1.5">
-          <div className="grid grid-cols-4 gap-1">
-            {FEATURE_ICONS.map((ic) => (
-              <button
-                key={ic.value}
-                type="button"
-                title={ic.label}
-                aria-label={ic.label}
-                aria-pressed={value === ic.value}
-                onClick={() => onChange(ic.value)}
-                className={cn(
-                  "grid size-9 place-items-center rounded-sm text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                  value === ic.value &&
-                    "bg-[var(--color-bg-selected)] text-[var(--color-action-primary)]",
-                )}
-              >
-                <MSym name={ic.value} size={20} />
-              </button>
-            ))}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {has ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Clear icon"
-          title="Clear icon"
-          onClick={() => onChange("")}
-          className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[var(--color-status-danger)] shadow-[var(--elevation-1)] transition-colors hover:bg-[var(--color-status-danger-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          aria-label={has ? `Feature icon: ${value}. Change icon` : "Choose a feature icon"}
+          className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <MSym name="close" size={13} />
+          {has ? (
+            <MSym name={value} size={20} />
+          ) : (
+            <MSym name="add" size={18} className="text-muted-foreground" />
+          )}
         </button>
-      ) : (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-muted-foreground shadow-[var(--elevation-1)]"
-        >
-          <MSym name="add" size={13} />
-        </span>
-      )}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-auto p-1.5">
+        <div className="grid grid-cols-4 gap-1">
+          {FEATURE_ICONS.map((ic) => (
+            <button
+              key={ic.value}
+              type="button"
+              title={ic.label}
+              aria-label={ic.label}
+              aria-pressed={value === ic.value}
+              onClick={() => onChange(ic.value)}
+              className={cn(
+                "grid size-9 place-items-center rounded-sm text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                value === ic.value &&
+                  "bg-[var(--color-bg-selected)] text-[var(--color-action-primary)]",
+              )}
+            >
+              <MSym name={ic.value} size={20} />
+            </button>
+          ))}
+        </div>
+        {has && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="mt-1.5 flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <MSym name="close" size={14} />
+            Remove icon
+          </button>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -522,7 +532,9 @@ function InlineFeatureItem({
 
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="flex items-start gap-3">
+      {/* One calm line: quiet icon tile · description field · unobtrusive trash
+          (muted → danger on hover), matching the asset-picker treatment. */}
+      <div className="flex items-center gap-2">
         {iconField && (
           <FeatureIconTile
             value={iconValue}
@@ -538,7 +550,7 @@ function InlineFeatureItem({
               onChange={(e) => onEdit(textField.label, e.target.value)}
               invalid={textInvalid}
               placeholder="Describe this feature…"
-              className="h-11 px-3"
+              className="h-9"
             />
             {textInvalid && (
               <p className="mt-1 text-[11px] leading-snug text-[var(--color-status-danger)]">
@@ -547,25 +559,16 @@ function InlineFeatureItem({
             )}
           </div>
         )}
-        {/* Inline remove: a subtle divider + red trash, vertically centered on
-            the field row (matches the compact feature-row spec). */}
-        <div className="flex h-11 shrink-0 items-center gap-1.5">
-          <span
-            aria-hidden
-            className="h-6 w-px bg-[var(--color-border-subtle)]"
-          />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={!removable}
-            title={removable ? "Remove feature" : "At least one feature required"}
-            aria-label="Remove feature"
-            onClick={onRemove}
-            className="text-[var(--color-status-danger)] hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] disabled:text-muted-foreground"
-          >
-            <MSym name="delete" size={18} />
-          </Button>
-        </div>
+        <button
+          type="button"
+          disabled={!removable}
+          title={removable ? "Remove feature" : "At least one feature required"}
+          aria-label="Remove feature"
+          onClick={onRemove}
+          className="grid size-8 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+        >
+          <MSym name="delete" size={16} />
+        </button>
       </div>
       {extraFields.length > 0 && (
         <PropertyRows>
@@ -665,25 +668,22 @@ function InlineFeatureCollections({
               ) : (
                 <div
                   className={cn(
-                    "flex items-center gap-2.5",
+                    "flex items-center",
                     items.length > 0 &&
                       "mt-4 border-t border-[var(--color-border-subtle)] pt-4"
                   )}
                 >
-                  <Button
-                    variant="default"
-                    size="icon-sm"
-                    className="shrink-0 rounded-full"
+                  <button
+                    type="button"
                     disabled={!canAdd}
                     onClick={() => childType && onAddChild(list.id, childType)}
                     title={`Add ${nounLower}`}
                     aria-label={`Add ${nounLower}`}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
                   >
-                    <MSym name="add" size={18} />
-                  </Button>
-                  <span className="text-[13px] text-muted-foreground">
+                    <MSym name="add" size={16} />
                     Add {nounLower}
-                  </span>
+                  </button>
                 </div>
               )}
             </div>
@@ -895,7 +895,7 @@ function FieldsBody({
 
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name}>
+      <ObjectHeader eyebrow={eyebrow} name={name} bleed>
         {headers.length > 1 && (
           <Button
             variant="ghost"
@@ -907,7 +907,10 @@ function FieldsBody({
           </Button>
         )}
       </ObjectHeader>
-      <div className="flex flex-col divide-y divide-[var(--color-border-subtle)]">
+      {/* Sections bleed to the p-4 panel edges so each divider anchors the eye
+          across the full width (Figma section rhythm); px-4 on each section
+          re-insets the content. */}
+      <div className="-mx-4 flex flex-col divide-y divide-[var(--color-border-subtle)]">
         {groups.map((group, i) => (
           <GroupSection
             key={group.header ?? i}

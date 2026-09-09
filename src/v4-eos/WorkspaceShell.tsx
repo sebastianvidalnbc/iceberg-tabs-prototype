@@ -155,6 +155,12 @@ export function WorkspaceShell({
   const beginExplorerResize = useCallback(
     (e: ReactPointerEvent) => {
       e.preventDefault();
+      // Capture the pointer on the handle itself so drag events keep flowing
+      // even as the cursor moves OVER the preview iframe (an iframe otherwise
+      // swallows window-level pointer events, killing the drag mid-way and
+      // leaving the cursor/hover stuck because pointerup never fires).
+      const el = e.currentTarget as HTMLElement;
+      el.setPointerCapture(e.pointerId);
       const startX = e.clientX;
       const startW = explorerWidth;
       const onMove = (ev: PointerEvent) => {
@@ -165,13 +171,16 @@ export function WorkspaceShell({
         setExplorerWidth(next);
       };
       const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
+        el.releasePointerCapture?.(e.pointerId);
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerup", onUp);
+        el.removeEventListener("pointercancel", onUp);
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
       };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerup", onUp);
+      el.addEventListener("pointercancel", onUp);
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
     },
@@ -691,7 +700,7 @@ export function WorkspaceShell({
             title="Drag to resize"
             onPointerDown={beginExplorerResize}
             onDoubleClick={() => setExplorerWidth(280)}
-            className="group relative z-10 cursor-col-resize select-none"
+            className="group relative z-10 -mx-[3px] w-1.5 shrink-0 cursor-col-resize touch-none select-none"
           >
             {/* Divider line — same weight/colour as the Properties panel's. */}
             <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />

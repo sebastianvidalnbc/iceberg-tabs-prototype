@@ -442,20 +442,27 @@ export function Explorer({
   const [pagesPct, setPagesPct] = useState(PAGES_DEFAULT_PCT);
   const beginPagesResize = (e: ReactPointerEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const container = e.currentTarget.parentElement;
+    const el = e.currentTarget;
+    const container = el.parentElement;
     if (!container) return;
     const rect = container.getBoundingClientRect();
+    // Capture on the handle so the drag tracks continuously (no "button-like"
+    // stalls) and always releases the cursor on pointerup/cancel.
+    el.setPointerCapture(e.pointerId);
     const onMove = (ev: PointerEvent) => {
       const pct = ((ev.clientY - rect.top) / rect.height) * 100;
       setPagesPct(Math.min(80, Math.max(15, pct)));
     };
     const onUp = () => {
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerup", onUp);
+      el.releasePointerCapture?.(e.pointerId);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
       document.body.style.cursor = "";
     };
-    document.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerup", onUp);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
     document.body.style.cursor = "row-resize";
   };
 
@@ -501,7 +508,7 @@ export function Explorer({
         title="Drag to resize"
         onPointerDown={beginPagesResize}
         onDoubleClick={() => setPagesPct(PAGES_DEFAULT_PCT)}
-        className="group relative z-10 -my-[3px] h-1.5 shrink-0 cursor-row-resize select-none"
+        className="group relative z-10 -my-[3px] h-1.5 shrink-0 cursor-row-resize touch-none select-none"
       >
         <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
         <span

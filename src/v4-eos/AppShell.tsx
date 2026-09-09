@@ -15,8 +15,9 @@ import type { AuthoringContext } from "./data";
 // hash route. In the editor the shell forwards the same rail with the editor's
 // own context handler so switching still swaps the in-editor dataset.
 interface AppShellProps {
-  // Which major area the rail should show as current.
-  activeContext: AuthoringContext;
+  // Which major area the rail should show as current. "home" marks the dashboard
+  // landing, where no product-nav item is current.
+  activeContext: AuthoringContext | "home";
   // Optional override for rail clicks. The editor passes its in-place context
   // switcher here; browse levels omit it and fall back to route navigation.
   onSelectContext?: (context: AuthoringContext) => void;

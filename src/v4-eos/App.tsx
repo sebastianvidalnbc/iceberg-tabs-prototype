@@ -1,6 +1,7 @@
 import { useHashRoute } from "./ui-lib/useHashRoute";
 import { WorkspaceShell } from "./WorkspaceShell";
 import { AppShell } from "./AppShell";
+import { HomeView } from "./views/HomeView";
 import { PagesView } from "./views/PagesView";
 import { VariantsView } from "./views/VariantsView";
 import { WidgetsView } from "./views/WidgetsView";
@@ -57,9 +58,17 @@ export default function App() {
       </AppShell>
     );
   }
+  if (route.view === "pages") {
+    return (
+      <AppShell activeContext="page">
+        <PagesView />
+      </AppShell>
+    );
+  }
+  // Home dashboard — the landing reached via the Iceberg mark or an empty hash.
   return (
-    <AppShell activeContext="page">
-      <PagesView />
+    <AppShell activeContext="home">
+      <HomeView />
     </AppShell>
   );
 }
