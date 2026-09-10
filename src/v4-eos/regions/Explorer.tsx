@@ -13,6 +13,19 @@ import {
   WIDGET_OFFERS_NODE_ID,
   WIDGET_OFFER_FILTER_INDEX,
 } from "../data";
+import { classifyWidget, type WidgetType } from "../browse";
+
+// Type-family wayfinding inside the widget editor: only the widget-only grouping
+// nodes carry a family dot, so the cue can never leak into a Page's structure.
+// The family is derived from the group's own label (e.g. "Retention Offers" →
+// Retention), matching how the Widgets list classifies rows.
+const FAM_GROUP_OBJECT_TYPES = new Set(["offer-group", "segmentation-group"]);
+function famTypeForNode(node: StructureNode): WidgetType | undefined {
+  if (!node.objectType || !FAM_GROUP_OBJECT_TYPES.has(node.objectType)) {
+    return undefined;
+  }
+  return classifyWidget(node.label);
+}
 
 // Collection tree — mixes route rows and experience rows (Variants in Page
 // context, Widget configs in Widget context). Expansion is local (routes are
@@ -245,6 +258,7 @@ function StructureLevel({
               fluid
               boxed={boxedTop}
               noTrailingFade={noTrailingFade}
+              famType={famTypeForNode(node)}
               hasChildren={hasChildren}
               isOpen={isOpen}
               selected={node.id === selectedId}

@@ -232,6 +232,26 @@ export function classifyWidget(slug: string): WidgetType {
   return "Other";
 }
 
+// Type-family wayfinding hue — the single source of truth shared by the Widgets
+// list (group-header accent bar + count pill + row dot) and the widget editor
+// (offer-tree groups + Segmentation offer-type rows), so a family reads the same
+// everywhere. `fam` is the solid marker hue; `tint`/`ink` are the AA-safe pill
+// pairing. Retention keeps Iceberg Blue as the pinned primary family. These stay
+// scoped to widget surfaces and never touch the global single-accent chrome.
+export const WIDGET_FAMILY_HUE: Record<
+  WidgetType,
+  { fam: string; tint: string; ink: string }
+> = {
+  Retention: { fam: "#2563eb", tint: "#eff4ff", ink: "#1e40af" },
+  "Plan Picker": { fam: "#7c3aed", tint: "#f4effe", ink: "#5b21b6" },
+  Promotions: { fam: "#e11d64", tint: "#fdeff4", ink: "#9f1244" },
+  Banner: { fam: "#d97706", tint: "#fdf4e7", ink: "#92500e" },
+  Media: { fam: "#0d9488", tint: "#e7f6f4", ink: "#0f766e" },
+  SEO: { fam: "#0891b2", tint: "#e6f6fb", ink: "#155e75" },
+  Legal: { fam: "#475569", tint: "#eef1f5", ink: "#334155" },
+  Other: { fam: "#94a3b8", tint: "#f1f3f5", ink: "#52555c" },
+};
+
 export interface WidgetRow {
   id: string;
   slug: string;

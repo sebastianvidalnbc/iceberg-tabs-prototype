@@ -48,6 +48,13 @@ import {
 } from "../data";
 import { allowedChildType, maxChildrenFor } from "../elements";
 import { findNodeById } from "../structureOps";
+import { classifyWidget, WIDGET_FAMILY_HUE } from "../browse";
+
+// Widget-only wayfinding: the Offers / Segmentation collections list their
+// children by Offer Type, so each row gets the same family dot the Widgets list
+// and Structure tree use. Gated on the "Offer Type" itemNoun so it never leaks
+// into Page collections (Variants, feature bullets, …).
+const OFFER_TYPE_NOUN = "Offer Type";
 
 interface PropertiesProps {
   // The active authoring context; selects which Properties resolver is used.
@@ -1004,6 +1011,8 @@ function CollectionBody({
   const atMin = max != null && count <= 1;
   const canAdd = !!childType && !atMax;
   const nounLower = itemNoun.toLowerCase();
+  // Only the Offer Type collections (Offers / Segmentation) carry family dots.
+  const showFam = itemNoun === OFFER_TYPE_NOUN;
 
   return (
     <>
@@ -1021,6 +1030,13 @@ function CollectionBody({
               key={item.id}
               className="group/item flex items-center gap-1 rounded-sm border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] py-1 pl-2.5 pr-1"
             >
+              {showFam && (
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ background: WIDGET_FAMILY_HUE[classifyWidget(item.label)].fam }}
+                />
+              )}
               <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
                 {item.label}
               </span>

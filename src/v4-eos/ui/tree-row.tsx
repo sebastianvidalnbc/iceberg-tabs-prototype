@@ -1,6 +1,7 @@
 import * as React from "react";
 import { MSym } from "@/v4-eos/ui/msym";
 import { cn } from "@/v4-eos/ui/lib/utils";
+import { WIDGET_FAMILY_HUE, type WidgetType } from "@/v4-eos/browse";
 
 // Iceberg-specific TreeRow (§16/§17) — shadcn supplies primitives, but the
 // content-authoring tree interaction is ours. Composed from tokens/Tailwind, not
@@ -38,6 +39,11 @@ export interface TreeRowProps {
   /** Drop the trailing overflow menu's solid fill + gradient mask (widget
    *  context) so the ⋮ sits transparently with no faded band behind it. */
   noTrailingFade?: boolean;
+  /** Widget-only type-family wayfinding: renders a small hue dot before the
+   *  label so an offer-type group's family (Retention, …) stays recognisable
+   *  inside the editor, matching the Widgets list. Reinforces the named group;
+   *  never the sole cue. */
+  famType?: WidgetType;
   onSelect: () => void;
   onToggle: () => void;
 }
@@ -58,6 +64,7 @@ export function TreeRow({
   fluid,
   boxed,
   noTrailingFade,
+  famType,
   onSelect,
   onToggle,
 }: TreeRowProps) {
@@ -128,6 +135,13 @@ export function TreeRow({
         </button>
       ) : (
         <span aria-hidden className="size-4 shrink-0" />
+      )}
+      {famType && (
+        <span
+          aria-hidden
+          className="size-2 shrink-0 rounded-full"
+          style={{ background: WIDGET_FAMILY_HUE[famType].fam }}
+        />
       )}
       <span
         className={cn(
