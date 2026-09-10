@@ -189,10 +189,11 @@ function AccessibilityScore({
   );
 }
 
-// Live preview status — the tri-state the real editor shows. ENABLED = green
-// LIVE (postMessage patches flowing); LOADING = iframe (re)loading; DISABLED =
-// nothing selected to render.
-type LiveStatus = "live" | "loading" | "disabled";
+// Live preview status — two states. LIVE = green (content authored, postMessage
+// patches flowing); DISABLED = nothing selected to render. (The old interim
+// LOADING state was dropped: the preview now pushes unconditionally and renders
+// instantly, so there is no handshake wait to surface.)
+type LiveStatus = "live" | "disabled";
 
 // Central workspace hosting the Peacock preview in a SEPARATE iframe document
 // (renderer.html), synchronised over postMessage — the V4 analog of the real
@@ -259,7 +260,10 @@ export function LivePreview({
     })),
   ];
 
-  const status: LiveStatus = !hasContent ? "disabled" : ready ? "live" : "loading";
+  // Two states only: DISABLED (nothing authored) or LIVE (content present). The
+  // preview now pushes unconditionally and renders instantly, so the old
+  // ready-gated "loading" interstitial was misleading and has been removed.
+  const status: LiveStatus = !hasContent ? "disabled" : "live";
 
   // Push the current model + framing state into the iframe (the live patch).
   const postRender = useCallback(() => {
@@ -481,7 +485,6 @@ export function LivePreview({
                 )}
                 <span className="ui-preview__status">
                   {status === "live" && <Badge variant="success">LIVE</Badge>}
-                  {status === "loading" && <Badge variant="warning">LOADING</Badge>}
                   {status === "disabled" && <Badge variant="default">DISABLED</Badge>}
                 </span>
               </div>

@@ -254,6 +254,7 @@ function Rail({ items }: { items: PreviewItem[] }) {
       {items.map((it, i) => (
         <div key={i} className="ui-brand__tile ui-brand__tile--wide">
           <span className="ui-brand__tile-label">{it.title}</span>
+          {it.body ? <span className="ui-brand__tile-sub">{it.body}</span> : null}
         </div>
       ))}
     </div>
@@ -382,16 +383,16 @@ function BrandSection({
 
       {kind === "hero" ? (
         <div className="ui-brand__hero-cta">
-          <CommerceWebButton buttonType="primary" size="desktop">
-            Get Started
+          <CommerceWebButton buttonType="primary" size="desktop" href={section.ctaHref}>
+            {section.cta ?? "Get Started"}
           </CommerceWebButton>
         </div>
       ) : null}
 
       {kind === "banner" ? (
         <div className="ui-brand__banner-cta">
-          <CommerceWebButton buttonType="primary" size="desktop">
-            Learn more
+          <CommerceWebButton buttonType="primary" size="desktop" href={section.ctaHref}>
+            {section.cta ?? "Learn more"}
           </CommerceWebButton>
         </div>
       ) : null}

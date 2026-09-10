@@ -715,7 +715,9 @@ body {
   background: linear-gradient(135deg, #23233015, var(--sec-card));
   border: 1px solid var(--sec-card-border);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
   padding: 12px;
 }
 .ui-brand__tile--wide {
@@ -727,6 +729,18 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: var(--sec-muted);
+}
+/* Optional second line on a rail tile (item body copy, when authored). */
+.ui-brand__tile-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--sec-muted);
+  opacity: 0.75;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* --- Comparison table ------------------------------------------------------ */

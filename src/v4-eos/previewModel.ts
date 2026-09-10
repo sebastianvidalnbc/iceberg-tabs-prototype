@@ -99,6 +99,10 @@ export interface PreviewSection {
   alignment: "left" | "centre" | "right";
   disclaimer?: string;
   message?: string;
+  // Section-level primary CTA (hero / banner bodies). Picked from the header
+  // fields; rendered only by kinds that own a section CTA.
+  cta?: string;
+  ctaHref?: string;
   cards: PreviewCard[];
   // Plan-picker categories (Plans / Bundles …). Present when the section has a
   // `categories` collection; when 2+, the render shows a category toggle and
@@ -234,7 +238,9 @@ function buildCard(
   parent: StructureNode | null,
 ): PreviewCard {
   const map = fieldsForNode(product, parent);
-  const title = pick(map, ["Product Title", "Title", "Plan Name", "Card Title"]) ?? product.label;
+  const title =
+    pick(map, ["Product Title", "Plan Title", "Title", "Plan Name", "Card Title"]) ??
+    product.label;
   const titleIcon = pick(map, ["Product Title Icon", "Title Icon"]);
   const logo = pick(map, ["Product Logo"]);
   const eyebrow = pick(map, ["Eyebrow"]);
@@ -365,6 +371,11 @@ function aggregateHeaderFields(
   acc: Record<string, string>,
 ): void {
   if (isProductNode(node, parent)) return;
+  // A schema-collection's items carry their OWN fields (Faq Title, Row Title,
+  // grid "Title", Membership "Title"…). Those belong to the items, not the
+  // section band — descending into them would let an item's Title overwrite the
+  // section title. The section's own copy lives on its Section Content fields.
+  if (node.objectType === "schema-collection") return;
   Object.assign(acc, fieldsForNode(node, parent));
   for (const c of node.children ?? []) aggregateHeaderFields(c, node, acc);
 }
@@ -460,6 +471,145 @@ function synthItems(kind: PreviewKind): PreviewItem[] {
   }
 }
 
+// --- Authored collection items (non-plan layouts) --------------------------
+// Non-plan layouts (FAQ, Steps, Footer, Cast, Rail, Grid, Comparison…) store
+// their repeatable content in schema-collection nodes whose schema-item children
+// carry per-item fields. Field labels vary wildly across the 40 layouts ("Faq
+// Title", "Row Title", "Headline", "Image Text"…), so items are mapped to the
+// unified PreviewItem via FUZZY keyword matching rather than exact labels.
+
+// Ordered by priority: the first field whose label CONTAINS one of these (and
+// isn't a config field) becomes the item title / body.
+const ITEM_TITLE_KEYWORDS = ["title", "heading", "headline", "name", "question", "header"];
+const ITEM_BODY_KEYWORDS = [
+  "answer", "content", "synopsis", "description", "subtitle", "subhead", "body", "copy", "text",
+];
+
+// Labels that are configuration/accessibility, never display copy — excluded
+// from title/body matching so e.g. "Aria Label" or "URL Link" is never shown.
+function isConfigLabel(label: string): boolean {
+  const l = label.toLowerCase();
+  return [
+    "url", "href", "aria", "alt tag", "alt text", "accessibility", "region",
+    "orientation", "background", "theme", "embed", "override", "icon",
+    "show ", "enable", "full bleed",
+  ].some((s) => l.includes(s));
+}
+
+// First non-config, non-boolean field whose label contains one of `keywords`
+// (priority order). Pass "" to match the first eligible field of any label.
+function pickByKeywords(
+  map: Record<string, string>,
+  keywords: string[],
+  exclude: Set<string>,
+): { label: string; value: string } | undefined {
+  for (const kw of keywords) {
+    for (const [label, value] of Object.entries(map)) {
+      if (exclude.has(label)) continue;
+      if (!value || !value.trim()) continue;
+      const v = value.trim().toLowerCase();
+      if (v === "true" || v === "false") continue;
+      if (isConfigLabel(label)) continue;
+      if (label.toLowerCase().includes(kw)) return { label, value };
+    }
+  }
+  return undefined;
+}
+
+// A collection that holds product/plan CARDS (fed by collectCards) rather than
+// generic items — excluded from item gathering.
+function isCardCollection(node: StructureNode): boolean {
+  const noun = (node.itemNoun ?? "").toLowerCase();
+  if (/\b(product|plan|card)\b/.test(noun) && !/feature|bundle|option|increment/.test(noun)) {
+    return true;
+  }
+  const l = node.label.toLowerCase();
+  return l === "products" || l.includes("plan picker data");
+}
+
+// Gather a section's TOP-LEVEL content collections (schema-collection nodes),
+// skipping category/feature/card collections. Stops descending once a content
+// collection is found so nested collections (footer Items, comparison Columns)
+// aren't mistaken for section-level primaries.
+function gatherCollections(node: StructureNode, out: StructureNode[]): void {
+  for (const c of node.children ?? []) {
+    if (c.objectType === "schema-collection") {
+      if (isCategoriesCollection(c) || isFeatureCollection(c) || isCardCollection(c)) {
+        continue;
+      }
+      out.push(c);
+      continue;
+    }
+    gatherCollections(c, out);
+  }
+}
+
+// One collection item → a PreviewItem. Title/body come from fuzzy keyword
+// matches; when there's no body field but the item owns a nested collection
+// (footer column → links), its children's titles are joined as the body.
+function buildItem(item: StructureNode, parent: StructureNode): PreviewItem | null {
+  const map = fieldsForNode(item, parent);
+  const exclude = new Set<string>();
+
+  const titleHit = pickByKeywords(map, ITEM_TITLE_KEYWORDS, exclude);
+  if (titleHit) exclude.add(titleHit.label);
+  const bodyHit = pickByKeywords(map, ITEM_BODY_KEYWORDS, exclude);
+  if (bodyHit) exclude.add(bodyHit.label);
+
+  let title = titleHit ? stripHtml(titleHit.value) : undefined;
+  let body = bodyHit ? stripHtml(bodyHit.value) : undefined;
+
+  // Fallback title: first eligible text field (covers layouts with no
+  // title-like label, e.g. Logo Grid's "Image Text").
+  if (!title) {
+    const anyHit = pickByKeywords(map, [""], exclude);
+    if (anyHit) {
+      title = stripHtml(anyHit.value);
+      exclude.add(anyHit.label);
+    }
+  }
+
+  // Nested collection → join child titles (footer section links).
+  if (!body) {
+    for (const child of item.children ?? []) {
+      if (child.objectType !== "schema-collection") continue;
+      const parts = (child.children ?? [])
+        .map((gc) => {
+          const gm = fieldsForNode(gc, child);
+          const h = pickByKeywords(gm, ITEM_TITLE_KEYWORDS, new Set());
+          return h ? stripHtml(h.value) : undefined;
+        })
+        .filter((s): s is string => Boolean(s));
+      if (parts.length) {
+        body = parts.join(" · ");
+        break;
+      }
+    }
+  }
+
+  if (!title && !body) return null;
+  return { title: title ?? item.label, body };
+}
+
+// The authored items for a non-plan section: its primary content collection's
+// items. For a comparison table the primary is the "Rows" collection (its plan
+// columns feed the header, not the feature rows).
+function collectItems(root: StructureNode, kind: PreviewKind): PreviewItem[] {
+  const cols: StructureNode[] = [];
+  gatherCollections(root, cols);
+  if (!cols.length) return [];
+  let primary = cols[0];
+  if (kind === "comparison") {
+    primary = cols.find((c) => c.label.toLowerCase().includes("row")) ?? cols[0];
+  }
+  const items: PreviewItem[] = [];
+  for (const child of primary.children ?? []) {
+    const it = buildItem(child, primary);
+    if (it) items.push(it);
+  }
+  return items;
+}
+
 // Build one PreviewSection from a top-level Structure node.
 function buildSection(
   section: StructureNode,
@@ -502,12 +652,33 @@ function buildSection(
   const message = pick(map, ["Error Body", "Voucher Error Text"]);
   const eyebrow = section.role ?? undefined;
 
+  // Section-level primary CTA (hero / banner). Authored via the section's own
+  // CTA fields; "None"/empty means no explicit CTA (the renderer keeps a default
+  // label for hero/banner so the band never looks empty).
+  const ctaRaw = pick(map, [
+    "Primary CTA", "Primary CTA Text", "CTA", "CTA Text", "Link Title", "Button Text",
+  ]);
+  const cta = ctaRaw && ctaRaw.toLowerCase() !== "none" ? ctaRaw : undefined;
+  const ctaHref = cta
+    ? pick(map, ["Primary CTA HREF", "CTA HREF", "Link URL", "Button URL"])
+    : undefined;
+
   // Count cards across categories so a plan picker still classifies as "plans"
   // even when the first category happens to be empty.
   const totalCards = categories
     ? categories.reduce((n, c) => n + c.cards.length, 0)
     : cards.length;
   const kind = classifyKind(section, totalCards, message);
+
+  // Authored items for non-plan layouts. Fall back to on-brand synthetic tiles
+  // only when the layout has no authorable collection (e.g. ATOM-driven
+  // carousels) or the author hasn't added items yet.
+  const authoredItems = totalCards ? [] : collectItems(root, kind);
+  const items = totalCards
+    ? []
+    : authoredItems.length
+      ? authoredItems
+      : synthItems(kind);
 
   // Background: the Select Background option (light / dark / branded). Peacock is
   // dark-first, so default to dark when unset.
@@ -525,9 +696,11 @@ function buildSection(
     alignment,
     disclaimer,
     message: kind === "message" ? message : undefined,
+    cta,
+    ctaHref,
     cards,
     categories,
-    items: totalCards ? [] : synthItems(kind),
+    items,
   };
 }
 
