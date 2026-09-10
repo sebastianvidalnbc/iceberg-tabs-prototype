@@ -8,11 +8,21 @@ export interface Crumb {
 
 export interface BreadcrumbProps {
   items: Crumb[];
+  /**
+   * Ellipsis-truncate each crumb label to a few characters and expose the full
+   * label on hover via `title`. Used in the compact widget editor bar so long
+   * slugs/names (e.g. "qa-republish-Copy of default") don't wrap and crumble
+   * the top bar on small screens.
+   */
+  truncate?: boolean;
 }
 
-export function Breadcrumb({ items }: BreadcrumbProps) {
+export function Breadcrumb({ items, truncate }: BreadcrumbProps) {
   return (
-    <nav className="ui-breadcrumb" aria-label="Breadcrumb">
+    <nav
+      className={truncate ? "ui-breadcrumb ui-breadcrumb--truncate" : "ui-breadcrumb"}
+      aria-label="Breadcrumb"
+    >
       <ol>
         {items.map((c, i) => {
           const last = i === items.length - 1;
@@ -20,7 +30,11 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
             <Fragment key={i}>
               <li>
                 {last ? (
-                  <span className="ui-breadcrumb__item" aria-current="page">
+                  <span
+                    className="ui-breadcrumb__item"
+                    aria-current="page"
+                    title={truncate ? c.label : undefined}
+                  >
                     {c.label}
                   </span>
                 ) : (
@@ -28,6 +42,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
                     className="ui-breadcrumb__item"
                     href={c.href ?? "#"}
                     onClick={c.onClick}
+                    title={truncate ? c.label : undefined}
                   >
                     {c.label}
                   </a>

@@ -145,6 +145,20 @@
 .ui-breadcrumb__item:hover { color: var(--color-text-primary); }
 .ui-breadcrumb__item[aria-current="page"] { color: var(--color-text-primary); font-weight: var(--fw-semibold); }
 .ui-breadcrumb__sep { color: var(--color-text-muted); }
+/* Compact variant (widget editor bar): keep every crumb on one line and cap
+   its width so long slugs/names ellipsis instead of wrapping the top bar. The
+   last crumb (the experience name) gets a little more room. Full label stays
+   available via the title tooltip. */
+.ui-breadcrumb--truncate ol { flex-wrap: nowrap; }
+.ui-breadcrumb--truncate .ui-breadcrumb__item {
+  display: inline-block;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.ui-breadcrumb--truncate li:last-child .ui-breadcrumb__item { max-width: 18ch; }
 
 .ui-navitem {
   display: flex; align-items: center; gap: var(--space-2); width: 100%; text-align: left;
@@ -762,12 +776,33 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 
 /* Collapsible Type section header spanning the full table width. Quiet subtle
    surface so it reads as a grouping band, not a data row. */
-.ui-ws-browse__group { display: flex; align-items: center; gap: var(--space-2); width: 100%; padding: var(--space-2) var(--space-3); border: 0; border-bottom: var(--border-width) solid var(--color-border-default); background: var(--color-bg-subtle); color: var(--color-text-secondary); font: inherit; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); cursor: pointer; text-align: left; }
+.ui-ws-browse__group { position: relative; display: flex; align-items: center; gap: var(--space-2); width: 100%; padding: var(--space-2) var(--space-3); border: 0; border-bottom: var(--border-width) solid var(--color-border-default); background: var(--color-bg-subtle); color: var(--color-text-secondary); font: inherit; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); cursor: pointer; text-align: left; }
 .ui-ws-browse__group:hover { background: var(--color-bg-hover); }
 .ui-ws-browse__group:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ui-ws-browse__group-chevron { color: var(--color-text-muted); flex: none; }
 .ui-ws-browse__group-name { flex: 1; min-width: 0; }
 .ui-ws-browse__group-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--color-bg-panel); color: var(--color-text-muted); font-size: var(--text-xs); font-weight: var(--fw-semibold); letter-spacing: 0; }
+
+/* Type-family wayfinding color — scoped to the widgets list only. Each of the 8
+   families carries a restrained hue used three ways: a group-header accent bar,
+   a tinted count pill, and a per-row dot, so a family stays recognisable while
+   scrolling. Color only reinforces the named group + the row's position under
+   it; it never carries meaning alone. Retention keeps Iceberg Blue (the brand
+   action hue) as the pinned primary family. Global system stays untouched. */
+.ui-ws-browse__table--widgets [data-fam] { --fam: var(--color-text-muted); --fam-tint: var(--color-bg-panel); --fam-ink: var(--color-text-muted); }
+.ui-ws-browse__table--widgets [data-fam="Retention"] { --fam: #2563eb; --fam-tint: #eff4ff; --fam-ink: #1e40af; }
+.ui-ws-browse__table--widgets [data-fam="Plan Picker"] { --fam: #7c3aed; --fam-tint: #f4effe; --fam-ink: #5b21b6; }
+.ui-ws-browse__table--widgets [data-fam="Promotions"] { --fam: #e11d64; --fam-tint: #fdeff4; --fam-ink: #9f1244; }
+.ui-ws-browse__table--widgets [data-fam="Banner"] { --fam: #d97706; --fam-tint: #fdf4e7; --fam-ink: #92500e; }
+.ui-ws-browse__table--widgets [data-fam="Media"] { --fam: #0d9488; --fam-tint: #e7f6f4; --fam-ink: #0f766e; }
+.ui-ws-browse__table--widgets [data-fam="SEO"] { --fam: #0891b2; --fam-tint: #e6f6fb; --fam-ink: #155e75; }
+.ui-ws-browse__table--widgets [data-fam="Legal"] { --fam: #475569; --fam-tint: #eef1f5; --fam-ink: #334155; }
+.ui-ws-browse__table--widgets [data-fam="Other"] { --fam: #94a3b8; --fam-tint: #f1f3f5; --fam-ink: #52555c; }
+/* 3px accent bar as a pseudo-element so it never fights the focus ring. */
+.ui-ws-browse__table--widgets .ui-ws-browse__group::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--fam); }
+.ui-ws-browse__table--widgets .ui-ws-browse__group .ui-ws-browse__group-count { background: var(--fam-tint); color: var(--fam-ink); }
+.ui-ws-browse__widget-fam-dot { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--fam); flex: none; }
+
 @media (max-width: 900px) {
   .ui-ws-browse { padding: var(--space-4) var(--space-3); }
   .ui-ws-browse__row { grid-template-columns: minmax(0, 1fr) auto; }

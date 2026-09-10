@@ -167,6 +167,7 @@ function WidgetGroupHeader({
     <button
       type="button"
       className="ui-ws-browse__group"
+      data-fam={type}
       aria-expanded={!collapsed}
       onClick={onToggle}
     >
@@ -198,7 +199,7 @@ function WidgetRowItem({
     !hasChildren && navigate(routes.editor("widget", row.id));
   return (
     <>
-      <div className="ui-ws-browse__row ui-ws-browse__row--widgets" role="row">
+      <div className="ui-ws-browse__row ui-ws-browse__row--widgets" data-fam={row.type} role="row">
         <span className="ui-ws-browse__slug" role="cell">
           {hasChildren ? (
             <IconButton
@@ -211,6 +212,7 @@ function WidgetRowItem({
           ) : (
             <span className="ui-ws-browse__chevron-spacer" aria-hidden="true" />
           )}
+          <span className="ui-ws-browse__widget-fam-dot" aria-hidden="true" />
           <Badge variant={row.status === "Published" ? "success" : "default"}>{row.status}</Badge>
           <button
             type="button"

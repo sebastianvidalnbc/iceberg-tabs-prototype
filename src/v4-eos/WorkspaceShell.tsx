@@ -565,18 +565,14 @@ export function WorkspaceShell({
     <AppShell activeContext={context} onSelectContext={handleSelectContext}>
       <div className="ui-ws-editor">
         <div className="ui-ws-editor__bar">
-          <Breadcrumb items={crumbs} />
-          {/* Widget header metadata — the real Iceberg widget variant editor
-              shows Format / Widget Type / status beside the variant name. Only
-              the retention config is modelled, so values are fixed. */}
+          {/* Widgets use the compact, ellipsis-truncated breadcrumb so long
+              slugs/names don't wrap the top bar on small screens. */}
+          <Breadcrumb items={crumbs} truncate={!isPage} />
+          {/* Widget header metadata — only the publish status is shown beside
+              the variant name; the fixed Format ("JSON") / Widget Type
+              ("Retention Service") pills were dropped to keep the bar compact. */}
           {!isPage && activeExperience && (
             <div className="ml-3 flex items-center gap-1.5">
-              <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-bg-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-                JSON
-              </span>
-              <span className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-bg-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-                Retention Service
-              </span>
               <span
                 className="inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-semibold"
                 style={{
