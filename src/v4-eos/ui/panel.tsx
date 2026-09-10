@@ -24,12 +24,16 @@ export function PanelHeader({
   eyebrow,
   title,
   sub,
+  leading,
   actions,
   className,
 }: {
   eyebrow?: string;
   title?: React.ReactNode;
   sub?: React.ReactNode;
+  // Optional control rendered flush-left of the eyebrow/title (e.g. a
+  // disclosure chevron) so the header owns its own left-aligned toggle.
+  leading?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
 }) {
@@ -40,22 +44,25 @@ export function PanelHeader({
         className,
       )}
     >
-      <div className="flex min-w-0 flex-col gap-0.5">
-        {eyebrow && (
-          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            {eyebrow}
-          </span>
-        )}
-        {title && (
-          <span className="truncate text-[13px] font-semibold text-foreground">
-            {title}
-          </span>
-        )}
-        {sub && (
-          <span className="truncate text-[12px] text-muted-foreground">
-            {sub}
-          </span>
-        )}
+      <div className="flex min-w-0 items-center gap-1.5">
+        {leading}
+        <div className="flex min-w-0 flex-col gap-0.5">
+          {eyebrow && (
+            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+              {eyebrow}
+            </span>
+          )}
+          {title && (
+            <span className="truncate text-[13px] font-semibold text-foreground">
+              {title}
+            </span>
+          )}
+          {sub && (
+            <span className="truncate text-[12px] text-muted-foreground">
+              {sub}
+            </span>
+          )}
+        </div>
       </div>
       {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
     </div>

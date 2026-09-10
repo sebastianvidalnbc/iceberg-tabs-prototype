@@ -33,6 +33,8 @@ export interface PreviewCard {
   id: string;
   title: string;
   titleIcon?: string;
+  // "Product Logo" — the product/brand mark shown above the card title.
+  logo?: string;
   eyebrow?: string;
   badge?: string;
   description?: string;
@@ -44,7 +46,9 @@ export interface PreviewCard {
   priceSavings?: string; // "Offer Detail" — savings eyebrow (e.g. "Save 30%")
   priceCadenceText?: string; // "Price Cadence and Subtext" — e.g. "/month"
   priceDetails?: string; // "Offer Detail Description" — small offer copy
+  priceAria?: string; // "Price Aria Label" — accessible name for the price block
   cta?: string;
+  ctaHref?: string; // "Primary CTA HREF" — destination for the card CTA link
   // "Description - Legal" / "Legal Description" — per-plan fine print rendered
   // OUTSIDE and BELOW the card (real IA plan-picker per-card legal block).
   legal?: string;
@@ -232,27 +236,37 @@ function buildCard(
   const map = fieldsForNode(product, parent);
   const title = pick(map, ["Product Title", "Title", "Plan Name", "Card Title"]) ?? product.label;
   const titleIcon = pick(map, ["Product Title Icon", "Title Icon"]);
+  const logo = pick(map, ["Product Logo"]);
   const eyebrow = pick(map, ["Eyebrow"]);
   // Badge only shows when its toggle is on (the schema's Badge checkbox).
   const badge = map["Badge"] === "true" ? pick(map, ["Badge Text"]) ?? "Best Value" : undefined;
   const descRaw = pick(map, ["Product Description", "Description"]);
   const description = descRaw ? stripHtml(descRaw) : undefined;
 
+  // Cadence source: the first Price Cadence item, used as a fallback for both
+  // pricing AND the CTA so cadence-authored values still render on the card.
+  const clist = childByType(product, "price-cadence", "cadence");
+  const firstCad = clist?.children?.[0];
+  const cm = firstCad ? fieldsForNode(firstCad, clist ?? null) : {};
+
   // Primary CTA: the schema-switcher selects Custom / Central Management. The
   // real card renders a button only when a CTA is authored — "None"/empty means
-  // no button (not a button labelled "None").
-  const ctaText = pick(map, ["Primary CTA", "Primary CTA Text", "CTA", "CTA Text"]);
+  // no button (not a button labelled "None"). Card-level fields win; a
+  // cadence-authored CTA (text/href) is honoured when the card leaves it blank.
+  const ctaText =
+    pick(map, ["Primary CTA", "Primary CTA Text", "CTA", "CTA Text"]) ??
+    pick(cm, ["Primary CTA", "Primary CTA Text"]);
   const cta =
     ctaText && ctaText.toLowerCase() !== "none" ? ctaText : undefined;
+  const ctaHref = cta
+    ? pick(map, ["Primary CTA HREF"]) ?? pick(cm, ["Primary CTA HREF"])
+    : undefined;
 
   const features = collectFeatures(product);
 
   // Price. Primary source is the product card's OWN Pricing fields (the schema
   // single-price model, authored right on the card). Fall back to the first
   // Price Cadence item so any cadence-authored data still renders.
-  const clist = childByType(product, "price-cadence", "cadence");
-  const firstCad = clist?.children?.[0];
-  const cm = firstCad ? fieldsForNode(firstCad, clist ?? null) : {};
   const price =
     pick(map, ["Offer Price"]) ??
     pick(cm, ["Offer Price", "Strikethrough Price"]);
@@ -272,19 +286,25 @@ function buildCard(
     ]);
   const priceDetails = detRaw ? stripHtml(detRaw) : undefined;
   const priceCadence = firstCad?.label;
+  // Accessible name for the price block (schema "Price Aria Label"), falling
+  // back to the cadence item's "Aria Label" when authored there instead.
+  const priceAria = pick(map, ["Price Aria Label"]) ?? pick(cm, ["Aria Label"]);
 
-  // Per-card legal (fine print under the card). The sample Product schema uses a
-  // "Legal" type select (None/Standard/Custom) gating a "Legal Description"
+  // Per-card legal (fine print under the card). The sample Product schema pairs a
+  // "Legal" type select (None/Standard/Custom) with a "Legal Description"
   // textarea; schema-built layouts use the "Description - Legal" rich-text field.
-  // Render whenever copy is authored and the type isn't explicitly "None".
+  // Render whenever copy is authored — the textarea is what the author types, so
+  // it must appear live (WYSIWYG). The "Legal" type select no longer gates it:
+  // gating on "None" silently swallowed typed copy, which read as a broken
+  // preview. Empty copy ⇒ no legal block.
   const legalRaw = pick(map, ["Legal Description", "Description - Legal"]);
-  const legal =
-    legalRaw && map["Legal"] !== "None" ? stripHtml(legalRaw) : undefined;
+  const legal = legalRaw && legalRaw.trim() ? stripHtml(legalRaw) : undefined;
 
   return {
     id: product.id,
     title,
     titleIcon,
+    logo,
     eyebrow,
     badge,
     description,
@@ -295,7 +315,9 @@ function buildCard(
     priceSavings,
     priceCadenceText,
     priceDetails,
+    priceAria,
     cta,
+    ctaHref,
     legal,
   };
 }

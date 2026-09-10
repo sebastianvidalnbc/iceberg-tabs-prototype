@@ -142,6 +142,10 @@ function StructureLevel({
   offerQuery,
   setOfferQuery,
   allowInsert,
+  allowRowActions,
+  minimalRowActions,
+  boxedTop,
+  noTrailingFade,
 }: {
   nodes: StructureNode[];
   parentId: string | null;
@@ -163,6 +167,18 @@ function StructureLevel({
   // Page-builder insert points ("+ Add layout"). Pages only — widgets have a
   // fixed, schema-driven structure with no addable page layouts.
   allowInsert: boolean;
+  // Per-row overflow menu. Shown in both contexts; the action SET differs —
+  // pages get the full menu (rename / duplicate / copy / paste / disable /
+  // delete), widgets get the minimal set (rename / copy / paste) via
+  // minimalRowActions, since widget structure has no duplicate/disable/delete.
+  allowRowActions: boolean;
+  minimalRowActions?: boolean;
+  // Widget tab boxes: the single node at this (top) level shows selection on its
+  // wrapping box, so its row suppresses the row/layer selection cue. Descendants
+  // recurse without this flag and keep normal row selection.
+  boxedTop?: boolean;
+  // Widget context: drop the trailing overflow menu's faded band/gradient.
+  noTrailingFade?: boolean;
 }) {
   const drag = useDrag((from, to) => actions.onMoveNode(parentId, from, to));
   const q = offerQuery.trim().toLowerCase();
@@ -227,6 +243,8 @@ function StructureLevel({
             <TreeRow
               depth={depth}
               fluid
+              boxed={boxedTop}
+              noTrailingFade={noTrailingFade}
               hasChildren={hasChildren}
               isOpen={isOpen}
               selected={node.id === selectedId}
@@ -251,22 +269,37 @@ function StructureLevel({
                       else if (e.key === "Escape") cancelRename();
                     }}
                   />
+                ) : node.badge ? (
+                  // Inline status pill after the label: an offer's "Live" flag
+                  // (§4) or a segment's Optimizely mapping state (§11).
+                  <span className="inline-flex items-center gap-1.5">
+                    <span>{node.label}</span>
+                    <span
+                      className={`ui-badge${node.badgeTone ? ` ui-badge--${node.badgeTone}` : ""}`}
+                      style={{ padding: "0 6px", fontSize: 10, lineHeight: "16px" }}
+                    >
+                      {node.badge}
+                    </span>
+                  </span>
                 ) : (
                   node.label
                 )
               }
               trailing={
-                <RowActionsMenu
-                  label={node.label}
-                  disabled={node.disabled}
-                  canPaste={actions.canPaste}
-                  onRename={() => startRename(node.id, node.label)}
-                  onDuplicate={() => actions.onDuplicateNode(node.id)}
-                  onCopy={() => actions.onCopyNode(node.id)}
-                  onPaste={() => actions.onPasteNode(node.id)}
-                  onToggleDisabled={() => actions.onToggleDisabledNode(node.id)}
-                  onDelete={() => actions.onDeleteNode(node.id)}
-                />
+                allowRowActions ? (
+                  <RowActionsMenu
+                    label={node.label}
+                    minimal={minimalRowActions}
+                    disabled={node.disabled}
+                    canPaste={actions.canPaste}
+                    onRename={() => startRename(node.id, node.label)}
+                    onDuplicate={() => actions.onDuplicateNode(node.id)}
+                    onCopy={() => actions.onCopyNode(node.id)}
+                    onPaste={() => actions.onPasteNode(node.id)}
+                    onToggleDisabled={() => actions.onToggleDisabledNode(node.id)}
+                    onDelete={() => actions.onDeleteNode(node.id)}
+                  />
+                ) : undefined
               }
               onSelect={() => onSelect(node.id)}
               onToggle={() => onToggle(node.id)}
@@ -304,6 +337,9 @@ function StructureLevel({
                 offerQuery={offerQuery}
                 setOfferQuery={setOfferQuery}
                 allowInsert={allowInsert}
+                allowRowActions={allowRowActions}
+                minimalRowActions={minimalRowActions}
+                noTrailingFade={noTrailingFade}
               />
             )}
           </div>
@@ -315,6 +351,51 @@ function StructureLevel({
         />
       )}
     </>
+  );
+}
+
+// Top-level widget nodes that are global CONFIGURATION panels rather than
+// repeatable CONTENT collections (Offers / Segmentation / Survey Responses).
+const WIDGET_CONFIG_NODE_IDS = new Set([
+  "wg-widget-settings",
+  "wg-journey-flows",
+]);
+
+// Horizontal tab strip that splits the widget Structure into its two kinds of
+// top-level nodes: global CONFIGURATIONS (Widget Settings, Journey Flows) and
+// repeatable CONTENT collections (Offers, Segmentation, Survey Responses).
+type StructureTab = "config" | "content";
+function StructureTabs({
+  active,
+  onChange,
+}: {
+  active: StructureTab;
+  onChange: (t: StructureTab) => void;
+}) {
+  const tab = (id: StructureTab, label: string) => (
+    <button
+      key={id}
+      type="button"
+      role="tab"
+      aria-selected={active === id}
+      onClick={() => onChange(id)}
+      className={`-mb-px shrink-0 border-b-2 px-3 py-1.5 text-[12px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+        active === id
+          ? "border-[var(--color-action-primary)] text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div
+      role="tablist"
+      className="mb-2 flex w-full items-center gap-3 border-b border-[var(--color-border-subtle)] px-1"
+    >
+      {tab("config", "Configurations")}
+      {tab("content", "Content")}
+    </div>
   );
 }
 
@@ -330,6 +411,10 @@ function StructureTree({
   onToggle,
   actions,
   allowInsert,
+  allowRowActions,
+  minimalRowActions,
+  grouped,
+  noTrailingFade,
 }: {
   nodes: StructureNode[];
   selectedId: string | null;
@@ -338,6 +423,13 @@ function StructureTree({
   onToggle: (id: string) => void;
   actions: StructureActions;
   allowInsert: boolean;
+  allowRowActions: boolean;
+  minimalRowActions?: boolean;
+  // Widget context: split the top level into CONFIGURATION + CONTENT sections
+  // and wrap the content collections in a boxed, collapsible group.
+  grouped?: boolean;
+  // Widget context: drop the trailing overflow menu's faded band/gradient.
+  noTrailingFade?: boolean;
 }) {
   const [offerQuery, setOfferQuery] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -353,29 +445,86 @@ function StructureTree({
   };
   const cancelRename = () => setRenamingId(null);
 
+  // Widget top level is presented as two tabs; Configurations opens by default.
+  const [activeTab, setActiveTab] = useState<StructureTab>("config");
+
+  // Render one top-level sibling list. In grouped (widget) mode the top level is
+  // a fixed schema, so its rows aren't drag-reorderable — and splitting the list
+  // across two sections would otherwise desync drag indices; children keep their
+  // own drag via the nested StructureLevel.
+  const level = (list: StructureNode[], boxedTop?: boolean) => (
+    <StructureLevel
+      nodes={list}
+      parentId={null}
+      depth={0}
+      dragDisabled={grouped || undefined}
+      selectedId={selectedId}
+      expanded={expanded}
+      renamingId={renamingId}
+      draft={draft}
+      setDraft={setDraft}
+      startRename={startRename}
+      commitRename={commitRename}
+      cancelRename={cancelRename}
+      onSelect={onSelect}
+      onToggle={onToggle}
+      actions={actions}
+      offerQuery={offerQuery}
+      setOfferQuery={setOfferQuery}
+      allowInsert={allowInsert}
+      allowRowActions={allowRowActions}
+      minimalRowActions={minimalRowActions}
+      boxedTop={boxedTop}
+      noTrailingFade={noTrailingFade}
+    />
+  );
+
+  const configNodes = nodes.filter((n) => WIDGET_CONFIG_NODE_IDS.has(n.id));
+  const contentNodes = nodes.filter((n) => !WIDGET_CONFIG_NODE_IDS.has(n.id));
+
+  // Widget top-level nodes render as boxed tabs with ONE unified treatment
+  // (Configurations and Content read as the same kind of unit): a quiet hairline
+  // at rest — no card fill inside the already-toned panel — lifting to the accent
+  // border + tinted fill only when the box is the current selection, so selection
+  // reads as "this box", not a layer/row inside it.
+  const boxClass = (nodeId: string) =>
+    nodeId === selectedId
+      ? `w-full rounded-md border p-1 transition-colors border-[var(--color-action-primary)] bg-[var(--color-bg-selected)]`
+      : `w-full rounded-md border p-1 transition-colors border-[var(--color-border-subtle)] hover:border-[var(--color-action-primary)]`;
+
   return (
     // min-w-max lets the tree grow to its widest row so the pane can scroll
     // horizontally (revealing deep rows + the overflow menu) instead of clipping.
     <div className="flex min-w-max flex-col gap-px px-2 py-2" role="tree">
-      <StructureLevel
-        nodes={nodes}
-        parentId={null}
-        depth={0}
-        selectedId={selectedId}
-        expanded={expanded}
-        renamingId={renamingId}
-        draft={draft}
-        setDraft={setDraft}
-        startRename={startRename}
-        commitRename={commitRename}
-        cancelRename={cancelRename}
-        onSelect={onSelect}
-        onToggle={onToggle}
-        actions={actions}
-        offerQuery={offerQuery}
-        setOfferQuery={setOfferQuery}
-        allowInsert={allowInsert}
-      />
+      {grouped ? (
+        <>
+          <StructureTabs active={activeTab} onChange={setActiveTab} />
+          {activeTab === "config" ? (
+            // Each configuration panel is a self-contained boxed CTA — clicking
+            // it opens that global settings form in Properties.
+            <div className="flex w-full flex-col gap-1.5">
+              {configNodes.map((n) => (
+                <div key={n.id} className={boxClass(n.id)}>
+                  {level([n], true)}
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Each content collection is its own boxed, expandable tab (Offers /
+            // Segmentation / Survey Responses) rather than one shared group, so
+            // each reads as a distinct top-level unit.
+            <div className="flex w-full flex-col gap-1.5">
+              {contentNodes.map((n) => (
+                <div key={n.id} className={boxClass(n.id)}>
+                  {level([n], true)}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        level(nodes)
+      )}
     </div>
   );
 }
@@ -457,6 +606,16 @@ export function Explorer({
   const routeLabel = findRouteLabel(collectionTree, selectedRouteId);
   const structureEmptyNoun = context === "widget" ? "widget config" : "variant";
 
+  // Widget context collapses the collection ("Widget tree") pane to a slim
+  // single-line bar by default — the full slug list is rarely useful once a
+  // widget is open, and the STRUCTURE tree (Journey / Offers / …) is what
+  // authors actually work in, so it should own the height. Clicking the bar
+  // reopens the full, resizable list. Page context is unaffected (never
+  // collapsed), so its behaviour is unchanged.
+  const [widgetPaneCollapsed, setWidgetPaneCollapsed] = useState(true);
+  const collectionCollapsed = context === "widget" && widgetPaneCollapsed;
+  const currentWidgetLabel = activeExperience?.name ?? routeLabel ?? "—";
+
   // Pages / Structure split (percentage of the Explorer height for the Pages
   // pane). Default is intentionally compact so Structure gets more room.
   const PAGES_DEFAULT_PCT = 30;
@@ -491,66 +650,114 @@ export function Explorer({
     // Keep the shell grid contract (.ui-ws__region) on the outer element; the
     // panel internals are fully shadcn/Tailwind (§8). Dark panel surface.
     <Panel className="ui-ws__region" aria-label="Explorer">
-      {/* Collection pane (PAGES) — resizable height. */}
-      <div
-        className="flex min-h-0 shrink-0 grow-0 flex-col"
-        style={{ flexBasis: `${pagesPct}%` }}
-      >
-        <PanelHeader
-          eyebrow={collectionHeader}
-          actions={
-            <div className="w-40">
-              <SearchInput
-                value={collectionQuery}
-                onChange={setCollectionQuery}
-                onClear={() => setCollectionQuery("")}
-              />
-            </div>
-          }
-        />
-        <ScrollArea className="min-h-0 flex-1">
-          <CollectionTree
-            key={context}
-            tree={collectionTree}
-            selectedId={collectionSelectedId}
-            onSelectRoute={onSelectRoute}
-            onSelectExperience={onSelectExperience}
-          />
-        </ScrollArea>
-      </div>
-      {/* Draggable divider between Pages and Structure. Same line weight/colour
-          as the column dividers, with a horizontal 3×2-dot grabber centred on it
-          (sits just above the Structure header). Net zero height (negative
-          margins) so the panes stay flush; the 6px box is the grab target. */}
-      <div
-        role="separator"
-        aria-orientation="horizontal"
-        aria-label="Resize pages panel"
-        title="Drag to resize"
-        onPointerDown={beginPagesResize}
-        onDoubleClick={() => setPagesPct(PAGES_DEFAULT_PCT)}
-        className="group relative z-10 -my-[3px] h-1.5 shrink-0 cursor-row-resize touch-none select-none"
-      >
-        <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
-        <span
-          aria-hidden
-          className="absolute left-1/2 top-1/2 flex h-4 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] shadow-[var(--elevation-1)] transition-colors group-hover:border-[var(--color-action-primary)]"
+      {collectionCollapsed ? (
+        // Collapsed "Widget tree": a slim single-line bar showing the open
+        // widget. Clicking it reopens the full, resizable collection list.
+        <button
+          type="button"
+          onClick={() => setWidgetPaneCollapsed(false)}
+          title="Show widget list"
+          aria-label="Show widget list"
+          className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <span className="grid grid-flow-col grid-rows-2 gap-[3px]">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span
-                key={i}
-                className="size-[3px] rounded-full bg-[var(--color-text-muted)] transition-colors group-hover:bg-[var(--color-action-primary)]"
-              />
-            ))}
+          <MSym name="chevron_right" size={18} className="shrink-0 text-muted-foreground" />
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            {collectionHeader}
           </span>
-        </span>
-      </div>
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+            {currentWidgetLabel}
+          </span>
+        </button>
+      ) : (
+        <>
+          {/* Collection pane (PAGES / WIDGETS) — resizable height. */}
+          <div
+            className="flex min-h-0 shrink-0 grow-0 flex-col"
+            style={{ flexBasis: `${pagesPct}%` }}
+          >
+            <PanelHeader
+              eyebrow={collectionHeader}
+              // Same disclosure chevron as the collapsed bar, kept flush-left and
+              // rotated down to read as "expanded — click to collapse" (so the
+              // toggle icon and position match across both states).
+              leading={
+                context === "widget" ? (
+                  <button
+                    type="button"
+                    onClick={() => setWidgetPaneCollapsed(true)}
+                    title="Collapse widget list"
+                    aria-label="Collapse widget list"
+                    className="flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  >
+                    <MSym name="chevron_right" size={18} className="rotate-90" />
+                  </button>
+                ) : undefined
+              }
+              actions={
+                <div className="w-40">
+                  <SearchInput
+                    value={collectionQuery}
+                    onChange={setCollectionQuery}
+                    onClear={() => setCollectionQuery("")}
+                  />
+                </div>
+              }
+            />
+            <ScrollArea className="min-h-0 flex-1">
+              <CollectionTree
+                key={context}
+                tree={collectionTree}
+                selectedId={collectionSelectedId}
+                onSelectRoute={onSelectRoute}
+                onSelectExperience={onSelectExperience}
+              />
+            </ScrollArea>
+          </div>
+          {/* Draggable divider between the collection pane and Structure. Same
+              line weight/colour as the column dividers, with a horizontal
+              3×2-dot grabber centred on it (sits just above the Structure
+              header). Net zero height (negative margins) so the panes stay
+              flush; the 6px box is the grab target. */}
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize pages panel"
+            title="Drag to resize"
+            onPointerDown={beginPagesResize}
+            onDoubleClick={() => setPagesPct(PAGES_DEFAULT_PCT)}
+            className="group relative z-10 -my-[3px] h-1.5 shrink-0 cursor-row-resize touch-none select-none"
+          >
+            <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-1/2 flex h-4 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] shadow-[var(--elevation-1)] transition-colors group-hover:border-[var(--color-action-primary)]"
+            >
+              <span className="grid grid-flow-col grid-rows-2 gap-[3px]">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="size-[3px] rounded-full bg-[var(--color-text-muted)] transition-colors group-hover:bg-[var(--color-action-primary)]"
+                  />
+                ))}
+              </span>
+            </span>
+          </div>
+        </>
+      )}
       {/* Structure pane — fills the remaining height. */}
       <div className="flex min-h-0 flex-1 flex-col">
         <PanelHeader
           eyebrow="Structure"
-          sub={activeExperience ? activeExperience.name : routeLabel ?? "—"}
+          // Page context names the active experience here; widget context omits
+          // it — the collapsed WIDGETS bar above already names the open widget,
+          // so repeating it is redundant.
+          sub={
+            context === "widget"
+              ? undefined
+              : activeExperience
+                ? activeExperience.name
+                : routeLabel ?? "—"
+          }
         />
         <ScrollArea className="min-h-0 flex-1" orientation="both">
           {activeExperience ? (
@@ -559,6 +766,10 @@ export function Explorer({
               selectedId={selectedStructureNodeId}
               expanded={expanded}
               allowInsert={context === "page"}
+              allowRowActions
+              minimalRowActions={context === "widget"}
+              grouped={context === "widget"}
+              noTrailingFade={context === "widget"}
               onSelect={onSelectStructureNode}
               onToggle={onToggleExpand}
               actions={{

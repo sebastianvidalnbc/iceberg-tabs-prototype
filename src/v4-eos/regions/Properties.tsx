@@ -5,6 +5,7 @@ import { Button } from "@/v4-eos/ui/button";
 import { Badge } from "@/v4-eos/ui/badge";
 import { Separator } from "@/v4-eos/ui/separator";
 import { ScrollArea } from "@/v4-eos/ui/scroll-area";
+import { PanelHeader } from "@/v4-eos/ui/panel";
 import {
   TextField,
   TextAreaField,
@@ -24,6 +25,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/v4-eos/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/v4-eos/ui/tooltip";
 import { cn } from "@/v4-eos/ui/lib/utils";
 import {
   resolvePropertiesForVariant,
@@ -107,7 +114,7 @@ function PropertyControl({
     );
   }
   if (field.kind === "asset") {
-    return <AssetPicker value={value} />;
+    return <AssetPicker value={value} onEdit={onEdit} />;
   }
   if (field.kind === "textarea") {
     return (
@@ -159,14 +166,25 @@ function PropertyControl({
 // Asset picker, quieted down. Empty state is a single compact "Choose image"
 // affordance — no placeholder tile, no "No asset selected" filler. When set, a
 // small thumbnail + filename + an unobtrusive × to clear. One element per state,
-// no nested containers (§ eliminate container-in-container).
-function AssetPicker({ value }: { value: string }) {
+// no nested containers (§ eliminate container-in-container). Both affordances
+// write back through onEdit so the author can add AND remove the asset live
+// (choosing sets the bundled demo asset; the × clears it) — the value flows to
+// the preview like every other field. The prototype ships a single bundled
+// image asset, so "Choose image…" sets that token rather than opening a picker.
+const DEMO_ASSET = "peacock-logo";
+function AssetPicker({
+  value,
+  onEdit,
+}: {
+  value: string;
+  onEdit: (value: string) => void;
+}) {
   const empty = value.trim() === "";
   if (empty) {
     return (
       <button
         type="button"
-        onClick={() => {}}
+        onClick={() => onEdit(DEMO_ASSET)}
         className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <MSym name="add_photo_alternate" size={16} />
@@ -189,7 +207,7 @@ function AssetPicker({ value }: { value: string }) {
         type="button"
         aria-label="Remove asset"
         title="Remove"
-        onClick={() => {}}
+        onClick={() => onEdit("")}
         className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <MSym name="close" size={16} />
@@ -286,6 +304,36 @@ function TemplateGallery({
   );
 }
 
+// A field label with an optional info-icon tooltip (§6). The icon is a hover/
+// focus target carrying contextual help so the panel stays uncluttered — long
+// copy wraps in the Radix tooltip instead of overflowing the narrow panel.
+function FieldLabel({ label, tooltip }: { label: string; tooltip?: string }) {
+  if (!tooltip) return <>{label}</>;
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              tabIndex={0}
+              role="img"
+              aria-label={`Help: ${label}`}
+              onClick={(e) => e.preventDefault()}
+              className="inline-grid size-4 shrink-0 cursor-help place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <MSym name="info" size={14} />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[240px] text-balance">
+            {tooltip}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </span>
+  );
+}
+
 // One label/control row, delegating to the V2-local PropertyRow composition.
 // Full-width controls (textarea/radio/asset) stack.
 function PropertyFieldRow({
@@ -308,7 +356,7 @@ function PropertyFieldRow({
     field.kind === "asset";
   return (
     <PropRow
-      label={field.label}
+      label={<FieldLabel label={field.label} tooltip={field.tooltip} />}
       htmlFor={id}
       required={field.required}
       stacked={stacked}
@@ -719,13 +767,10 @@ export function Properties({
       aria-label="Properties"
       className="ui-ws__region w-[460px] max-w-full bg-[var(--color-bg-panel)] text-foreground max-[900px]:w-full"
     >
-      {/* Same treatment as the Explorer's PAGES / STRUCTURE headers (PanelHeader
-          eyebrow): they're peers in the panel-title hierarchy. */}
-      <div className="flex shrink-0 items-center border-b border-border px-4 py-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-          Properties
-        </span>
-      </div>
+      {/* Peer of the Explorer PAGES / STRUCTURE headers — the shared PanelHeader
+          eyebrow, no longer a bespoke re-implementation. px-4 keeps the eyebrow
+          aligned with the p-4 panel body below. */}
+      <PanelHeader eyebrow="Properties" className="px-4" />
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 p-4">
           {variant && selectedStructureNodeId ? (

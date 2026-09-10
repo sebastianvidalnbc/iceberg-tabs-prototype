@@ -414,6 +414,7 @@ body {
    (savings+price+details+CTA) stacked with 24px gaps. */
 .ui-brand__card {
   position: relative;
+  box-sizing: border-box; /* width below is the border-box total (incl. 40px pad) */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -457,6 +458,21 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px; /* [VERIFIED] eyebrow → title gap */
+}
+.ui-brand__card-logo {
+  /* Product Logo lockup, sitting above the card head (24px card-top gap). The
+     bundled wordmark asset is the white nav variant, so it's rendered as a
+     solid dark lockup to stay legible on the light plan card. card-top is a
+     column flex (align-items: stretch), so align-self: flex-start keeps the
+     mark at its intrinsic width instead of being stretched across the card;
+     object-fit: contain preserves the wordmark's aspect ratio. */
+  display: block;
+  align-self: flex-start;
+  height: 20px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  filter: brightness(0);
 }
 .ui-brand__card-title {
   display: flex;

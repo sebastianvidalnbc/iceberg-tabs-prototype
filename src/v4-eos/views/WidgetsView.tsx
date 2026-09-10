@@ -1,32 +1,81 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Button, IconButton } from "../ui-lib/Button";
 import { Badge } from "../ui-lib/Badge";
+import { Icon } from "../ui-lib/Icon";
 import { SearchInput } from "../ui-lib/TextInput";
+import { SegmentedControl } from "../ui-lib/SegmentedControl";
 import { EmptyState } from "../ui-lib/EmptyState";
 import {
   buildWidgetRows,
+  groupWidgetRows,
+  WIDGET_TYPE_ORDER,
   routes,
   navigate,
   type WidgetRow,
   type WidgetChildRow,
+  type WidgetType,
 } from "../browse";
 
-// Widgets list — mirrors real Iceberg's Widgets screen: a SINGLE list where each
-// widget slug expands INLINE (rather than navigating away) to reveal the entries
-// it owns under a "Pages:" label. Only one widget is expanded at a time. Clicking
-// a child row opens the editor. All CTAs are prototype no-ops.
+// Widgets list — a SINGLE list, now organised by widget Type so 20+ mixed
+// widgets stay scannable. A Type filter sits above the table and rows are
+// grouped under collapsible Type section headers (Retention pinned first).
+// Search matches slugs; a widget slug still expands INLINE to reveal the entries
+// it owns under a "Pages:" label. Clicking a child opens the editor. All CTAs
+// are prototype no-ops.
 export function WidgetsView() {
   const allRows = useMemo(() => buildWidgetRows(), []);
   const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | WidgetType>("all");
   // Single-open accordion: the id of the currently expanded widget, or null.
   const [openId, setOpenId] = useState<string | null>(null);
+  // Per-Type collapse memory for the group section headers.
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<WidgetType>>(
+    () => new Set(),
+  );
 
   const q = query.trim().toLowerCase();
-  const rows = q
+  const searched = q
     ? allRows.filter((r) => r.slug.toLowerCase().includes(q))
     : allRows;
 
-  const toggle = (id: string) => setOpenId((cur) => (cur === id ? null : id));
+  // Per-Type counts over the current search results — drive the filter labels.
+  const typeCounts = useMemo(() => {
+    const acc = {} as Record<WidgetType, number>;
+    for (const r of searched) acc[r.type] = (acc[r.type] ?? 0) + 1;
+    return acc;
+  }, [searched]);
+
+  // If the active type filter has no matches after a search, fall back to All so
+  // the list never looks empty for a still-selected-but-absent type.
+  const effectiveFilter =
+    typeFilter !== "all" && !typeCounts[typeFilter] ? "all" : typeFilter;
+
+  const filtered =
+    effectiveFilter === "all"
+      ? searched
+      : searched.filter((r) => r.type === effectiveFilter);
+  const groups = groupWidgetRows(filtered);
+
+  // Searching, or narrowing to one type, forces every visible group open so
+  // matches are never hidden behind a collapsed header.
+  const forceOpen = q !== "" || effectiveFilter !== "all";
+  const isCollapsed = (t: WidgetType) => !forceOpen && collapsedGroups.has(t);
+
+  const filterOptions = [
+    { label: `All (${searched.length})`, value: "all" },
+    ...WIDGET_TYPE_ORDER.filter((t) => typeCounts[t] > 0).map((t) => ({
+      label: `${t} (${typeCounts[t]})`,
+      value: t,
+    })),
+  ];
+
+  const toggleRow = (id: string) => setOpenId((cur) => (cur === id ? null : id));
+  const toggleGroup = (t: WidgetType) =>
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(t) ? next.delete(t) : next.add(t);
+      return next;
+    });
 
   return (
     <div className="ui-ws-browse">
@@ -50,6 +99,15 @@ export function WidgetsView() {
         </div>
       </header>
 
+      <div className="ui-ws-browse__filters">
+        <SegmentedControl
+          aria-label="Filter widgets by type"
+          options={filterOptions}
+          value={effectiveFilter}
+          onChange={(v) => setTypeFilter(v as "all" | WidgetType)}
+        />
+      </div>
+
       <div className="ui-ws-browse__table ui-ws-browse__table--widgets" role="table" aria-label="Widgets">
         <div className="ui-ws-browse__row ui-ws-browse__row--head" role="row">
           <span role="columnheader">Slug</span>
@@ -58,23 +116,67 @@ export function WidgetsView() {
           <span role="columnheader" aria-label="Actions" />
         </div>
 
-        {rows.length === 0 ? (
+        {groups.length === 0 ? (
           <EmptyState
             title="No widgets match your search"
-            description="Try a different slug or clear the search."
+            description="Try a different slug, clear the search, or switch the type filter."
           />
         ) : (
-          rows.map((r) => (
-            <WidgetRowItem
-              key={r.id}
-              row={r}
-              expanded={openId === r.id}
-              onToggle={() => toggle(r.id)}
-            />
-          ))
+          groups.map((g) => {
+            const collapsed = isCollapsed(g.type);
+            return (
+              <Fragment key={g.type}>
+                <WidgetGroupHeader
+                  type={g.type}
+                  count={g.rows.length}
+                  collapsed={collapsed}
+                  onToggle={() => toggleGroup(g.type)}
+                />
+                {!collapsed &&
+                  g.rows.map((r) => (
+                    <WidgetRowItem
+                      key={r.id}
+                      row={r}
+                      expanded={openId === r.id}
+                      onToggle={() => toggleRow(r.id)}
+                    />
+                  ))}
+              </Fragment>
+            );
+          })
         )}
       </div>
     </div>
+  );
+}
+
+// Collapsible Type section header spanning the full table width. Groups the
+// widget rows beneath it (Retention, Plan Picker, …) so the list is scannable.
+function WidgetGroupHeader({
+  type,
+  count,
+  collapsed,
+  onToggle,
+}: {
+  type: WidgetType;
+  count: number;
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="ui-ws-browse__group"
+      aria-expanded={!collapsed}
+      onClick={onToggle}
+    >
+      <Icon
+        name={collapsed ? "chevron-right" : "chevron-down"}
+        className="ui-ws-browse__group-chevron"
+      />
+      <span className="ui-ws-browse__group-name">{type}</span>
+      <span className="ui-ws-browse__group-count">{count}</span>
+    </button>
   );
 }
 

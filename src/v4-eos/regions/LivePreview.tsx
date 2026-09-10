@@ -88,6 +88,14 @@ const PREVIEW_MODULE_OPTIONS = [
   { label: "Cancel Journey", value: "cancel-journey" },
 ];
 
+// §1 Preview environment. Authors can validate config changes against the
+// Stable-Int test stack BEFORE publishing to Production — so they no longer
+// have to dump prod codes into stable-int to see the effect (§13).
+const PREVIEW_ENV_OPTIONS = [
+  { label: "Stable-Int (test)", value: "stable-int" },
+  { label: "Production", value: "prod" },
+];
+
 // Collapse a node's authored fields (groups[].fields[] | fields[]) to a plain
 // label→value map for the JSON projection.
 type LooseNode = {
@@ -116,9 +124,13 @@ function buildWidgetConfigJson(variant: VariantWorkspace | null): unknown {
   const surveyNode = find("wg-survey-responses");
   const segNode = find("wg-segmentation");
 
-  const offers = (offersNode?.children ?? []).flatMap((g) =>
-    (g.children ?? []).map((o) => ({ type: g.label, ...nodeFields(o) })),
-  );
+  // Offers are grouped into category bands ("Retention Offers" / "Acquisition
+  // Offers"); flatten to a list, tagging each offer with its band category. The
+  // offer's own Type field is preserved via nodeFields(o).
+  const offers = (offersNode?.children ?? []).flatMap((band) => {
+    const category = band.label.replace(/ Offers$/, "");
+    return (band.children ?? []).map((o) => ({ category, ...nodeFields(o) }));
+  });
   const surveyResponses = (surveyNode?.children ?? []).map((s) => nodeFields(s));
   const serializeSeg = (n: LooseNode): unknown =>
     n.children && n.children.length
@@ -202,6 +214,8 @@ export function LivePreview({
   const [size, setSize] = useState("full");
   // Widget context: the module chosen to render this widget's JSON through.
   const [previewModule, setPreviewModule] = useState(NO_MODULE);
+  // Widget context: which environment the preview reflects (§1).
+  const [previewEnv, setPreviewEnv] = useState("stable-int");
   const [ready, setReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -270,29 +284,72 @@ export function LivePreview({
     }
   }, [previewModel, audience, selectedId]);
 
-  // Listen for messages from the iframe: ready (push the model), and Pick
-  // Section clicks (select the node, then exit pick mode).
+  // Keep mutable refs to the latest push fn, ready flag, and pick handler so the
+  // message listener (and the hardening interval) can be attached ONCE with
+  // []-deps and never miss a handshake. Previously the listener depended on
+  // `postRender`, whose identity changes on every field edit, so it was torn
+  // down and re-attached constantly — and the iframe's one-shot "ready" ping
+  // could land during a re-subscription gap. When that happened `setReady`
+  // never fired: the badge stayed LOADING and, once the hardening window below
+  // elapsed, the ready-gated re-push froze all live edits. Refs remove the race.
+  const postRenderRef = useRef(postRender);
+  const readyRef = useRef(ready);
+  const onPickSectionRef = useRef(onPickSection);
+  useLayoutEffect(() => {
+    postRenderRef.current = postRender;
+    readyRef.current = ready;
+    onPickSectionRef.current = onPickSection;
+  });
+
+  // Listen for messages from the iframe: ready (mark live + push the model) and
+  // Pick Section clicks (select the node). Attached once — it reads the latest
+  // handlers through the refs above, so it never re-subscribes.
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       const data = e.data as PreviewToCms;
       if (!data || data.source !== PREVIEW_SOURCE) return;
       if (data.type === "ready") {
         setReady(true);
-        postRender();
+        postRenderRef.current();
       } else if (data.type === "section-selected") {
         // Click-to-select is always on; picking no longer exits the (optional)
         // highlight mode, so the author can keep clicking element to element.
-        onPickSection(data.nodeId);
+        onPickSectionRef.current(data.nodeId);
       }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [postRender, onPickSection]);
+  }, []);
 
-  // Re-push whenever the model / selection / framing / pick-mode changes.
+  // Push on EVERY model / selection / framing change, independent of the "ready"
+  // handshake. The renderer applies any "render" it receives regardless of the
+  // one-shot ping, and postRender no-ops when the frame isn't mounted yet — so
+  // pushing unconditionally guarantees keystroke edits always reach the preview
+  // even if the handshake was missed. Fired from a LAYOUT effect (not a passive
+  // effect) so the postMessage is flushed in the SAME commit as the edit, before
+  // the browser paints — the preview tracks keystrokes with no perceptible lag
+  // (this is a prototype: the edit→preview path must feel instant).
+  useLayoutEffect(() => {
+    postRender();
+  }, [postRender]);
+
+  // Bridge hardening (parent side). The iframe applies any "render" it receives
+  // regardless of the one-shot "ready" handshake, so after each (re)load we
+  // proactively re-push the current render on a short interval until the
+  // handshake is acknowledged — capped so it can't spin. This delivers the
+  // model even when the "ready" ping is lost: a cross-document mount race, or a
+  // long-lived iframe that desynced during a dev/HMR session. Paired with the
+  // renderer-side re-announce, both ends of the bridge now self-heal.
+  const [loadTick, setLoadTick] = useState(0);
   useEffect(() => {
-    if (ready) postRender();
-  }, [ready, postRender]);
+    if (loadTick === 0) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      postRenderRef.current();
+      if (readyRef.current || ++n > 15) window.clearInterval(id);
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [loadTick]);
 
   // Widget context: data widgets (Retention Service) have no page render. Show
   // the real "Preview JSON in Module" picker — pick a module to render the
@@ -300,6 +357,9 @@ export function LivePreview({
   if (isWidget) {
     const moduleLabel =
       PREVIEW_MODULE_OPTIONS.find((o) => o.value === previewModule)?.label ?? "";
+    const envLabel =
+      PREVIEW_ENV_OPTIONS.find((o) => o.value === previewEnv)?.label ?? "";
+    const isTestEnv = previewEnv !== "prod";
     const showModule = previewModule !== NO_MODULE;
     const configJson = showModule
       ? JSON.stringify(buildWidgetConfigJson(variant), null, 2)
@@ -319,10 +379,36 @@ export function LivePreview({
                       options={PREVIEW_MODULE_OPTIONS}
                     />
                   </div>
+                  {/* §1 Environment switcher — preview against the Stable-Int
+                      test stack before publishing to Production. */}
+                  <div className="ui-preview__field">
+                    <SelectField
+                      aria-label="Preview environment"
+                      value={previewEnv}
+                      onValueChange={setPreviewEnv}
+                      options={PREVIEW_ENV_OPTIONS}
+                    />
+                  </div>
                 </div>
                 <div className="ui-preview__meta">
-                  <Badge variant="default">JSON</Badge>
-                  {showModule && <Badge variant="success">LIVE</Badge>}
+                  {/* The widget's JSON format is already declared in the editor
+                      header (and the "live config JSON" caption below), so the
+                      preview toolbar shows only what's unique here: the target
+                      environment and the render status. */}
+                  {/* Environment pill — makes the target stack explicit so test
+                      previews are never mistaken for production. */}
+                  <Badge variant={isTestEnv ? "warning" : "info"}>{envLabel}</Badge>
+                  {/* Status pill — kept consistent with the Page preview's
+                      tri-state. A picked module renders the live config JSON
+                      (LIVE); with none chosen there is nothing to render
+                      (DISABLED). */}
+                  <span className="ui-preview__status">
+                    {showModule ? (
+                      <Badge variant="success">LIVE</Badge>
+                    ) : (
+                      <Badge variant="default">DISABLED</Badge>
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
@@ -330,7 +416,9 @@ export function LivePreview({
               {showModule ? (
                 <div className="ui-preview__json">
                   <div className="ui-preview__json-head">
-                    Rendering with <strong>{moduleLabel}</strong> · live config JSON
+                    Rendering with <strong>{moduleLabel}</strong> ·{" "}
+                    <strong>{envLabel}</strong> · live config JSON
+                    {isTestEnv && " — safe to preview unpublished changes"}
                   </div>
                   <pre className="ui-preview__json-body">{configJson}</pre>
                 </div>
@@ -422,7 +510,10 @@ export function LivePreview({
                     className="ui-preview__iframe"
                     title="Live preview"
                     src={RENDERER_URL}
-                    onLoad={() => setReady(false)}
+                    onLoad={() => {
+                      setReady(false);
+                      setLoadTick((t) => t + 1);
+                    }}
                   />
                 </div>
                 {audience !== "default" && (

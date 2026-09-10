@@ -27,13 +27,14 @@ export function RowActionsMenu({
   label,
   disabled,
   canPaste,
+  minimal,
   onRename,
   onDuplicate,
   onCopy,
   onPaste,
   onToggleDisabled,
   onDelete,
-}: { label: string } & RowActionsHandlers) {
+}: { label: string; minimal?: boolean } & RowActionsHandlers) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -52,10 +53,12 @@ export function RowActionsMenu({
           <MSym name="edit" size={16} />
           Rename
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={onDuplicate}>
-          <MSym name="content_copy" size={16} />
-          Duplicate
-        </DropdownMenuItem>
+        {!minimal && (
+          <DropdownMenuItem onSelect={onDuplicate}>
+            <MSym name="content_copy" size={16} />
+            Duplicate
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onCopy}>
           <MSym name="content_copy" size={16} />
@@ -68,16 +71,22 @@ export function RowActionsMenu({
           <MSym name="content_paste" size={16} />
           Paste
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={onToggleDisabled}>
-          <MSym name={disabled ? "check_circle" : "block"} size={16} />
-          {disabled ? "Enable" : "Disable"}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-          <MSym name="delete" size={16} />
-          Delete
-        </DropdownMenuItem>
+        {/* Duplicate / Disable / Delete are omitted in the minimal set (widget
+            context) — only Rename · Copy · Paste are offered there. */}
+        {!minimal && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={onToggleDisabled}>
+              <MSym name={disabled ? "check_circle" : "block"} size={16} />
+              {disabled ? "Enable" : "Disable"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+              <MSym name="delete" size={16} />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -185,9 +185,57 @@ export interface WidgetChildRow {
   status: PageStatus;
 }
 
+// Widget Type — a scannability grouping derived PURELY from the slug (no new
+// data-model field). Lets the Widgets list collapse 20+ mixed widgets into a
+// handful of recognisable families so authors find the one they want fast.
+export type WidgetType =
+  | "Retention"
+  | "Plan Picker"
+  | "Promotions"
+  | "Banner"
+  | "Media"
+  | "SEO"
+  | "Legal"
+  | "Other";
+
+// Display + grouping order. Retention is pinned first (the most-used, most
+// complex widget), then the higher-volume Plan Picker family, then the rest;
+// "Other" always sorts last.
+export const WIDGET_TYPE_ORDER: WidgetType[] = [
+  "Retention",
+  "Plan Picker",
+  "Promotions",
+  "Banner",
+  "Media",
+  "SEO",
+  "Legal",
+  "Other",
+];
+
+// Slug → Type rules, evaluated in priority order (first match wins). More
+// specific render kinds (Banner) sit above broader ones (Promotions) so a
+// "discount-banner" lands in Banner, not Promotions.
+const WIDGET_TYPE_RULES: { type: WidgetType; test: RegExp }[] = [
+  { type: "Retention", test: /retention/ },
+  { type: "Plan Picker", test: /plan-picker/ },
+  { type: "Banner", test: /banner/ },
+  { type: "Promotions", test: /promotion|discount/ },
+  { type: "SEO", test: /seo|robots/ },
+  { type: "Legal", test: /legal/ },
+  { type: "Media", test: /image|trailer|rail/ },
+];
+
+// Classify a widget slug into its Type. Falls back to "Other".
+export function classifyWidget(slug: string): WidgetType {
+  const s = slug.toLowerCase();
+  for (const r of WIDGET_TYPE_RULES) if (r.test.test(s)) return r.type;
+  return "Other";
+}
+
 export interface WidgetRow {
   id: string;
   slug: string;
+  type: WidgetType;
   status: PageStatus;
   created: string;
   modified: string;
@@ -210,12 +258,28 @@ export function buildWidgetRows(): WidgetRow[] {
     return {
       id: node.id,
       slug: node.label,
+      type: classifyWidget(node.label),
       status: h % 3 === 0 ? "Draft" : "Published",
       created: sampleDate(node.id, 1),
       modified: sampleModified(node.id),
       children,
     };
   });
+}
+
+// A Type group: the family label plus the widget rows it owns.
+export interface WidgetGroup {
+  type: WidgetType;
+  rows: WidgetRow[];
+}
+
+// Group widget rows by Type in the canonical WIDGET_TYPE_ORDER; empty groups
+// are dropped so only families that actually have widgets render a header.
+export function groupWidgetRows(rows: WidgetRow[]): WidgetGroup[] {
+  return WIDGET_TYPE_ORDER.map((type) => ({
+    type,
+    rows: rows.filter((r) => r.type === type),
+  })).filter((g) => g.rows.length > 0);
 }
 
 // Find the page/widget node that owns a given variant id, searching the given

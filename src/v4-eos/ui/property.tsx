@@ -32,7 +32,7 @@ export function ObjectHeader({
         bleed && "-mx-4 px-4",
       )}
     >
-      <span className="basis-full text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+      <span className="basis-full text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
         {eyebrow}
       </span>
       <span className="text-[16px] font-semibold leading-tight tracking-[-0.01em] text-foreground">

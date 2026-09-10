@@ -59,6 +59,12 @@ function BrandCard({
       >
         {card.badge ? <span className="ui-brand__badge">{card.badge}</span> : null}
         <div className="ui-brand__card-top">
+          {/* Product Logo (schema "Product Logo") — the product/brand mark above
+              the title. Rendered from the bundled Peacock wordmark asset when a
+              logo is authored on the card. */}
+          {card.logo ? (
+            <img className="ui-brand__card-logo" src={peacockLogo} alt="" />
+          ) : null}
           <div className="ui-brand__card-head">
             {card.eyebrow ? (
               <p className="ui-brand__card-eyebrow">{card.eyebrow}</p>
@@ -112,7 +118,7 @@ function BrandCard({
                   <p className="ui-brand__price-savings">{card.priceSavings}</p>
                 ) : null}
                 {card.price || card.priceStrike ? (
-                  <p className="ui-brand__price-row">
+                  <p className="ui-brand__price-row" aria-label={card.priceAria}>
                     {card.priceStrike ? (
                       <span className="ui-brand__price-strike">
                         {card.priceStrike}
@@ -134,7 +140,12 @@ function BrandCard({
               </div>
             ) : null}
             {card.cta ? (
-              <CommerceWebButton buttonType="primary" size="desktop" block>
+              <CommerceWebButton
+                buttonType="primary"
+                size="desktop"
+                block
+                href={card.ctaHref}
+              >
                 {card.cta}
               </CommerceWebButton>
             ) : null}

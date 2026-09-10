@@ -31,6 +31,13 @@ export interface TreeRowProps {
   /** Fluid width: row grows to its content (no label truncation) so the pane can
    *  scroll horizontally to reveal deep rows + the trailing overflow menu. */
   fluid?: boolean;
+  /** Boxed rows (widget top-level tab boxes) express selection on the wrapping
+   *  box, not the row — so the row's own tinted fill and left accent bar are
+   *  suppressed to avoid a doubled, layer-style selection cue. */
+  boxed?: boolean;
+  /** Drop the trailing overflow menu's solid fill + gradient mask (widget
+   *  context) so the ⋮ sits transparently with no faded band behind it. */
+  noTrailingFade?: boolean;
   onSelect: () => void;
   onToggle: () => void;
 }
@@ -49,6 +56,8 @@ export function TreeRow({
   isOver,
   disabled,
   fluid,
+  boxed,
+  noTrailingFade,
   onSelect,
   onToggle,
 }: TreeRowProps) {
@@ -79,22 +88,27 @@ export function TreeRow({
         // selection/hover fill spans the full — possibly scrolled — width).
         fluid && "w-max min-w-full",
         // Selection is a full-bleed band: square corners so it reads as a row
-        // highlight spanning the pane, not a rounded chip.
-        selected && "rounded-none bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground",
+        // highlight spanning the pane, not a rounded chip. Boxed rows skip this
+        // — their wrapping box carries the selected treatment instead.
+        selected && !boxed && "rounded-none bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground",
+        selected && boxed && "text-foreground",
         isDragging && "opacity-40",
         isOver && "before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:content-['']",
         disabled && "opacity-55",
       )}
       style={{ paddingLeft: 8 + depth * INDENT_PX }}
     >
-      {/* Left accent bar — a non-color redundant cue for selection. */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full",
-          selected ? "bg-primary" : "bg-transparent",
-        )}
-      />
+      {/* Left accent bar — a non-color redundant cue for selection. Omitted for
+          boxed rows, which aren't layers/rows being selected (the box shows it). */}
+      {!boxed && (
+        <span
+          aria-hidden
+          className={cn(
+            "absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full",
+            selected ? "bg-primary" : "bg-transparent",
+          )}
+        />
+      )}
       {grip != null && grip}
       {hasChildren ? (
         <button
@@ -136,9 +150,14 @@ export function TreeRow({
             // insets the icon to 4px clear of the 10px scrollbar while the solid
             // fill still covers the label all the way to the edge.
             "sticky right-0 z-10 ml-auto flex shrink-0 items-center gap-1 pl-1 pr-3.5 transition-opacity",
-            "[background:var(--row-bg)]",
-            "before:pointer-events-none before:absolute before:right-full before:top-0 before:h-full before:w-8 before:content-['']",
-            "before:bg-[linear-gradient(to_right,transparent,var(--row-bg))]",
+            // Solid fill + left gradient mask keep the menu legible over long,
+            // horizontally-scrolled labels. Widget context opts out (rows are
+            // boxed/short) so no faded band shows behind the ⋮.
+            !noTrailingFade && "[background:var(--row-bg)]",
+            !noTrailingFade &&
+              "before:pointer-events-none before:absolute before:right-full before:top-0 before:h-full before:w-8 before:content-['']",
+            !noTrailingFade &&
+              "before:bg-[linear-gradient(to_right,transparent,var(--row-bg))]",
             // Show the overflow menu only on hover, when the row is selected, or
             // while its menu is open (so the dropdown doesn't vanish mid-use).
             "opacity-0 group-hover:opacity-100 focus-within:opacity-100",

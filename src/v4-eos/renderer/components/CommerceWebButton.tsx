@@ -38,6 +38,9 @@ export interface CommerceWebButtonProps
   iconPosition?: "leading" | "trailing";
   /** Full-width (used by the product-card CTA). */
   block?: boolean;
+  /** Optional destination. When set, the CTA renders as a semantic <a> so the
+   *  authored "Primary CTA HREF" is honoured (announced by assistive tech). */
+  href?: string;
 }
 
 export function CommerceWebButton({
@@ -50,6 +53,7 @@ export function CommerceWebButton({
   className,
   children,
   type = "button",
+  href,
   ...rest
 }: CommerceWebButtonProps) {
   const classes = [
@@ -63,8 +67,8 @@ export function CommerceWebButton({
     .filter(Boolean)
     .join(" ");
 
-  return (
-    <button type={type} className={classes} {...rest}>
+  const inner = (
+    <>
       {icon && iconPosition === "leading" ? (
         <span className="pk-btn__icon" aria-hidden="true">
           {icon}
@@ -76,6 +80,28 @@ export function CommerceWebButton({
           {icon}
         </span>
       ) : null}
+    </>
+  );
+
+  // With an href, render an anchor so the authored destination is real markup.
+  // Navigation is suppressed inside the preview iframe so a click never carries
+  // the author away from what they're building.
+  if (href) {
+    return (
+      <a
+        className={classes}
+        href={href}
+        onClick={(e) => e.preventDefault()}
+        {...(rest as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <button type={type} className={classes} {...rest}>
+      {inner}
     </button>
   );
 }

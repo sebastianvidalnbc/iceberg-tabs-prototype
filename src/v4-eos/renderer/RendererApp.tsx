@@ -47,10 +47,17 @@ export function RendererApp() {
   };
 
   useEffect(() => {
+    // The CMS pushes the model only in response to our "ready" ping. That ping
+    // is one-shot, so if the parent's message listener isn't attached yet when
+    // we first announce (a cross-document load race), the ping is lost and the
+    // preview stalls on a stale/empty model. Guard against it by re-announcing
+    // until the first render lands (the parent re-pushes on every "ready").
+    let acknowledged = false;
     const onMessage = (e: MessageEvent) => {
       const data = e.data as CmsToPreview;
       if (!data || data.source !== CMS_SOURCE) return;
       if (data.type === "render") {
+        acknowledged = true;
         setState({
           model: data.model,
           selectedId: data.selectedId,
@@ -61,9 +68,19 @@ export function RendererApp() {
       }
     };
     window.addEventListener("message", onMessage);
-    // Announce readiness so the CMS pushes the current model.
-    post({ source: PREVIEW_SOURCE, type: "ready" });
-    return () => window.removeEventListener("message", onMessage);
+    const announce = () => post({ source: PREVIEW_SOURCE, type: "ready" });
+    // Announce immediately, then retry until acknowledged. Cap the retries so a
+    // standalone tab (no parent to answer) doesn't ping indefinitely.
+    announce();
+    const retry = window.setInterval(() => {
+      if (!acknowledged) announce();
+    }, 200);
+    const stop = window.setTimeout(() => window.clearInterval(retry), 4000);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.clearInterval(retry);
+      window.clearTimeout(stop);
+    };
   }, []);
 
   // Keep the selected element scrolled into view when selection changes

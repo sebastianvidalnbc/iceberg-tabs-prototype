@@ -56,6 +56,12 @@ rather than an editor mock.
 - Validation gating on Save (required fields must be complete).
 - Structure editing: drag-reorder among siblings; add / duplicate / copy /
   paste / disable / delete; add-layout page building from the schema catalog.
+- Retention / services-config authoring — the **widget** context, distinct from
+  the **page** context: a widget's Services CMS configuration is authored as a
+  tree of offers, segments, and surveys, with `retention-service-config` items
+  prioritized at the top. Nodes preserve authored order (not alphabetical), and
+  the widget context exposes a restricted row-action set (a minimal
+  rename / copy / paste rather than the full page-context menu).
 - Deployment: V4-eos builds to a standalone GitHub Pages site (separate repo)
   from the built output via `npm run deploy:v4`.
 
@@ -89,3 +95,10 @@ rather than an editor mock.
   real Iceberg schema.
 - Make the live result and its correctness (validation, accessibility) visible
   while authoring.
+
+## Accessibility & Inclusion
+
+- Target standard: **WCAG 2.1 AA** for the authoring chrome.
+- The editor surfaces a live accessibility readout — a tri-state Pass / Review /
+  Fail "semáforo" chip with score and locale — so authors see conformance while
+  they work, not only at review time.

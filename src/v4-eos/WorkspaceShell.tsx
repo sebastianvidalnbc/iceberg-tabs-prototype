@@ -42,6 +42,11 @@ import type { StructureNode, StructureObjectType } from "./data";
 import { collectVariationNodes, derivePreviewModel } from "./previewModel";
 import { collectInvalidFields } from "./validate";
 import { LayoutPicker } from "./regions/LayoutPicker";
+import {
+  PrePublishDialog,
+  ScheduleDialog,
+  HistoryDialog,
+} from "./regions/WidgetActionDialogs";
 import { buildLayoutNode, createChildNode, getLayoutDef } from "./layouts";
 import { buildSchemaChild } from "./schemaModel";
 
@@ -142,16 +147,34 @@ export function WorkspaceShell({
     refLabel?: string;
   } | null>(null);
 
+  // Widget action-bar flows (§7 Schedule, §8 History, §9 Pre-publish). Publish
+  // routes through a confirm dialog; a scheduled release surfaces as a chip; the
+  // History button carries an unseen-activity dot until it's first opened.
+  const [prePublishOpen, setPrePublishOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+  const [historySeen, setHistorySeen] = useState(false);
+
   // MVT / A-B override: a variation id to PREVIEW instead of the current
   // selection (the mvtOverride analog — preview-only, never mutates data). ""
   // means "as authored" (derive from the selected node).
   const [mvtOverride, setMvtOverride] = useState<string>("");
 
   // Resizable Explorer column: the author can drag the divider between the
-  // tree/collection pane and the preview to widen the tree (up to a max).
+  // tree/collection pane and the preview to widen the tree (up to a max). The
+  // default is PER-CONTEXT and remembered independently: widget authoring lives
+  // almost entirely in the STRUCTURE tree (Journey / Offers / …) and barely uses
+  // the preview, so the Widget context opens the column wider than Pages.
   const EXPLORER_MIN = 240;
   const EXPLORER_MAX = 560;
-  const [explorerWidth, setExplorerWidth] = useState(280);
+  const EXPLORER_DEFAULTS: Record<AuthoringContext, number> = {
+    page: 280,
+    widget: 420,
+  };
+  const [explorerWidths, setExplorerWidths] =
+    useState<Record<AuthoringContext, number>>(EXPLORER_DEFAULTS);
+  const explorerWidth = explorerWidths[context];
   const beginExplorerResize = useCallback(
     (e: ReactPointerEvent) => {
       e.preventDefault();
@@ -162,13 +185,13 @@ export function WorkspaceShell({
       const el = e.currentTarget as HTMLElement;
       el.setPointerCapture(e.pointerId);
       const startX = e.clientX;
-      const startW = explorerWidth;
+      const startW = explorerWidths[context];
       const onMove = (ev: PointerEvent) => {
         const next = Math.min(
           EXPLORER_MAX,
           Math.max(EXPLORER_MIN, startW + (ev.clientX - startX)),
         );
-        setExplorerWidth(next);
+        setExplorerWidths((prev) => ({ ...prev, [context]: next }));
       };
       const onUp = () => {
         el.releasePointerCapture?.(e.pointerId);
@@ -184,7 +207,7 @@ export function WorkspaceShell({
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
     },
-    [explorerWidth],
+    [explorerWidths, context],
   );
 
   const isPage = context === "page";
@@ -587,31 +610,90 @@ export function WorkspaceShell({
                 Preview
               </Button>
               <Button variant="secondary" size="sm" onClick={() => {}}>
-                <Icon name="publish" size={16} />
-                Publish
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => {}}>
-                <Icon name="send-qa" size={16} />
-                Send To QA
+                <Icon name="variants" size={16} />
+                Variants
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
-                disabled={issues.length > 0}
-                title={
-                  issues.length > 0
-                    ? `${issues.length} required field${
-                        issues.length === 1 ? "" : "s"
-                      } need attention before saving`
-                    : "All required fields complete"
-                }
-                onClick={() => {}}
+                onClick={() => {
+                  // Widgets go through the pre-publish summary (§9); pages keep
+                  // their existing (stubbed) publish path.
+                  if (!isPage) setPrePublishOpen(true);
+                }}
               >
-                <Icon name="save" size={16} />
-                {issues.length > 0
-                  ? `Save · ${issues.length} issue${issues.length === 1 ? "" : "s"}`
-                  : "Save"}
+                <Icon name="publish" size={16} />
+                Publish
               </Button>
+              {/* §7 Schedule a future release — widget-only, mirrors the
+                  scheduled-publish other Iceberg surfaces support. */}
+              {!isPage && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <Icon name="schedule" size={16} />
+                  Schedule
+                </Button>
+              )}
+              <Button variant="secondary" size="sm" onClick={() => {}}>
+                <Icon name="send-qa" size={16} />
+                Send To QA
+              </Button>
+              {/* §7 Scheduled-release chip — a persistent reminder that a future
+                  publish is queued, with a quick way to clear it. */}
+              {!isPage && scheduledAt && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-medium"
+                  style={{
+                    background: "var(--color-status-warning-bg)",
+                    color: "var(--color-status-warning)",
+                  }}
+                >
+                  <Icon name="schedule" size={14} />
+                  Scheduled ·{" "}
+                  {new Date(scheduledAt).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                  <button
+                    type="button"
+                    aria-label="Cancel scheduled release"
+                    className="ml-0.5 inline-flex"
+                    onClick={() => setScheduledAt(null)}
+                  >
+                    <Icon name="close" size={12} />
+                  </button>
+                </span>
+              )}
+              {/* Auto-save: this redesign persists edits automatically, so there
+                  is no Save CTA — just a passive status. Required-field
+                  validation still surfaces as a non-blocking hint beside it. */}
+              <span
+                className="ui-cta-tip inline-flex items-center gap-1 text-[12px] font-medium text-[var(--color-text-muted)]"
+                data-tip="All changes saved automatically"
+              >
+                <Icon name="check" size={16} />
+                Saved
+              </span>
+              {issues.length > 0 && (
+                <span
+                  className="ui-cta-tip inline-flex items-center gap-1 text-[12px] font-medium"
+                  data-tip={`${issues.length} required field${
+                    issues.length === 1 ? "" : "s"
+                  } need attention before publishing`}
+                  style={{
+                    color:
+                      "var(--color-status-warning, var(--color-text-secondary))",
+                  }}
+                >
+                  <Icon name="warning" size={16} />
+                  {issues.length} to fix
+                </span>
+              )}
 
               <span
                 aria-hidden
@@ -650,27 +732,58 @@ export function WorkspaceShell({
                 className="mx-0.5 h-5 w-px bg-[var(--color-border-default)]"
               />
 
-              {/* Metadata / config tools. */}
-              <span className="ui-cta-tip" data-tip="CSS">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="CSS"
-                  onClick={() => {}}
-                >
-                  <Icon name="css" size={18} />
-                </Button>
-              </span>
-              <span className="ui-cta-tip" data-tip="JSON-LD">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="JSON-LD"
-                  onClick={() => {}}
-                >
-                  <Icon name="json-ld" size={18} />
-                </Button>
-              </span>
+              {/* Metadata / config tools. CSS + JSON-LD are page-only in the
+                  real editor (hidden for JSON widgets), so they only render in
+                  page context; Settings shows for both. */}
+              {isPage && (
+                <>
+                  <span className="ui-cta-tip" data-tip="CSS">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="CSS"
+                      onClick={() => {}}
+                    >
+                      <Icon name="css" size={18} />
+                    </Button>
+                  </span>
+                  <span className="ui-cta-tip" data-tip="JSON-LD">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="JSON-LD"
+                      onClick={() => {}}
+                    >
+                      <Icon name="json-ld" size={18} />
+                    </Button>
+                  </span>
+                </>
+              )}
+              {/* §8 Publish / release history — widget-only. An unseen-activity
+                  dot draws attention until the author opens it once. */}
+              {!isPage && (
+                <span className="ui-cta-tip" data-tip="Publish history">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Publish history"
+                    className="relative"
+                    onClick={() => {
+                      setHistoryOpen(true);
+                      setHistorySeen(true);
+                    }}
+                  >
+                    <Icon name="history" size={18} />
+                    {!historySeen && (
+                      <span
+                        aria-hidden
+                        className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full"
+                        style={{ background: "var(--color-status-warning)" }}
+                      />
+                    )}
+                  </Button>
+                </span>
+              )}
               <span className="ui-cta-tip" data-tip="Settings">
                 <Button
                   variant="ghost"
@@ -721,7 +834,12 @@ export function WorkspaceShell({
             aria-label="Resize structure panel"
             title="Drag to resize"
             onPointerDown={beginExplorerResize}
-            onDoubleClick={() => setExplorerWidth(280)}
+            onDoubleClick={() =>
+              setExplorerWidths((prev) => ({
+                ...prev,
+                [context]: EXPLORER_DEFAULTS[context],
+              }))
+            }
             className="group relative z-10 -mx-[3px] w-1.5 shrink-0 cursor-col-resize touch-none select-none"
           >
             {/* Divider line — same weight/colour as the Properties panel's. */}
@@ -787,6 +905,21 @@ export function WorkspaceShell({
             : undefined
         }
       />
+      {/* Widget action-bar flows (§7 Schedule, §8 History, §9 Pre-publish). */}
+      <PrePublishDialog
+        open={prePublishOpen}
+        onOpenChange={setPrePublishOpen}
+        onConfirm={() => {}}
+        variant={activeExperience}
+        issueCount={issues.length}
+        env="Production"
+      />
+      <ScheduleDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        onSchedule={(whenIso) => setScheduledAt(whenIso)}
+      />
+      <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} />
     </AppShell>
   );
 }

@@ -109,6 +109,10 @@ export interface TreeNode {
   // to build a fresh item (the tabs "push empty tab" analog). Raw schema fields;
   // typed loosely to avoid a schemaModel → data type cycle.
   childSchema?: unknown[];
+  // Optional inline status pill shown after the row label in the Explorer tree
+  // (e.g. an offer's "Live" flag §4, or a segment's Optimizely mapping §11).
+  badge?: string;
+  badgeTone?: "success" | "warning" | "info" | "danger";
   // Structure-tree authoring state: a disabled layer is dimmed + excluded from
   // the experience but preserved (toggle via the row's Disable/Enable action).
   disabled?: boolean;
@@ -345,6 +349,23 @@ const SAVE_MOMENTS = ["Offer Save", "Content Save"];
 // Product/Voucher schema-switcher (isClearable → "None").
 const CODE_TYPES = ["None", "Product", "Voucher"];
 
+// §5 Human-readable plan/product each Cancellation Product Static ID maps to, so
+// authors never have to decode an opaque ID by hand.
+const STATIC_ID_PLAN_NAMES: Record<string, string> = {
+  peacock_premium_monthly: "Premium · Monthly",
+  peacock_premium_annual: "Premium · Annual",
+  peacock_premium_plus_monthly: "Premium Plus · Monthly",
+  peacock_premium_plus_annual: "Premium Plus · Annual",
+};
+const planNameForStaticId = (id: string): string =>
+  STATIC_ID_PLAN_NAMES[id] ?? (id ? "Unrecognised plan ID" : "");
+
+// §11 Whether an mParticle segment is wired to an Optimizely audience (so it can
+// run in experiments). Heuristic for the prototype — a real check would hit the
+// Optimizely mapping service — but it yields a realistic mapped/unmapped mix.
+const isSegmentMappedToOptimizely = (name: string): boolean =>
+  !!name && !name.includes("NOOFFER") && !name.endsWith("SOLO");
+
 // Journey Flow select options (verbatim labels from the real schema). In
 // production these sit behind feature flags (default off); we surface them so
 // the widget's full architecture is visible.
@@ -392,6 +413,11 @@ const REAL_SEGMENTS: string[] = [
 interface OfferData {
   id: string;
   type: string;
+  // §3 top-level band: "Retention" (cancellation saves) vs "Acquisition"
+  // (partner / win-back offers, e.g. JetBlue), so the two are never intermingled.
+  category: string;
+  // §4 the Journey Flow this offer is currently live in ("" ⇒ not live).
+  liveInFlow: string;
   cancellationProductStaticId: string;
   segmentName: string;
   surveyResponseLabelKey: string;
@@ -410,7 +436,9 @@ const makeOffer = (
   extras: Partial<OfferData> = {}
 ): OfferData => ({
   id: `of-${segmentName}`,
-  type: "Retention",
+  type: extras.type ?? "Retention",
+  category: extras.category ?? "Retention",
+  liveInFlow: extras.liveInFlow ?? "",
   cancellationProductStaticId:
     extras.cancellationProductStaticId ?? "peacock_premium_monthly",
   segmentName,
@@ -458,6 +486,11 @@ const buildOffers = (): OfferData[] => {
     "US.CANCEL.299SAVED6MQ425WWE",
     "US.CANCEL.299SAVED6MQ425SOLO",
   ];
+  // §4 mark a few offers as live in a Journey Flow so the "Live" cue and the
+  // read-only STATUS panel have real values to show (others stay "Not live").
+  offers[0].liveInFlow = "Cancel Save";
+  offers[1].liveInFlow = "Cancel Save";
+  offers[4].liveInFlow = "WWE Win-back";
   // The NOOFFER row suppresses the default offer.
   const noOffer = offers.find((o) => o.segmentName.endsWith("NOOFFER"));
   if (noOffer) noOffer.suppressDefaultOffer = true;
@@ -472,6 +505,32 @@ const buildOffers = (): OfferData[] => {
       }),
     );
   }
+  // §3 Acquisition band: partner / win-back offers (e.g. JetBlue) authored in a
+  // clearly separate band from cancellation-save (Retention) offers.
+  offers.push(
+    makeOffer("US.ACQ.JETBLUE.TRUEBLUE12M", {
+      type: "Cross Sell",
+      category: "Acquisition",
+      cancellationProductStaticId: "peacock_premium_annual",
+      productVoucher: "Peacock Premium",
+      liveInFlow: "JetBlue Partner",
+      segmentation: { offerType: "Acquisition", categoryTitle: "JetBlue", segmentNames: [] },
+    }),
+    makeOffer("US.ACQ.JETBLUE.MOSAIC6M", {
+      type: "Cross Sell",
+      category: "Acquisition",
+      cancellationProductStaticId: "peacock_premium_plus_annual",
+      productVoucher: "Peacock Premium Plus",
+      segmentation: { offerType: "Acquisition", categoryTitle: "JetBlue", segmentNames: [] },
+    }),
+    makeOffer("US.ACQ.WINBACK.30D", {
+      type: "Other",
+      category: "Acquisition",
+      cancellationProductStaticId: "peacock_premium_monthly",
+      liveInFlow: "Win-back",
+      segmentation: { offerType: "Acquisition", categoryTitle: "Win-back", segmentNames: [] },
+    }),
+  );
   return offers;
 };
 
@@ -517,19 +576,40 @@ const segmentNameNode = (
   keyPrefix: string,
   name: string,
   i: number,
-): StructureNode => ({
-  id: `${keyPrefix}-seg-${i}`,
-  label: name || `Segment ${i + 1}`,
-  objectType: "segment-name",
-  props: {
-    kind: "fields",
-    data: {
-      eyebrow: "SEGMENT NAME",
-      name: name || `Segment ${i + 1}`,
-      fields: [{ label: "Segment Name", value: name }],
+): StructureNode => {
+  const mapped = isSegmentMappedToOptimizely(name);
+  return {
+    id: `${keyPrefix}-seg-${i}`,
+    label: name || `Segment ${i + 1}`,
+    objectType: "segment-name",
+    // §11 surface Optimizely-mapping readiness inline in the tree.
+    badge: name ? (mapped ? "Mapped" : "Unmapped") : undefined,
+    badgeTone: mapped ? "success" : "warning",
+    props: {
+      kind: "fields",
+      data: {
+        eyebrow: "SEGMENT NAME",
+        name: name || `Segment ${i + 1}`,
+        fields: [
+          {
+            label: "Segment Name",
+            value: name,
+            tooltip:
+              "The mParticle audience key. Must match the segment configured in mParticle exactly.",
+          },
+          {
+            label: "Optimizely mapping",
+            value: mapped
+              ? "Mapped ✓"
+              : "Unmapped — will not run in A/B tests",
+            tooltip:
+              "Whether this mParticle segment is wired to an Optimizely audience. Unmapped segments are skipped by experiments.",
+          },
+        ],
+      },
     },
-  },
-});
+  };
+};
 
 // --- Offer (a single offerMappings tab) -------------------------------------
 // Field order/labels/controls mirror the real Peacock retention schema exactly:
@@ -540,61 +620,115 @@ const segmentNameNode = (
 const offerNode = (offer: OfferData): StructureNode => {
   const codeType = offer.voucherCode ? "Voucher" : offer.productVoucher ? "Product" : "None";
   const code = codeType === "Voucher" ? offer.voucherCode : offer.productVoucher;
+  const planName = planNameForStaticId(offer.cancellationProductStaticId);
+  const isRetentionType = offer.type === "Retention";
+  const groups: PropertyGroup[] = [
+    // §4/§3 read-only context so authors instantly see where the offer runs and
+    // which band it belongs to, without opening Journey Flows.
+    {
+      header: "STATUS",
+      fields: [
+        {
+          label: "Live in flow",
+          value: offer.liveInFlow || "Not live",
+          tooltip:
+            "The Journey Flow this offer is currently served in. Managed under Journey Flows.",
+        },
+        { label: "Band", value: `${offer.category} offer` },
+      ],
+    },
+    {
+      fields: [
+        {
+          label: "Type",
+          value: offer.type,
+          kind: "select",
+          options: OFFER_TYPES,
+          required: true,
+          tooltip:
+            "Retention saves incentivise cancelling customers to stay. Cross Sell / Downgrade / Other tailor the flow.",
+        },
+      ],
+    },
+    {
+      header: "IF CUSTOMER IS CANCELLING",
+      fields: [
+        {
+          label: "Cancellation Product Static ID",
+          value: offer.cancellationProductStaticId,
+          required: true,
+          tooltip:
+            "The subscription product this offer applies to. Copy the Static ID from Central Management.",
+          // §5 decode the opaque ID to the plan/product it maps to.
+          helper: planName ? `Maps to: ${planName}` : undefined,
+        },
+      ],
+    },
+    {
+      header: "AND",
+      fields: [
+        {
+          label: "Segment Name (Optional)",
+          value: offer.segmentName,
+          tooltip:
+            "The mParticle audience this offer targets. Leave blank to apply to every cancelling customer on the plan above.",
+        },
+      ],
+    },
+  ];
+  // §12 Survey Response routing is irrelevant for a straight Retention save, so
+  // hide the field for Retention offers (it stays for Cross Sell / Downgrade / …).
+  if (!isRetentionType) {
+    groups.push({
+      header: "AND",
+      fields: [
+        {
+          label: "Survey Response Label Key (Optional)",
+          value: offer.surveyResponseLabelKey,
+          helper: "e.g. retention.survey.response.id.1",
+          tooltip:
+            "Links this offer to a cancellation-survey answer so it only shows to customers who chose that reason.",
+        },
+      ],
+    });
+  }
+  groups.push({
+    header: "THEN SHOW",
+    fields: [
+      {
+        label: "Suppress default offer",
+        value: offer.suppressDefaultOffer ? "true" : "false",
+        kind: "switch",
+        tooltip:
+          "When on, this offer replaces the widget's default offer for the matched segment.",
+      },
+      {
+        label: "Product / Voucher",
+        value: codeType,
+        kind: "select",
+        options: CODE_TYPES,
+        tooltip:
+          "Whether the incentive is a Product (plan swap) or a Voucher (discount code).",
+      },
+      {
+        label: codeType === "Voucher" ? "Voucher Code" : "Product Static ID",
+        value: codeType === "None" ? "" : code,
+      },
+    ],
+  });
   return {
     id: offer.id,
     label: offer.segmentName || offer.voucherCode || offer.id,
     objectType: "offer",
+    // §4 inline "Live" cue on the row when the offer is served in a flow.
+    badge: offer.liveInFlow ? "Live" : undefined,
+    badgeTone: offer.liveInFlow ? "success" : undefined,
     props: {
       kind: "fields",
       data: {
         eyebrow: "OFFER",
         name: offer.segmentName || offer.voucherCode,
-        groups: [
-          {
-            fields: [
-              { label: "Type", value: offer.type, kind: "select", options: OFFER_TYPES, required: true },
-            ],
-          },
-          {
-            header: "IF CUSTOMER IS CANCELLING",
-            fields: [
-              {
-                label: "Cancellation Product Static ID",
-                value: offer.cancellationProductStaticId,
-                required: true,
-              },
-            ],
-          },
-          {
-            header: "AND",
-            fields: [{ label: "Segment Name (Optional)", value: offer.segmentName }],
-          },
-          {
-            header: "AND",
-            fields: [
-              {
-                label: "Survey Response Label Key (Optional)",
-                value: offer.surveyResponseLabelKey,
-                helper: "e.g. retention.survey.response.id.1",
-              },
-            ],
-          },
-          {
-            header: "THEN SHOW",
-            fields: [
-              {
-                label: "Suppress default offer",
-                value: offer.suppressDefaultOffer ? "true" : "false",
-                kind: "switch",
-              },
-              { label: "Product / Voucher", value: codeType, kind: "select", options: CODE_TYPES },
-              {
-                label: codeType === "Voucher" ? "Voucher Code" : "Product Static ID",
-                value: codeType === "None" ? "" : code,
-              },
-            ],
-          },
-        ],
+        groups,
       },
     },
   };
@@ -610,11 +744,30 @@ const surveyResponseNode = (sr: SurveyResponseData): StructureNode => ({
       eyebrow: "SURVEY RESPONSE",
       name: sr.displayLabel || sr.responseId,
       fields: [
-        { label: "ID", value: sr.responseId },
-        { label: "Display Label", value: sr.displayLabel },
-        { label: "Display Order", value: sr.displayOrder },
+        {
+          label: "ID",
+          value: sr.responseId,
+          tooltip:
+            "The stable key an offer references (surveyResponseLabelKey) to bind to this answer.",
+        },
+        {
+          label: "Display Label",
+          value: sr.displayLabel,
+          tooltip: "The human-readable cancellation reason shown to customers.",
+        },
+        {
+          label: "Display Order",
+          value: sr.displayOrder,
+          tooltip: "Position of this answer in the survey list (lower shows first).",
+        },
         { label: "Type", value: sr.type, kind: "select", options: SURVEY_TYPES },
-        { label: "Save Moment", value: sr.saveMoment, kind: "select", options: SAVE_MOMENTS },
+        {
+          label: "Save Moment",
+          value: sr.saveMoment,
+          kind: "select",
+          options: SAVE_MOMENTS,
+          tooltip: "When the response is persisted — on offer save or on content save.",
+        },
         { label: "Save Priority", value: sr.savePriority },
       ],
     },
@@ -688,20 +841,26 @@ const buildSegmentationArea = (): StructureNode => {
 // Offers are grouped by Offer Type into collapsible groups (a scannability
 // enhancement borrowed from the design prototype). Order is fixed; empty groups
 // are omitted.
-const OFFER_GROUP_ORDER = ["Retention", "Cross Sell", "Downgrade", "Other"];
-const groupId = (type: string) =>
-  `wg-offers-${type.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+// §3 Offers split into two top-level bands by CATEGORY — Retention saves vs
+// Acquisition/partner offers (e.g. JetBlue) — so the two are never intermingled
+// and can't be edited into each other by mistake. Order is fixed; empty bands
+// are omitted. Each band keeps objectType "offer-group" so the Explorer's
+// group-aware Offers search continues to work unchanged.
+const OFFER_CATEGORY_ORDER = ["Retention", "Acquisition"];
+const groupId = (category: string) =>
+  `wg-offers-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
 const buildOfferGroups = (offers: OfferData[]): StructureNode[] =>
-  OFFER_GROUP_ORDER.flatMap((type) => {
-    const inType = offers.filter((o) => o.type === type);
-    if (inType.length === 0) return [];
+  OFFER_CATEGORY_ORDER.flatMap((category) => {
+    const inCat = offers.filter((o) => (o.category || "Retention") === category);
+    if (inCat.length === 0) return [];
     return [
       {
-        id: groupId(type),
-        label: type,
+        id: groupId(category),
+        label: `${category} Offers`,
         objectType: "offer-group",
-        children: inType.map(offerNode),
+        defaultExpanded: category === "Retention",
+        children: inCat.map(offerNode),
       } satisfies StructureNode,
     ];
   });
@@ -849,6 +1008,8 @@ export function createWidgetChild(
         ...offerNode({
           id: wuid("of"),
           type: "Retention",
+          category: "Retention",
+          liveInFlow: "",
           cancellationProductStaticId: "",
           segmentName: "",
           surveyResponseLabelKey: "",
@@ -959,6 +1120,8 @@ export interface PropertyField {
   required?: boolean;
   options?: string[]; // choices for "select" / "radio" kinds
   helper?: string; // helper text shown under the control
+  // §6 Optional contextual help shown as an info-icon tooltip beside the label.
+  tooltip?: string;
 }
 
 // A titled group of fields (e.g. PRODUCT / CTA / LEGAL). Groups render with a
