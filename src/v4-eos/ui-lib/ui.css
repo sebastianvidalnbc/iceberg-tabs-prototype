@@ -642,6 +642,23 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 .ui-preview__json-head { position: sticky; top: 0; padding: var(--space-2) var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); background: var(--color-bg-surface); border-bottom: var(--border-width) solid var(--color-border-default); }
 .ui-preview__json-body { margin: 0; padding: var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.6; color: var(--color-text-primary); white-space: pre; }
 
+/* Widget preview — a selected saved offer rendered as a representative,
+   customer-facing offer card (item 7). Lives in the preview (Peacock) zone;
+   styling is illustrative and deliberately distinct from the Eos editor chrome. */
+.ui-preview__canvas[data-mode="offer"] { display: grid; place-items: center; overflow: auto; padding: var(--space-6); }
+.ui-offer-preview { position: relative; width: min(420px, 100%); display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-6); border-radius: var(--radius-lg, 12px); background: linear-gradient(160deg, #241546, #0b0b1a); color: #fff; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35); text-align: left; }
+.ui-offer-preview__badges { position: absolute; top: var(--space-3); right: var(--space-3); display: flex; gap: var(--space-1); }
+.ui-offer-preview__eyebrow { margin: 0; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.1em; font-weight: var(--fw-semibold); color: rgba(255, 255, 255, 0.6); }
+.ui-offer-preview__title { margin: 0; font-size: var(--text-xl, 1.5rem); font-weight: var(--fw-bold, 700); line-height: 1.15; }
+.ui-offer-preview__lede { margin: 0; font-size: var(--text-sm); color: rgba(255, 255, 255, 0.8); }
+.ui-offer-preview__code { margin: 0; align-self: flex-start; padding: var(--space-2) var(--space-3); border: 1px dashed rgba(255, 255, 255, 0.4); border-radius: var(--radius-md, 8px); font-family: var(--font-mono); font-size: var(--text-lg, 1.1rem); letter-spacing: 0.04em; }
+.ui-offer-preview__plan { margin: 0; align-self: flex-start; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md, 8px); background: rgba(255, 255, 255, 0.12); font-weight: var(--fw-semibold); }
+.ui-offer-preview__meta { margin: var(--space-2) 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-4); }
+.ui-offer-preview__meta > div { display: flex; flex-direction: column; gap: 2px; }
+.ui-offer-preview__meta dt { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.5); }
+.ui-offer-preview__meta dd { margin: 0; font-size: var(--text-sm); color: #fff; word-break: break-word; }
+.ui-offer-preview__note { margin: var(--space-2) 0 0; font-size: 11px; color: rgba(255, 255, 255, 0.45); }
+
 /* Per-Variant preview state — visibly changes as Variants are switched. */
 .ui-preview__state { display: flex; flex-direction: column; gap: var(--space-2); max-width: 42ch; padding: var(--space-5); text-align: center; color: var(--color-text-secondary); }
 .ui-preview__state--error { color: var(--color-status-danger); }

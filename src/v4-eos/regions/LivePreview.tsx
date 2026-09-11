@@ -152,6 +152,84 @@ function buildWidgetConfigJson(variant: VariantWorkspace | null): unknown {
 // "/iceberg-v4-eos/" in both dev (via the config middleware) and prod.
 const RENDERER_URL = `${import.meta.env.BASE_URL}renderer.html`;
 
+// §item7 Depth-first find of a Structure node by id (offers live two levels deep,
+// under a category band). Returns the loose projection used by nodeFields.
+function findLooseById(nodes: LooseNode[], id: string): LooseNode | undefined {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    const hit = n.children && findLooseById(n.children, id);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+// §item7 Anna: "preview functionality for saved offers." A selected offer renders
+// as a representative customer-facing offer card in the preview (Peacock) zone —
+// styling is illustrative and deliberately distinct from the Eos editor chrome.
+function WidgetOfferPreview({ fields }: { fields: Record<string, string> }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const type = fields["Type"] || "Retention";
+  const category =
+    fields["Category Title"] || fields["Band"]?.replace(/ offer$/, "") || "";
+  const staticId = fields["Cancellation Product Static ID"] || "";
+  const prettyPlan = staticId
+    ? staticId
+        .replace(/^peacock_/, "Peacock ")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+    : "your plan";
+  const mode = fields["Product / Voucher"] || "None";
+  const voucher = fields["Voucher Code"] || "";
+  const product = fields["Product Static ID"] || "";
+  const segment = fields["Segment Name (Optional)"] || "";
+  const endDate = fields["Offer End Date"] || "";
+  const isExpired = endDate !== "" && endDate < today;
+  const liveInFlow = fields["Live in flow"] || "";
+  const isLive = liveInFlow !== "" && liveInFlow !== "Not live";
+  return (
+    <div className="ui-offer-preview" role="group" aria-label="Saved offer preview">
+      <div className="ui-offer-preview__badges">
+        {isLive && <Badge variant="success">Live</Badge>}
+        {isExpired && <Badge variant="danger">Expired</Badge>}
+      </div>
+      <p className="ui-offer-preview__eyebrow">
+        {type} offer{category ? ` · ${category}` : ""}
+      </p>
+      <h3 className="ui-offer-preview__title">Keep {prettyPlan}</h3>
+      <p className="ui-offer-preview__lede">
+        {mode === "Voucher"
+          ? "Apply this voucher to stay subscribed:"
+          : mode === "Product"
+            ? "Switch to this plan to keep watching:"
+            : "The widget's default offer for this segment."}
+      </p>
+      {mode === "Voucher" && voucher && (
+        <p className="ui-offer-preview__code">{voucher}</p>
+      )}
+      {mode === "Product" && product && (
+        <p className="ui-offer-preview__plan">{product}</p>
+      )}
+      <dl className="ui-offer-preview__meta">
+        <div>
+          <dt>Segment</dt>
+          <dd>{segment || "All cancelling customers"}</dd>
+        </div>
+        <div>
+          <dt>Ends</dt>
+          <dd>{endDate || "No end date"}</dd>
+        </div>
+        <div>
+          <dt>Applies to</dt>
+          <dd>{prettyPlan}</dd>
+        </div>
+      </dl>
+      <p className="ui-offer-preview__note">
+        Representative render of the saved offer — customer styling is illustrative.
+      </p>
+    </div>
+  );
+}
+
 // Live accessibility score — the real editor's "semáforo": a colour-coded
 // readout of the page's a11y rate for the current locale. Tri-state by ratio
 // (green pass / amber review / red fail). The prototype has no a11y engine, so
@@ -203,6 +281,7 @@ type LiveStatus = "live" | "disabled";
 export function LivePreview({
   variant,
   context,
+  selectedObject,
   previewModel,
   selectedId,
   onPickSection,
@@ -365,6 +444,16 @@ export function LivePreview({
       PREVIEW_ENV_OPTIONS.find((o) => o.value === previewEnv)?.label ?? "";
     const isTestEnv = previewEnv !== "prod";
     const showModule = previewModule !== NO_MODULE;
+    // §item7 A selected saved offer renders as a real offer preview, ahead of the
+    // module/empty state (offers sit two levels deep under a category band).
+    const offerNode =
+      selectedObject?.objectType === "offer" && selectedId
+        ? findLooseById(
+            (variant?.structure ?? []) as unknown as LooseNode[],
+            selectedId,
+          )
+        : undefined;
+    const offerFields = offerNode ? nodeFields(offerNode) : null;
     const configJson = showModule
       ? JSON.stringify(buildWidgetConfigJson(variant), null, 2)
       : "";
@@ -407,7 +496,7 @@ export function LivePreview({
                       (LIVE); with none chosen there is nothing to render
                       (DISABLED). */}
                   <span className="ui-preview__status">
-                    {showModule ? (
+                    {offerFields || showModule ? (
                       <Badge variant="success">LIVE</Badge>
                     ) : (
                       <Badge variant="default">DISABLED</Badge>
@@ -416,8 +505,13 @@ export function LivePreview({
                 </div>
               </div>
             </div>
-            <div className="ui-preview__canvas" data-mode={showModule ? "json" : undefined}>
-              {showModule ? (
+            <div
+              className="ui-preview__canvas"
+              data-mode={offerFields ? "offer" : showModule ? "json" : undefined}
+            >
+              {offerFields ? (
+                <WidgetOfferPreview fields={offerFields} />
+              ) : showModule ? (
                 <div className="ui-preview__json">
                   <div className="ui-preview__json-head">
                     Rendering with <strong>{moduleLabel}</strong> ·{" "}
@@ -431,8 +525,8 @@ export function LivePreview({
                   <MSym name="desktop_windows" size={40} className="ui-preview__empty-icon" />
                   <p className="ui-preview__empty-title">No preview module selected</p>
                   <p className="ui-preview__empty-sub">
-                    Pick a module above to render this widget’s JSON, or preview
-                    the raw config output.
+                    Select a saved offer in the Structure to preview it, or pick a
+                    module above to render this widget’s JSON.
                   </p>
                 </div>
               )}

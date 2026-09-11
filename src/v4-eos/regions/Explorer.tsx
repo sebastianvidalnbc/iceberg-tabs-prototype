@@ -408,7 +408,8 @@ function StructureTabs({
       className="mb-2 flex w-full items-center gap-3 border-b border-[var(--color-border-subtle)] px-1"
     >
       {tab("config", "Configurations")}
-      {tab("content", "Content")}
+      {/* §item2 Anna: "Content" didn't read right for the offer section. */}
+      {tab("content", "Authoring")}
     </div>
   );
 }

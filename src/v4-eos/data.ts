@@ -349,6 +349,10 @@ const SAVE_MOMENTS = ["Offer Save", "Content Save"];
 // Product/Voucher schema-switcher (isClearable → "None").
 const CODE_TYPES = ["None", "Product", "Voucher"];
 
+// §item4 Prototype "today" — the real current date so the "Expired" cue is
+// honest (an offer whose end date is in the past reads as expired here).
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+
 // §5 Human-readable plan/product each Cancellation Product Static ID maps to, so
 // authors never have to decode an opaque ID by hand.
 const STATIC_ID_PLAN_NAMES: Record<string, string> = {
@@ -422,6 +426,9 @@ interface OfferData {
   segmentName: string;
   surveyResponseLabelKey: string;
   suppressDefaultOffer: boolean;
+  // §item4 ISO yyyy-mm-dd the offer stops serving; "" ⇒ no end date. Surfaced so
+  // expired offers are visible in the editor instead of silently failing in prod.
+  offerEndDate: string;
   productVoucher: string;
   voucherCode: string;
   segmentation: {
@@ -444,6 +451,7 @@ const makeOffer = (
   segmentName,
   surveyResponseLabelKey: extras.surveyResponseLabelKey ?? "",
   suppressDefaultOffer: extras.suppressDefaultOffer ?? false,
+  offerEndDate: extras.offerEndDate ?? "",
   productVoucher: extras.productVoucher ?? "Peacock Premium",
   voucherCode: extras.voucherCode ?? segmentName.replace(/^US\.CANCEL\./, ""),
   segmentation: extras.segmentation ?? {
@@ -491,6 +499,11 @@ const buildOffers = (): OfferData[] => {
   offers[0].liveInFlow = "Cancel Save";
   offers[1].liveInFlow = "Cancel Save";
   offers[4].liveInFlow = "WWE Win-back";
+  // §item4 seed end dates: one already lapsed (Expired cue), two upcoming, so the
+  // STATUS badge and the Offer End Date field have real values to demonstrate.
+  offers[0].offerEndDate = "2025-12-31";
+  offers[1].offerEndDate = "2026-12-31";
+  offers[4].offerEndDate = "2026-10-15";
   // The NOOFFER row suppresses the default offer.
   const noOffer = offers.find((o) => o.segmentName.endsWith("NOOFFER"));
   if (noOffer) noOffer.suppressDefaultOffer = true;
@@ -622,6 +635,9 @@ const offerNode = (offer: OfferData): StructureNode => {
   const code = codeType === "Voucher" ? offer.voucherCode : offer.productVoucher;
   const planName = planNameForStaticId(offer.cancellationProductStaticId);
   const isRetentionType = offer.type === "Retention";
+  // §item4 ISO date strings sort lexicographically, so a plain string compare is
+  // a correct "end date is before today" test.
+  const isExpired = offer.offerEndDate !== "" && offer.offerEndDate < TODAY_ISO;
   const groups: PropertyGroup[] = [
     // §4/§3 read-only context so authors instantly see where the offer runs and
     // which band it belongs to, without opening Journey Flows.
@@ -635,6 +651,31 @@ const offerNode = (offer: OfferData): StructureNode => {
             "The Journey Flow this offer is currently served in. Managed under Journey Flows.",
         },
         { label: "Band", value: `${offer.category} offer` },
+        {
+          label: "Offer End Date",
+          value: offer.offerEndDate,
+          // §item4 authored date the offer stops serving; empty ⇒ open-ended.
+          helper: offer.offerEndDate
+            ? isExpired
+              ? "This end date has already passed."
+              : "Date this offer stops serving."
+            : "No end date — serves until removed.",
+          tooltip:
+            "Set an end date so lapsed offers show as Expired here instead of silently failing in production. Format: YYYY-MM-DD.",
+        },
+        // §item4 explicit Expired badge when the authored end date is in the past.
+        ...(isExpired
+          ? ([
+              {
+                label: "Status",
+                value: "",
+                badge: "Expired",
+                badgeTone: "destructive",
+                tooltip:
+                  "This offer's end date is in the past, so it no longer serves in production.",
+              },
+            ] as PropertyField[])
+          : []),
       ],
     },
     {
@@ -713,6 +754,46 @@ const offerNode = (offer: OfferData): StructureNode => {
       {
         label: codeType === "Voucher" ? "Voucher Code" : "Product Static ID",
         value: codeType === "None" ? "" : code,
+        // §item3 relabel/hide live from the sibling "Product / Voucher" select so
+        // the field tracks edits (Voucher ⇒ Voucher Code, Product ⇒ Product
+        // Static ID, None ⇒ hidden) instead of only reflecting the seed at build.
+        dependsOn: {
+          field: "Product / Voucher",
+          labelMap: { Voucher: "Voucher Code", Product: "Product Static ID" },
+          hideWhen: ["None"],
+        },
+        tooltip:
+          "The identifier served for this offer — a Voucher Code for a discount, or a Product Static ID for a plan swap.",
+      },
+    ],
+  });
+  // §item6 Anna: segmentation is easier to manage in one view with the offer, so
+  // surface this offer's segmentation inline — not only in the Segmentation area.
+  const seg = offer.segmentation;
+  const segCount = seg.segmentNames.length;
+  groups.push({
+    header: "SEGMENTATION",
+    fields: [
+      {
+        label: "Offer Type",
+        value: seg.offerType,
+        tooltip:
+          "The segmentation family this offer belongs to — shown here so targeting lives beside the offer, not in a separate tab.",
+      },
+      {
+        label: "Category Title",
+        value: seg.categoryTitle,
+        tooltip:
+          "The segmentation category (e.g. D2C, JetBlue) this offer is filed under.",
+      },
+      {
+        label: "Segment Names",
+        value: seg.segmentNames.join("\n"),
+        kind: "textarea",
+        helper: segCount
+          ? `${segCount} prioritised segment${segCount === 1 ? "" : "s"} · one per line`
+          : "No additional segments — applies to the plan/segment above.",
+        tooltip: "The mParticle audiences this offer is prioritised for.",
       },
     ],
   });
@@ -886,10 +967,16 @@ const buildWidgetSettingsNode = (): StructureNode => ({
           fields: [
             { label: "Name", value: "retention-service-config-us" },
             {
+              // §item1 Anna: authors should manage the widget beyond raw code.
+              // "Form" (the new default) drives the widget through the guided
+              // Structure/Properties forms; JSON/HTML stay for advanced edits.
               label: "Format",
-              value: "JSON",
+              value: "Form",
               kind: "select",
-              options: ["JSON", "HTML"],
+              options: ["Form", "JSON", "HTML"],
+              helper: "Form authoring manages this widget with guided fields — no JSON or HTML editing required.",
+              tooltip:
+                "Form: manage offers, segmentation and settings through the guided forms in this editor. JSON / HTML: hand-edit the raw config for advanced cases.",
             },
             {
               label: "Widget Type",
@@ -1014,6 +1101,7 @@ export function createWidgetChild(
           segmentName: "",
           surveyResponseLabelKey: "",
           suppressDefaultOffer: false,
+          offerEndDate: "",
           productVoucher: "",
           voucherCode: "",
           segmentation: { offerType: "Retention", categoryTitle: "", segmentNames: [] },
@@ -1122,6 +1210,24 @@ export interface PropertyField {
   helper?: string; // helper text shown under the control
   // §6 Optional contextual help shown as an info-icon tooltip beside the label.
   tooltip?: string;
+  // §item3 Reactive relabel / visibility driven by a sibling field's LIVE value
+  // (its author override, else its schema default). Used by the offer code field
+  // so it tracks the "Product / Voucher" select as the author changes it.
+  dependsOn?: {
+    field: string; // sibling field label whose live value is read
+    labelMap?: Record<string, string>; // live value → this field's label
+    hideWhen?: string[]; // live values that hide this field entirely
+  };
+  // §item4 Read-only status badge shown in place of an editable control (e.g. an
+  // "Expired" pill in an offer's STATUS group). Tones map to Badge variants.
+  badge?: string;
+  badgeTone?:
+    | "success"
+    | "warning"
+    | "info"
+    | "secondary"
+    | "destructive"
+    | "default";
 }
 
 // A titled group of fields (e.g. PRODUCT / CTA / LEGAL). Groups render with a

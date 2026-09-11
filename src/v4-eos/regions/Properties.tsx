@@ -357,6 +357,15 @@ function PropertyFieldRow({
   const id = useId();
   const errId = invalid ? `${id}-err` : undefined;
   const helpId = field.helper ? `${id}-help` : undefined;
+  // §item4 A field can present a read-only status badge in place of an editable
+  // control (e.g. an offer's "Expired" pill in STATUS) — no input, no id wiring.
+  if (field.badge) {
+    return (
+      <PropRow label={<FieldLabel label={field.label} tooltip={field.tooltip} />}>
+        <Badge variant={field.badgeTone ?? "secondary"}>{field.badge}</Badge>
+      </PropRow>
+    );
+  }
   const stacked =
     field.kind === "textarea" ||
     field.kind === "radio" ||
@@ -920,10 +929,33 @@ function FieldsBody({
   }) => React.ReactNode;
 }) {
   const { eyebrow, name } = data;
-  const groups: PropertyGroup[] = useMemo(
-    () => data.groups ?? [{ fields: data.fields ?? [] }],
-    [data.groups, data.fields]
-  );
+  const groups: PropertyGroup[] = useMemo(() => {
+    const raw = data.groups ?? [{ fields: data.fields ?? [] }];
+    // §item3 Resolve reactive fields against the LIVE form state: a field with
+    // `dependsOn` reads a sibling field's value (author override first, else its
+    // schema default) to relabel itself or hide entirely — so the offer code
+    // field tracks the "Product / Voucher" select as the author changes it.
+    if (!raw.some((g) => g.fields.some((f) => f.dependsOn))) return raw;
+    const liveValue = (label: string): string | undefined => {
+      if (label in overridesForNode) return overridesForNode[label];
+      for (const g of raw) {
+        const f = g.fields.find((x) => x.label === label);
+        if (f) return f.value;
+      }
+      return undefined;
+    };
+    return raw.map((g) => ({
+      ...g,
+      fields: g.fields.flatMap((f) => {
+        if (!f.dependsOn) return [f];
+        const ctrl = liveValue(f.dependsOn.field);
+        if (ctrl != null && f.dependsOn.hideWhen?.includes(ctrl)) return [];
+        const label =
+          ctrl != null ? f.dependsOn.labelMap?.[ctrl] ?? f.label : f.label;
+        return [{ ...f, label }];
+      }),
+    }));
+  }, [data.groups, data.fields, overridesForNode]);
   const headers = useMemo(
     () => [
       ...groups.map((g) => g.header).filter((h): h is string => !!h),
