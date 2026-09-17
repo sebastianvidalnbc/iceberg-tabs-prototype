@@ -122,7 +122,7 @@ function InsertLayoutBar({ onClick }: { onClick: () => void }) {
       <button
         type="button"
         onClick={onClick}
-        className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--color-border-strong)] px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-bg)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--color-border-strong)] px-2 py-0.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-bg)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <MSym name="add" size={14} />
         Add layout
@@ -273,7 +273,7 @@ function StructureLevel({
                   <input
                     autoFocus
                     aria-label="Rename"
-                    className="w-full rounded-sm border border-input bg-background px-1 py-0.5 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    className="w-full rounded-sm border border-input bg-background px-1 py-0.5 text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
@@ -393,7 +393,7 @@ function StructureTabs({
       role="tab"
       aria-selected={active === id}
       onClick={() => onChange(id)}
-      className={`-mb-px shrink-0 border-b-2 px-3 py-1.5 text-[12px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+      className={`-mb-px shrink-0 border-b-2 px-3 py-1.5 text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
         active === id
           ? "border-[var(--color-action-primary)] text-foreground"
           : "border-transparent text-muted-foreground hover:text-foreground"
@@ -676,10 +676,10 @@ export function Explorer({
           className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <MSym name="chevron_right" size={18} className="shrink-0 text-muted-foreground" />
-          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+          <span className="shrink-0 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             {collectionHeader}
           </span>
-          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+          <span className="min-w-0 flex-1 truncate text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-medium text-foreground">
             {currentWidgetLabel}
           </span>
         </button>
@@ -740,9 +740,11 @@ export function Explorer({
             title="Drag to resize"
             onPointerDown={beginPagesResize}
             onDoubleClick={() => setPagesPct(PAGES_DEFAULT_PCT)}
-            className="group relative z-10 -my-[3px] h-1.5 shrink-0 cursor-row-resize touch-none select-none"
+            className="group relative z-10 -my-1 h-2 shrink-0 cursor-row-resize touch-none select-none"
           >
-            <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
+            {/* Eos §3.6 resizer: 8px hit target (the -my-1 h-2 wrapper above);
+                idle 1px transparent-bordered line, hover/active 3px accent. */}
+            <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:h-[3px] group-hover:bg-[var(--color-action-primary)]" />
             <span
               aria-hidden
               className="absolute left-1/2 top-1/2 flex h-4 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] shadow-[var(--elevation-1)] transition-colors group-hover:border-[var(--color-action-primary)]"
@@ -800,7 +802,7 @@ export function Explorer({
               }}
             />
           ) : (
-            <p className="m-3 text-[13px] leading-relaxed text-muted-foreground">
+            <p className="m-3 text-[length:var(--type-body-md-size)] leading-relaxed text-muted-foreground">
               Select a {structureEmptyNoun} to view its structure.
             </p>
           )}

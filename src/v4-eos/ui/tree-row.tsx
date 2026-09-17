@@ -86,7 +86,7 @@ export function TreeRow({
       onClick={onSelect}
       {...dropHandlers}
       className={cn(
-        "group relative flex h-7 cursor-pointer items-center gap-1 rounded-sm pr-1 text-[13px] leading-none",
+        "group relative flex h-7 cursor-pointer items-center gap-1 rounded-sm pr-1 text-[length:var(--type-label-lg-size)] leading-none",
         "text-foreground/90 transition-colors",
         // --row-bg tracks the row's current background so the trailing menu's
         // fade mask can blend the label into whatever fill is showing.
@@ -146,7 +146,7 @@ export function TreeRow({
       <span
         className={cn(
           fluid ? "whitespace-nowrap" : "min-w-0 flex-1 truncate",
-          muted && "font-mono text-[12px] text-muted-foreground",
+          muted && "font-mono text-[length:var(--type-body-sm-size)] text-muted-foreground",
           disabled && "line-through",
         )}
       >

@@ -15,14 +15,15 @@ import { ObjectHeader, PropertyRow, PropertyRows } from "@/v4-eos/ui/property";
 import { Panel, PanelHeader } from "@/v4-eos/ui/panel";
 import { Section, Specimen, Swatch } from "./layout";
 
-// --- Foundations: color roles pulled straight from the Iceberg tokens the
-// shadcn layer aliases (§ theme.css). Renders live so it always reflects dark. ---
+// --- Foundations: the Eos M3 color/type/spacing roles this workspace is built
+// on (ui-lib/tokens.css), rendered live so the swatches always reflect the
+// actual running theme rather than a static screenshot. ---
 export function FoundationsSection() {
   return (
     <Section
       id="foundations"
       title="Foundations"
-      lead="Color roles are aliased from the Iceberg semantic tokens (tokens.css). The shadcn layer never introduces a second palette — dark comes from [data-theme=\u201cdark\u201d]."
+      lead="Color roles come straight from the Eos-aligned Iceberg tokens (ui-lib/tokens.css) — the same custom properties every V4 component consumes, so this page can never drift from the running theme."
     >
       <Specimen label="Surfaces">
         <Swatch name="Canvas" brand="Onyx" varName="--color-bg-canvas" />
@@ -47,13 +48,14 @@ export function FoundationsSection() {
   );
 }
 
-// --- Actions: every Button variant + size, plus icon buttons. ---
+// --- Actions: every Button variant + size, plus icon buttons — Eos §3.2
+// pill shape, height, and padding rules (Phase 4). ---
 export function ActionsSection() {
   return (
     <Section
       id="actions"
       title="Actions"
-      lead="shadcn Button, themed for Iceberg density. Restrained radii; consistent height, focus ring, and icon sizing."
+      lead="Eos §3.2 button: pill radius, filled/outline/ghost variants, consistent height and icon sizing across sizes."
     >
       <Specimen label="Variants">
         <Button>Default</Button>
@@ -89,13 +91,14 @@ export function ActionsSection() {
   );
 }
 
-// --- Status: Badge defaults + Iceberg status variants. ---
+// --- Status: Badge, including the Iceberg-specific status variants layered
+// on top of Eos's status color roles. ---
 export function StatusSection() {
   return (
     <Section
       id="status"
       title="Status & badges"
-      lead="Badge with shadcn defaults plus Iceberg status variants (success / warning / info) mapped to the status tokens. Status is never color-only \u2014 always paired with a label."
+      lead="Iceberg status variants (success / warning / info) mapped onto the Eos status color tokens. Status is never color-only \u2014 always paired with a label."
     >
       <Specimen label="Default variants">
         <Badge>Default</Badge>
@@ -112,8 +115,9 @@ export function StatusSection() {
   );
 }
 
-// --- Form controls: the adapters the Properties panel actually uses. Live,
-// stateful demos so focus/checked/switch states are inspectable. ---
+// --- Form controls: the Eos-spec'd controls (Phase 4) the Properties panel
+// actually uses. Live, stateful demos so focus/checked/switch states are
+// inspectable. ---
 export function FormSection() {
   const [text, setText] = useState("Premium card test");
   const [area, setArea] = useState("Rich copy with headings.");
@@ -125,7 +129,7 @@ export function FormSection() {
     <Section
       id="form-controls"
       title="Form controls"
-      lead="The V2 form-control adapters (TextField, TextAreaField, Select, Checkbox, Switch, Radio) as consumed by the Properties panel \u2014 28px density, dark control fills."
+      lead="TextField, TextAreaField, Select, Checkbox, Switch, and Radio, aligned to Eos field/control specs and consumed as-is by the Properties panel."
     >
       <Specimen label="Inputs" className="flex-col items-stretch gap-4">
         <div className="max-w-sm">
@@ -143,11 +147,11 @@ export function FormSection() {
         </div>
       </Specimen>
       <Specimen label="Toggles & choice">
-        <label className="flex items-center gap-2 text-[13px] text-foreground">
+        <label className="flex items-center gap-2 text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] text-foreground">
           <CheckboxField checked={checked} onCheckedChange={setChecked} />
           Enabled
         </label>
-        <label className="flex items-center gap-2 text-[13px] text-foreground">
+        <label className="flex items-center gap-2 text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] text-foreground">
           <SwitchField checked={on} onCheckedChange={setOn} />
           Live
         </label>
@@ -162,15 +166,15 @@ export function FormSection() {
   );
 }
 
-// --- Patterns: the composed pieces that give V2 its authoring feel \u2014 panel
-// chrome and the Properties label/control rows. Shows the primitives working
-// together, not just in isolation. ---
+// --- Patterns: Iceberg-specific compositions built from Eos primitives \u2014
+// panel chrome and the Properties label/control rows. Shows the primitives
+// working together in the authoring UI, not just in isolation. ---
 export function PatternsSection() {
   return (
     <Section
       id="patterns"
       title="Patterns"
-      lead="Composed pieces used across the editor: panel chrome (eyebrow + title + actions) and the Properties label/control rows."
+      lead="Iceberg authoring compositions built from Eos primitives: panel chrome (eyebrow + title + actions) and the Properties label/control rows."
     >
       <Specimen label="Panel header" className="flex-col items-stretch">
         <Panel className="w-full max-w-md overflow-hidden rounded-md border border-border">
@@ -198,7 +202,7 @@ export function PatternsSection() {
               <SwitchField checked onCheckedChange={() => {}} />
             </PropertyRow>
             <PropertyRow label="Section ID">
-              <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[12px] text-muted-foreground">
+              <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[length:var(--type-body-sm-size)] text-muted-foreground">
                 sec-hero-01
               </code>
             </PropertyRow>
@@ -213,6 +217,61 @@ export function PatternsSection() {
             </Button>
           </div>
         </div>
+      </Specimen>
+    </Section>
+  );
+}
+
+// --- Potential Eos Contributions: Iceberg-built pieces that go beyond what
+// the Eos library currently documents. They're implemented as one-off V4
+// components today, not published Eos primitives \u2014 called out here as
+// candidates rather than demoed live, since they only make sense in their
+// real authoring context (a resizable panel, a data table, a tree). ---
+export function ContributionsSection() {
+  return (
+    <Section
+      id="contributions"
+      title="Potential Eos Contributions"
+      lead="Iceberg-specific pieces built on top of Eos that could graduate into the Eos library itself \u2014 none of these are Eos primitives today, so each stays a local V4 component (linked below) rather than a documented spec."
+    >
+      <Specimen label="Resizer grabber" className="flex-col items-stretch gap-1">
+        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">
+          Eos \u00a73.6 specifies the resizer's hit target and hover/active color, but
+          not a grip affordance. Iceberg adds a dotted-pill grabber centered on
+          every divider (Explorer\u2194Preview, Pages\u2194Structure) \u2014{" "}
+          <code className="font-mono">WorkspaceShell.tsx</code>,{" "}
+          <code className="font-mono">regions/Explorer.tsx</code>.
+        </p>
+      </Specimen>
+      <Specimen label="PanelHeader" className="flex-col items-stretch gap-1">
+        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">
+          A compact tool-panel header (eyebrow + title + sub + trailing
+          actions) reused by Explorer, Structure, and Properties \u2014{" "}
+          <code className="font-mono">ui/panel.tsx</code>.
+        </p>
+      </Specimen>
+      <Specimen label="PropertyRow / PropertyRows" className="flex-col items-stretch gap-1">
+        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">
+          A generic label-left/control-right row that auto-stacks to
+          label-above-control on narrow viewports \u2014 shown live in Patterns
+          above, implemented in <code className="font-mono">ui/property.tsx</code>.
+        </p>
+      </Specimen>
+      <Specimen label="FilterChip + TableFooter" className="flex-col items-stretch gap-1">
+        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">
+          Built to Eos \u00a73.7's data-table spec (pinned filter chips, footer
+          range + pager instead of a header count) for the Pages/Widgets/
+          Variants tables \u2014 <code className="font-mono">ui-lib/FilterChip.tsx</code>,{" "}
+          <code className="font-mono">ui-lib/TableFooter.tsx</code>.
+        </p>
+      </Specimen>
+      <Specimen label="Structure tree row" className="flex-col items-stretch gap-1">
+        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">
+          Combines disclosure, drag handle, validation flag, disabled state,
+          and an overflow menu in one dense row \u2014 denser and more
+          feature-complete than a plain Eos list item \u2014{" "}
+          <code className="font-mono">ui/tree-row.tsx</code>.
+        </p>
       </Specimen>
     </Section>
   );

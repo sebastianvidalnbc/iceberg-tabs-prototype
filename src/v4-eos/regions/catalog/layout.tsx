@@ -1,9 +1,10 @@
 import * as React from "react";
 import { cn } from "@/v4-eos/ui/lib/utils";
 
-// Shared layout scaffolding for the V2 design-system catalog. Purely
-// presentational, Tailwind-only, and dark-themed via the same Iceberg tokens
-// the rest of V2 uses. Kept separate so each catalog section stays declarative.
+// Shared layout scaffolding for the V4 (Eos) design-system catalog. Purely
+// presentational, Tailwind-only, and themed via the same Eos-aligned Iceberg
+// tokens the rest of V4 uses. Kept separate so each catalog section stays
+// declarative.
 
 // A titled catalog section with an id (for the in-page nav) and optional lead.
 export function Section({
@@ -19,11 +20,11 @@ export function Section({
 }) {
   return (
     <section id={id} className="scroll-mt-4 border-t border-border pt-8 first:border-t-0 first:pt-0">
-      <h2 className="text-[18px] font-semibold tracking-tight text-foreground">
+      <h2 className="text-[length:var(--type-title-lg-size)] leading-[length:var(--type-title-lg-lh)] font-semibold tracking-tight text-foreground">
         {title}
       </h2>
       {lead && (
-        <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-1 max-w-2xl text-[length:var(--type-body-md-size)] leading-relaxed text-muted-foreground">
           {lead}
         </p>
       )}
@@ -47,8 +48,8 @@ export function Specimen({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline gap-2">
-        <span className="text-[12px] font-medium text-foreground">{label}</span>
-        {hint && <span className="text-[11px] text-muted-foreground">{hint}</span>}
+        <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-foreground">{label}</span>
+        {hint && <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] text-muted-foreground">{hint}</span>}
       </div>
       <div
         className={cn(
@@ -80,11 +81,11 @@ export function Swatch({
         style={{ background: `var(${varName})` }}
       />
       <div className="flex flex-col">
-        <span className="text-[12px] font-medium text-foreground">{name}</span>
+        <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-foreground">{name}</span>
         {brand && (
-          <span className="text-[11px] text-muted-foreground">{brand}</span>
+          <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] text-muted-foreground">{brand}</span>
         )}
-        <code className="text-[10px] text-muted-foreground">{varName}</code>
+        <code className="text-[length:var(--type-label-xs-size)] leading-[length:var(--type-label-xs-lh)] text-muted-foreground">{varName}</code>
       </div>
     </div>
   );

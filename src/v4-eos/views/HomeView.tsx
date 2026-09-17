@@ -19,8 +19,9 @@ import { navigate, routes } from "../browse";
 // --- tokens for card + eyebrow (kept local; consistent with the panels) ------
 const CARD =
   "rounded-[var(--radius-lg)] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]";
+// Eos §1.7 Label Medium (12/16): uppercase eyebrow/section label.
 const EYEBROW =
-  "text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-muted)]";
+  "text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-muted)]";
 
 type Tone = "info" | "warning" | "danger" | "success" | "experiment" | "neutral";
 
@@ -76,10 +77,11 @@ function StatCard({ label, value, hint, tone, icon }: Stat) {
           <MSym name={icon} size={18} />
         </span>
       </div>
-      <div className="mt-3 text-[40px] font-bold leading-none tabular-nums text-[var(--color-text-primary)]">
+      {/* Eos §1.3: "Dashboard metric" -> Display Small (36/44). */}
+      <div className="mt-3 text-[length:var(--type-display-sm-size)] font-bold leading-none tabular-nums text-[var(--color-text-primary)]">
         {value}
       </div>
-      <p className="mt-2 text-[12px] leading-snug text-[var(--color-text-secondary)]">
+      <p className="mt-2 text-[length:var(--type-body-sm-size)] leading-snug text-[var(--color-text-secondary)]">
         {hint}
       </p>
     </div>
@@ -123,10 +125,10 @@ function ActionCard({ icon, label, hint, onClick, disabled }: Action) {
         <MSym name={icon} size={22} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[14px] font-semibold text-[var(--color-text-primary)]">
+        <span className="block text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-[var(--color-text-primary)]">
           {label}
         </span>
-        <span className="block truncate text-[12px] text-[var(--color-text-secondary)]">
+        <span className="block truncate text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-[var(--color-text-secondary)]">
           {hint}
         </span>
       </span>
@@ -157,7 +159,7 @@ function UatConfigurator() {
     <section className={cn(CARD, "flex flex-col gap-4 p-5")}>
       <header>
         <span className={EYEBROW}>UAT Configurator</span>
-        <p className="mt-1 text-[12px] leading-snug text-[var(--color-text-secondary)]">
+        <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-[var(--color-text-secondary)]">
           Attach environment cookies for a CMS test build.
         </p>
       </header>
@@ -169,7 +171,7 @@ function UatConfigurator() {
               onCheckedChange={(v) => toggle(c, !!v)}
             />
             <span
-              className="cursor-pointer text-[13px] text-[var(--color-text-primary)]"
+              className="cursor-pointer text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] text-[var(--color-text-primary)]"
               onClick={() => toggle(c)}
             >
               {c}
@@ -180,7 +182,7 @@ function UatConfigurator() {
       <div>
         <label
           htmlFor={prId}
-          className="mb-1 block text-[12px] font-normal text-[var(--color-text-secondary)]"
+          className="mb-1 block text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-normal text-[var(--color-text-secondary)]"
         >
           PR number
         </label>
@@ -190,9 +192,9 @@ function UatConfigurator() {
           onChange={(e) => setPr(e.target.value)}
           inputMode="numeric"
           placeholder="e.g. 4821"
-          className="h-8 max-w-[220px] bg-[var(--color-bg-subtle)] text-[13px]"
+          className="h-8 max-w-[220px] bg-[var(--color-bg-subtle)] text-[length:var(--type-body-md-size)]"
         />
-        <p className="mt-1 text-[11px] leading-snug text-[var(--color-text-muted)]">
+        <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-[var(--color-text-muted)]">
           Add a GitHub pull-request number to target its preview build.
         </p>
       </div>
@@ -231,7 +233,7 @@ function ModuleUsage() {
     <section className={cn(CARD, "flex flex-col gap-4 p-5")}>
       <header>
         <span className={EYEBROW}>Module / Layout Usage</span>
-        <p className="mt-1 text-[12px] leading-snug text-[var(--color-text-secondary)]">
+        <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-[var(--color-text-secondary)]">
           See which variants across published pages, widgets and central
           management use a module or layout.
         </p>
@@ -264,15 +266,16 @@ export function HomeView() {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
             <span className={EYEBROW}>Iceberg · Commerce CMS</span>
-            <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.01em] text-[var(--color-text-primary)]">
+            {/* Eos §1.11 "Detail H1" -> Headline Small (24/32). */}
+            <h1 className="mt-1 text-[length:var(--type-headline-sm-size)] font-bold leading-tight tracking-[-0.01em] text-[var(--color-text-primary)]">
               Dashboard
             </h1>
-            <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">
+            <p className="mt-1 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-[var(--color-text-secondary)]">
               Content operations overview · US · en-US
             </p>
           </div>
           <span
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-3 py-1 text-[12px] font-semibold"
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-3 py-1 text-[length:var(--type-label-badge-size)] leading-[length:var(--type-label-badge-lh)] font-semibold"
             style={{
               background: "var(--color-status-warning-bg)",
               color: "var(--color-status-warning)",
@@ -311,13 +314,13 @@ export function HomeView() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <span
-                className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em]"
+                className="inline-flex items-center gap-1.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em]"
                 style={{ color: "var(--color-status-danger)" }}
               >
                 <MSym name="accessibility_new" size={14} />
                 PASS Score Audit
               </span>
-              <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">
+              <p className="mt-1 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-[var(--color-text-secondary)]">
                 Published pages with a PASS score below 60% · US · en-US
               </p>
             </div>
@@ -331,14 +334,15 @@ export function HomeView() {
             </Button>
           </div>
           <div className="mt-4 flex items-baseline gap-3">
+            {/* Eos §1.3 "KPI statistic" -> Display Medium (45/52). */}
             <span
-              className="text-[48px] font-bold leading-none tabular-nums"
+              className="text-[length:var(--type-display-md-size)] font-bold leading-none tabular-nums"
               style={{ color: "var(--color-status-danger)" }}
             >
               153
             </span>
             <span
-              className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.04em]"
+              className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--type-label-badge-size)] leading-[length:var(--type-label-badge-lh)] font-semibold uppercase tracking-[0.04em]"
               style={{
                 background: "var(--color-status-danger-bg)",
                 color: "var(--color-status-danger)",

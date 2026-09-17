@@ -37,6 +37,12 @@
 /* ---------- Buttons — M3 pill shape --------------------------------------- */
 .ui-btn { border-radius: var(--radius-pill); font-weight: var(--fw-medium); }
 .ui-btn--icon-only { border-radius: 50%; }
+/* Eos §3.2: filled/outline buttons pad-x 16px; compact (--btn-height-sm)
+   stays 12px. `:not(.ui-btn--icon-only)` preserves ui.css's zero padding on
+   the square icon-only variant (icon-only is 0,1,0 specificity, same as this
+   rule, so ordering alone would otherwise let this — later-loaded — file win). */
+.ui-btn:not(.ui-btn--icon-only) { padding: 0 var(--space-4); }
+.ui-btn--sm:not(.ui-btn--icon-only) { padding: 0 var(--space-3); }
 /* Filled (primary) is Eos near-black; secondary becomes an M3 outlined pill. */
 .ui-btn--secondary {
   background: transparent;
@@ -46,12 +52,17 @@
 .ui-btn--secondary:hover { background: var(--color-bg-hover); }
 .ui-btn--tertiary:hover { background: var(--color-bg-hover); }
 
-/* ---------- Search — Eos filled pill field -------------------------------- */
+/* ---------- Search — Eos text field, not a filled pill --------------------
+   design.md §3.3 documents Text fields & search under ONE shared contract
+   (height/border/radius/font): a bordered --radius-field (4px) box, not a
+   filled rounded-pill bar. The prior "filled pill field" here was the same
+   class of unauthorized modernization-pass deviation Phase 3 found and
+   removed from the nav rail (60px pill rail vs the shipping 80px flat rail). */
 .ui-search {
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-pill);
-  padding: 0 var(--space-3);
-  border: var(--border-width) solid transparent;
+  background: var(--color-bg-control);
+  border-radius: var(--radius-field);
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
 }
 .ui-search .ui-control {
   border: 0;
@@ -62,76 +73,34 @@
 }
 .ui-search .ui-control:focus,
 .ui-search .ui-control:focus-visible { box-shadow: none; }
-.ui-search:focus-within { border-color: var(--color-action-primary); }
+.ui-search:focus-within {
+  border-color: var(--color-action-primary);
+  box-shadow: var(--focus-ring);
+}
 
-/* ---------- Floating application tool rail (icon-first) -------------------
-   Modernization pass. Shell pattern inspired by a floating tool rail (NOT
-   Outlook's visuals): a compact Eos surface with radius-lg + subtle elevation,
-   inset by the shell padding, reading as a persistent tool palette rather than
-   a full-height admin sidebar. Icons are the persistent nav signal; labels are
-   exposed as accessible tooltips (hover + keyboard focus).
-   Classification: CUSTOM EOS-CONSISTENT rail + tooltip (Eos has no tooltip
-   component); active indicator = EOS-DERIVED from Navigation Bar 15:1779. */
+/* ---------- Eos vertical Navigation rail (design.md §3.1) ------------------
+   Phase 3 — replaces the prior "floating tool rail" pill/tooltip pattern
+   (60px width, white rounded floating panel, 44×32 pill icon capsule, labels
+   as hover/focus tooltips) with the shipping Eos rail: 80px width, flush
+   --sidebar (#f0f0f0) background, 64px items centered in the rail, bare 22px
+   icons (no pill/capsule — the size comes from the Icon usage in AppNav.tsx),
+   Label XSmall (10px/16px) captions always visible under the icon. Base
+   ui.css already supplies the correct structure and idle/hover/active
+   semantics via the --nav-* custom properties set on .ui-ws-nav (idle =
+   --text-soft, hover = full-item rgba(0,0,0,.05) + primary text, active =
+   --sidebar-active fill + weight 600 on the label) — this block only
+   supplies the Eos-exact sizing/typography deltas. */
 .ui-ws-nav {
-  width: 60px;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: none;             /* flat surface — separation via backdrop tone */
-  overflow: visible;            /* let tooltips escape the rail */
-  z-index: 5;
+  width: 80px;
 }
-.ui-ws-nav__brand {
-  padding: var(--space-3) 0 var(--space-2);
-  border-bottom: 0;             /* border reduction — spacing separates */
-}
-.ui-ws-nav__mark { border-radius: var(--radius-pill); }
-.ui-ws-nav__list { overflow: visible; padding: var(--space-1); gap: 2px; }
 .ui-ws-nav__item {
-  position: relative;
-  gap: 0;
-  min-height: 44px;
-  padding: var(--space-1) 0;
-  background: transparent;
-}
-.ui-ws-nav__item:hover { background: transparent; }
-.ui-ws-nav__item--active { background: transparent; color: var(--nav-fg-strong); }
-.ui-ws-nav__icon {
-  width: 44px;
-  height: 32px;
-  border-radius: var(--radius-pill);
-  transition: background var(--motion-fast) var(--ease-standard);
-}
-.ui-ws-nav__item:hover .ui-ws-nav__icon { background: var(--nav-hover-bg); }
-.ui-ws-nav__item--active .ui-ws-nav__icon { background: var(--nav-active-bg); color: var(--nav-fg-strong); }
-.ui-ws-nav__item--active .eos-icon { font-variation-settings: "opsz" 24, "wght" 400, "FILL" 1, "GRAD" 0; }
-.ui-ws-nav__item:focus-visible { box-shadow: none; }
-.ui-ws-nav__item:focus-visible .ui-ws-nav__icon { box-shadow: var(--focus-ring); }
-/* Label → tooltip. Shown on pointer hover AND keyboard focus; the button also
-   carries aria-label, so this visual is decorative (aria-hidden in markup). */
-.ui-ws-nav__label {
-  position: absolute;
-  left: calc(100% + var(--space-2));
-  top: 50%;
-  transform: translateY(-50%) translateX(-4px);
-  padding: 4px var(--space-2);
-  background: var(--color-toast-bg);
-  color: var(--color-text-inverse);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-medium);
-  line-height: 1.2;
-  white-space: nowrap;
+  width: 64px;
+  margin: 0 auto;
   border-radius: var(--radius-sm);
-  box-shadow: var(--elevation-2);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-fast) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard);
-  z-index: 20;
 }
-.ui-ws-nav__item:hover .ui-ws-nav__label,
-.ui-ws-nav__item:focus-visible .ui-ws-nav__label {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
+.ui-ws-nav__label {
+  font-size: var(--type-label-xs-size);
+  line-height: var(--type-label-xs-lh);
 }
 
 /* ---------- Browse tables — integrated (modernization) -------------------
@@ -156,7 +125,9 @@
 .ui-ws-browse__row--head {
   text-transform: none;
   letter-spacing: 0;
-  font-size: var(--text-sm);
+  /* Eos §1.10: column headers are UI labels, not table content -> Label Medium (12/16). */
+  font-size: var(--type-label-md-size);
+  line-height: var(--type-label-md-lh);
   font-weight: var(--fw-medium);
   color: var(--color-text-secondary);
   /* sticky header sits on the workspace surface so scrolled rows don't bleed */
@@ -274,7 +245,8 @@
 .ui-topbar__env:hover { background: color-mix(in srgb, var(--color-action-primary) 6%, transparent); }
 .ui-topbar__env:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ui-topbar__env-label {
-  font-size: var(--text-sm);
+  font-size: var(--type-label-md-size);
+  line-height: var(--type-label-md-lh);
   font-weight: var(--fw-medium);
   letter-spacing: 0.5px;             /* Eos Label Medium */
   white-space: nowrap;
@@ -352,6 +324,55 @@
   color: var(--color-text-primary);
   font-weight: var(--fw-semibold);
   box-shadow: inset 2px 0 0 var(--color-action-primary);
+}
+
+/* ==========================================================================
+   Phase 8 — Responsive/Layout alignment (editor's 4-column grid)
+   WorkspaceShell only ever sets --ws-explorer-w inline (the drag-resizable
+   column); the real `grid-template-columns` declaration — and every
+   viewport-driven override below — lives here so a plain CSS media query can
+   win over that per-render inline style, which is otherwise impossible on
+   the same element/property (inline style always beats stylesheet rules).
+
+   --ws-properties-w establishes the Properties min/ideal/max band DESIGN.md
+   calls "fixed ~380–460px": clamp(380px, 24vw, 460px) lands exactly on the
+   380px floor at the 1440px reference viewport and the 460px ceiling at the
+   1920px reference viewport, scaling smoothly between them. The Explorer's
+   own min/ideal/max band (240 / 280|420 / 560) is enforced by the pointer
+   drag handler in WorkspaceShell — this file only consumes its result.
+   ========================================================================== */
+.ui-ws-editor .ui-ws {
+  --ws-properties-w: clamp(380px, 24vw, 460px);
+  grid-template-columns: var(--ws-explorer-w, 280px) 6px minmax(0, 1fr) var(--ws-properties-w);
+}
+
+/* <=900px: DESIGN.md — "Below 900px the Properties panel collapses to full
+   width." Drop it out of the column track entirely and stack it in a second
+   row spanning the full width, under the still side-by-side Explorer/Preview
+   row, rather than squeezing it into a narrow column. */
+@media (max-width: 900px) {
+  .ui-ws-editor .ui-ws {
+    grid-template-columns: var(--ws-explorer-w, 280px) 6px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .ui-ws-editor .ui-ws .ui-ws__region[aria-label="Properties"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    max-height: 45vh;
+    border-left: 0;
+    border-top: var(--border-width) solid var(--color-border-strong);
+  }
+}
+
+/* <=840px: eos-design-system.md §4 — "Responsive ≤840px: … hide resizer."
+   Explorer/Preview are still side-by-side "list | detail" panes at this
+   width, so only the drag handle disappears; the columns keep their last
+   widths (no layout jump, just the affordance goes away). */
+@media (max-width: 840px) {
+  .ui-ws-editor .ui-ws > [role="separator"][aria-label="Resize structure panel"] {
+    display: none;
+  }
 }
 
 /* ========================================================================== */

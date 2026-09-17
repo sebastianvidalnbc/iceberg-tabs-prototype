@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { AppShell } from "./AppShell";
 import { Explorer } from "./regions/Explorer";
 import { LivePreview } from "./regions/LivePreview";
@@ -574,7 +580,7 @@ export function WorkspaceShell({
           {!isPage && activeExperience && (
             <div className="ml-3 flex items-center gap-1.5">
               <span
-                className="inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-semibold"
+                className="inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[length:var(--type-label-badge-size)] leading-[length:var(--type-label-badge-lh)] font-semibold"
                 style={{
                   background: "var(--color-status-success-bg)",
                   color: "var(--color-status-success)",
@@ -641,7 +647,7 @@ export function WorkspaceShell({
                   publish is queued, with a quick way to clear it. */}
               {!isPage && scheduledAt && (
                 <span
-                  className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-medium"
+                  className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-[length:var(--type-label-badge-size)] leading-[length:var(--type-label-badge-lh)] font-medium"
                   style={{
                     background: "var(--color-status-warning-bg)",
                     color: "var(--color-status-warning)",
@@ -669,7 +675,7 @@ export function WorkspaceShell({
                   is no Save CTA — just a passive status. Required-field
                   validation still surfaces as a non-blocking hint beside it. */}
               <span
-                className="ui-cta-tip inline-flex items-center gap-1 text-[12px] font-medium text-[var(--color-text-muted)]"
+                className="ui-cta-tip inline-flex items-center gap-1 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-[var(--color-text-muted)]"
                 data-tip="All changes saved automatically"
               >
                 <Icon name="check" size={16} />
@@ -677,7 +683,7 @@ export function WorkspaceShell({
               </span>
               {issues.length > 0 && (
                 <span
-                  className="ui-cta-tip inline-flex items-center gap-1 text-[12px] font-medium"
+                  className="ui-cta-tip inline-flex items-center gap-1 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium"
                   data-tip={`${issues.length} required field${
                     issues.length === 1 ? "" : "s"
                   } need attention before publishing`}
@@ -795,9 +801,12 @@ export function WorkspaceShell({
         </div>
         <div
           className="ui-ws"
-          style={{
-            gridTemplateColumns: `${explorerWidth}px 6px minmax(0, 1fr) 380px`,
-          }}
+          // Only the drag-resizable Explorer width is set inline; the actual
+          // `grid-template-columns` declaration (and its <=900px stacked
+          // override) lives in eos.css keyed off this custom property, so a
+          // narrow-viewport media query can still win over the per-render
+          // inline style (Eos §4 layout / responsive alignment).
+          style={{ "--ws-explorer-w": `${explorerWidth}px` } as CSSProperties}
         >
           <Explorer
             context={context}
@@ -836,10 +845,12 @@ export function WorkspaceShell({
                 [context]: EXPLORER_DEFAULTS[context],
               }))
             }
-            className="group relative z-10 -mx-[3px] w-1.5 shrink-0 cursor-col-resize touch-none select-none"
+            className="group relative z-10 -mx-1 w-2 shrink-0 cursor-col-resize touch-none select-none"
           >
-            {/* Divider line — same weight/colour as the Properties panel's. */}
-            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:bg-[var(--color-action-primary)]" />
+            {/* Divider line — same weight/colour as the Properties panel's.
+                Eos §3.6 resizer: 8px hit target (the -mx-1 w-2 wrapper above);
+                idle 1px, hover/active 3px accent. */}
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[var(--color-border-strong)] transition-colors group-hover:w-[3px] group-hover:bg-[var(--color-action-primary)]" />
             {/* Grabber affordance: a 2×3-dot pill centred on the divider so it
                 reads as a draggable handle. Pointer events bubble to the parent
                 so grabbing it starts the resize. */}

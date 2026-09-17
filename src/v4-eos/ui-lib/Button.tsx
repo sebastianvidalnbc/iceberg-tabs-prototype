@@ -51,9 +51,11 @@ export function Button({
       aria-busy={loading || undefined}
       {...rest}
     >
-      {leadingIcon && <Icon name={leadingIcon} className="ui-btn__icon" />}
+      {/* Eos §3.2: "Icons in buttons: 16px". Icon defaults to 20px, so size
+          is set explicitly here rather than in CSS (Icon renders it inline). */}
+      {leadingIcon && <Icon name={leadingIcon} size={16} className="ui-btn__icon" />}
       {children}
-      {trailingIcon && <Icon name={trailingIcon} className="ui-btn__icon" />}
+      {trailingIcon && <Icon name={trailingIcon} size={16} className="ui-btn__icon" />}
       {loading && <span className="ui-btn__spinner ui-spinner" aria-hidden="true" />}
     </button>
   );
@@ -74,7 +76,7 @@ export function IconButton({ icon, className, ...rest }: IconButtonProps) {
       className={["ui-icon-btn", className ?? ""].filter(Boolean).join(" ")}
       {...rest}
     >
-      <Icon name={icon} className="ui-btn__icon" />
+      <Icon name={icon} size={16} className="ui-btn__icon" />
     </Button>
   );
 }

@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, IconButton } from "../ui-lib/Button";
 import { Badge, StatusDot } from "../ui-lib/Badge";
 import { SearchInput } from "../ui-lib/TextInput";
 import { Breadcrumb } from "../ui-lib/Breadcrumb";
+import { FilterChip } from "../ui-lib/FilterChip";
+import { TableFooter } from "../ui-lib/TableFooter";
 import { EmptyState } from "../ui-lib/EmptyState";
 import {
   buildVariantRows,
@@ -12,16 +14,35 @@ import {
   type VariantRow,
 } from "../browse";
 
+type QaFilter = "all" | "Approved" | "In review";
+
 // Variants list — the second browse level ("Variants for /slug" in real
-// Iceberg). Reached from a slug row; clicking a variant opens the editor. A
-// breadcrumb keeps the author oriented. All CTAs are prototype no-ops.
+// Iceberg; Figma 488:8901: CardHeader → Toolbar → Filters → Table →
+// TableFooter). Reached from a slug row; clicking a variant opens the editor.
+// A breadcrumb keeps the author oriented. All CTAs besides search/filters/
+// pagination are prototype no-ops.
 export function VariantsView({ pageId }: { pageId: string }) {
   const page = useMemo(() => findPageNode(pageId), [pageId]);
   const allRows = useMemo(() => buildVariantRows(pageId), [pageId]);
   const [query, setQuery] = useState("");
+  const [qaFilter, setQaFilter] = useState<QaFilter>("all");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const q = query.trim().toLowerCase();
-  const rows = q ? allRows.filter((r) => r.name.toLowerCase().includes(q)) : allRows;
+  const rows = useMemo(
+    () =>
+      allRows.filter((r) => {
+        if (q && !r.name.toLowerCase().includes(q)) return false;
+        if (qaFilter !== "all" && r.qaStatus !== qaFilter) return false;
+        return true;
+      }),
+    [allRows, q, qaFilter]
+  );
+
+  useEffect(() => setPageIndex(0), [q, qaFilter, pageSize]);
+
+  const pageRows = rows.slice(pageIndex * pageSize, pageIndex * pageSize + pageSize);
 
   const slug = page?.label ?? pageId;
 
@@ -36,22 +57,45 @@ export function VariantsView({ pageId }: { pageId: string }) {
       <header className="ui-ws-browse__head">
         <div className="ui-ws-browse__title">
           <h1 className="ui-ws-browse__h1">Variants for {slug}</h1>
-          <span className="ui-ws-browse__count">({allRows.length} results)</span>
           <IconButton icon="plus" aria-label="Create variant" className="ui-ws-browse__add" />
         </div>
+      </header>
+
+      <div className="ui-ws-browse__toolbar">
+        <SearchInput
+          size="sm"
+          value={query}
+          onChange={setQuery}
+          onClear={() => setQuery("")}
+          placeholder="Search…"
+        />
         <div className="ui-ws-browse__tools">
           <Button variant="secondary" size="sm">
             View Archived Variants
           </Button>
-          <SearchInput
-            size="sm"
-            value={query}
-            onChange={setQuery}
-            onClear={() => setQuery("")}
-            placeholder="Search…"
-          />
         </div>
-      </header>
+      </div>
+
+      <div className="ui-ws-browse__filters">
+        <Button variant="tertiary" size="sm" leadingIcon="filter">
+          All Filters
+        </Button>
+        <FilterChip
+          label="Approved"
+          active={qaFilter === "Approved"}
+          onClick={() => setQaFilter((f) => (f === "Approved" ? "all" : "Approved"))}
+        />
+        <FilterChip
+          label="In review"
+          active={qaFilter === "In review"}
+          onClick={() => setQaFilter((f) => (f === "In review" ? "all" : "In review"))}
+        />
+        {qaFilter !== "all" && (
+          <Button variant="tertiary" size="sm" leadingIcon="filter-off" onClick={() => setQaFilter("all")}>
+            Clear Filters
+          </Button>
+        )}
+      </div>
 
       <div className="ui-ws-browse__table ui-ws-browse__table--variants" role="table" aria-label={`Variants for ${slug}`}>
         <div className="ui-ws-browse__row ui-ws-browse__row--head" role="row">
@@ -64,15 +108,23 @@ export function VariantsView({ pageId }: { pageId: string }) {
           <span role="columnheader" aria-label="Actions" />
         </div>
 
-        {rows.length === 0 ? (
+        {pageRows.length === 0 ? (
           <EmptyState
             title="No variants match your search"
-            description="Try a different name or clear the search."
+            description="Try a different name or clear the search/filters."
           />
         ) : (
-          rows.map((r) => <VariantRowItem key={r.id} row={r} />)
+          pageRows.map((r) => <VariantRowItem key={r.id} row={r} />)
         )}
       </div>
+
+      <TableFooter
+        page={pageIndex}
+        pageSize={pageSize}
+        total={rows.length}
+        onPageChange={setPageIndex}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 }

@@ -192,7 +192,7 @@ function AssetPicker({
       <button
         type="button"
         onClick={() => onEdit(DEMO_ASSET)}
-        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <MSym name="add_photo_alternate" size={16} />
         Choose image…
@@ -207,7 +207,7 @@ function AssetPicker({
       >
         <Icon name="image" size={15} />
       </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+      <span className="min-w-0 flex-1 truncate text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
         {value}
       </span>
       <button
@@ -265,8 +265,8 @@ function TemplateCardButton({ card, onSelect }: { card: TemplateCard; onSelect: 
       >
         <Icon name={card.icon} size={20} />
       </span>
-      <span className="text-[13px] font-semibold text-foreground">{card.name}</span>
-      <span className="text-[11px] leading-snug text-muted-foreground">
+      <span className="text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">{card.name}</span>
+      <span className="text-[length:var(--type-body-sm-size)] leading-snug text-muted-foreground">
         {card.description}
       </span>
     </button>
@@ -292,7 +292,7 @@ function TemplateGallery({
     >
       {groups.map((group) => (
         <div key={group.label} className="flex flex-col gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+          <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             {group.label}
           </span>
           <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
@@ -547,7 +547,7 @@ function FeatureIconTile({
           <button
             type="button"
             onClick={() => onChange("")}
-            className="mt-1.5 flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="mt-1.5 flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] text-muted-foreground transition-colors hover:bg-[var(--color-status-danger-bg)] hover:text-[var(--color-status-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <MSym name="close" size={14} />
             Remove icon
@@ -617,7 +617,7 @@ function InlineFeatureItem({
               className="h-9"
             />
             {textInvalid && (
-              <p className="mt-1 text-[11px] leading-snug text-[var(--color-status-danger)]">
+              <p className="mt-1 text-[length:var(--type-label-md-size)] leading-snug text-[var(--color-status-danger)]">
                 {textField.label} is required.
               </p>
             )}
@@ -721,7 +721,7 @@ function InlineFeatureCollections({
               {atMax ? (
                 <p
                   className={cn(
-                    "text-[11px] text-muted-foreground",
+                    "text-[length:var(--type-body-sm-size)] text-muted-foreground",
                     items.length > 0
                       ? "mt-4 border-t border-[var(--color-border-subtle)] pt-4"
                       : "mt-1"
@@ -743,7 +743,7 @@ function InlineFeatureCollections({
                     onClick={() => childType && onAddChild(list.id, childType)}
                     title={`Add ${nounLower}`}
                     aria-label={`Add ${nounLower}`}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
                   >
                     <MSym name="add" size={16} />
                     Add {nounLower}
@@ -777,11 +777,16 @@ export function Properties({
 }: PropertiesProps) {
   const experienceNoun = context === "widget" ? "widget config" : "variant";
   return (
-    // Keep the shell grid contract (.ui-ws__region) + fixed width; internals are
-    // shadcn/Tailwind. Dark panel surface.
+    // Keep the shell grid contract (.ui-ws__region); internals are
+    // shadcn/Tailwind. Dark panel surface. Width is the shared
+    // --ws-properties-w custom property (declared in eos.css alongside the
+    // .ui-ws grid template) so this element's actual rendered width always
+    // matches the grid track reserved for it — DESIGN.md's "fixed ~380–460px"
+    // band, and the <=900px full-width collapse, both live there as the
+    // single source of truth instead of being duplicated/out of sync here.
     <aside
       aria-label="Properties"
-      className="ui-ws__region w-[460px] max-w-full bg-[var(--color-bg-panel)] text-foreground max-[900px]:w-full"
+      className="ui-ws__region w-[var(--ws-properties-w)] max-w-full bg-[var(--color-bg-panel)] text-foreground"
     >
       {/* Peer of the Explorer PAGES / STRUCTURE headers — the shared PanelHeader
           eyebrow, no longer a bespoke re-implementation. px-4 keeps the eyebrow
@@ -806,7 +811,7 @@ export function Properties({
               onReorderChild={onReorderChild}
             />
           ) : (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
+            <p className="text-[length:var(--type-body-md-size)] leading-relaxed text-muted-foreground">
               {selectedRouteId
                 ? `Select a ${experienceNoun}, then an object in its structure to edit its properties.`
                 : "Select an object in the structure to edit its properties."}
@@ -984,7 +989,7 @@ function FieldsBody({
           <Button
             variant="ghost"
             size="xs"
-            className="ml-auto self-center text-[12px] text-muted-foreground hover:text-foreground"
+            className="ml-auto self-center text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] text-muted-foreground hover:text-foreground"
             onClick={allCollapsed ? expandAll : collapseAll}
           >
             {allCollapsed ? "Expand all" : "Collapse all"}
@@ -1049,7 +1054,7 @@ function CollectionBody({
   return (
     <>
       <ObjectHeader eyebrow={eyebrow} name={name ?? eyebrow}>
-        <span className="ml-auto self-center text-[12px] text-muted-foreground">
+        <span className="ml-auto self-center text-[length:var(--type-body-sm-size)] text-muted-foreground">
           {count}
           {max != null ? ` / ${max}` : ""} {count === 1 ? nounLower : `${nounLower}s`}
         </span>
@@ -1069,7 +1074,7 @@ function CollectionBody({
                   style={{ background: WIDGET_FAMILY_HUE[classifyWidget(item.label)].fam }}
                 />
               )}
-              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+              <span className="min-w-0 flex-1 truncate text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
                 {item.label}
               </span>
               <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100">
@@ -1118,7 +1123,7 @@ function CollectionBody({
           Add {itemNoun}
         </Button>
         {atMax && (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[length:var(--type-body-sm-size)] text-muted-foreground">
             Maximum of {max} reached.
           </span>
         )}
@@ -1146,7 +1151,7 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
             </PropRow>
           )}
           <PropRow label="Section ID">
-            <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[12px] text-muted-foreground">
+            <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[length:var(--type-body-sm-size)] text-muted-foreground">
               {sectionId}
             </code>
           </PropRow>
@@ -1162,10 +1167,10 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
         </PropertyRows>
         {data.intelligentAffordance && (
           <section className="rounded-sm border border-border bg-[var(--color-bg-subtle)] p-3">
-            <p className="text-[13px] font-semibold text-foreground">
+            <p className="text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">
               Intelligent authoring
             </p>
-            <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+            <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-muted-foreground">
               Variations are generated per audience. Manage variant names in
               Section Options.
             </p>
@@ -1173,7 +1178,7 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
         )}
       </div>
       {note && (
-        <p className="text-[12px] leading-relaxed text-muted-foreground">{note}</p>
+        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">{note}</p>
       )}
       <Separator />
       <div className="flex flex-wrap gap-2">
@@ -1198,9 +1203,9 @@ function NoticeBody({ data }: { data: NoticeProperties }) {
     <>
       <ObjectHeader eyebrow={eyebrow} name={name} />
       <section className="rounded-sm border border-border bg-[var(--color-bg-subtle)] p-3">
-        <p className="text-[13px] font-semibold text-foreground">{message}</p>
+        <p className="text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">{message}</p>
         {detail && (
-          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+          <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-muted-foreground">
             {detail}
           </p>
         )}

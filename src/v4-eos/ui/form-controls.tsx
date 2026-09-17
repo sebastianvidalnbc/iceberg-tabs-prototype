@@ -24,7 +24,7 @@ import { cn } from "@/v4-eos/ui/lib/utils";
 // the outline comes from border-input (the strong outline role), and focus
 // lifts the fill to plain surface plus the blue ring.
 const FIELD =
-  "h-7 rounded-sm bg-[var(--color-bg-subtle)] text-[13px] focus-visible:bg-[var(--color-bg-surface)]";
+  "h-7 rounded-sm bg-[var(--color-bg-subtle)] text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] focus-visible:bg-[var(--color-bg-surface)]";
 
 export function TextField(
   props: React.ComponentProps<typeof Input> & { invalid?: boolean },
@@ -48,7 +48,7 @@ export function TextAreaField(
       {...rest}
       aria-invalid={invalid || undefined}
       className={cn(
-        "min-h-16 rounded-sm bg-[var(--color-bg-subtle)] text-[13px] focus-visible:bg-[var(--color-bg-surface)]",
+        "min-h-16 rounded-sm bg-[var(--color-bg-subtle)] text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] focus-visible:bg-[var(--color-bg-surface)]",
         className,
       )}
     />
@@ -119,7 +119,7 @@ export function SelectField({
         {options.map((raw) => {
           const opt = normalizeOption(raw);
           return (
-            <SelectItem key={opt.value} value={opt.value} className="text-[13px]">
+            <SelectItem key={opt.value} value={opt.value} className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)]">
               {opt.label}
             </SelectItem>
           );
@@ -152,7 +152,7 @@ export function RadioField({
         return (
           <div key={opt} className="flex items-center gap-2">
             <RadioGroupItem id={optId} value={opt} />
-            <Label htmlFor={optId} className="text-[13px] font-normal">
+            <Label htmlFor={optId} className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-normal">
               {opt}
             </Label>
           </div>

@@ -3,9 +3,12 @@ import { MSym } from "@/v4-eos/ui/msym";
 import { cn } from "@/v4-eos/ui/lib/utils";
 import { Input } from "@/v4-eos/ui/input";
 
-// Dark panel surfaces + headers shared by Explorer/Properties (§22). Tonal
-// hierarchy over heavy borders: panel = primary dark surface; headers use a
-// small-caps eyebrow. All values resolve through Iceberg tokens.
+// Panel surfaces + headers shared by Explorer/Properties (§22). Eos ships a
+// dense, light-mode authoring UI (design.md "Principle"), so --color-bg-panel
+// resolves to white; tonal hierarchy still comes from surface/spacing over
+// heavy borders, with a small-caps eyebrow on headers. A dark theme remains
+// available via [data-theme="dark"] (tokens.css) for surfaces that opt in
+// (e.g. V2), but is not the Eos default. All values resolve through tokens.
 
 export function Panel({ className, ...props }: React.ComponentProps<"section">) {
   return (
@@ -48,17 +51,17 @@ export function PanelHeader({
         {leading}
         <div className="flex min-w-0 flex-col gap-0.5">
           {eyebrow && (
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               {eyebrow}
             </span>
           )}
           {title && (
-            <span className="truncate text-[13px] font-semibold text-foreground">
+            <span className="truncate text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">
               {title}
             </span>
           )}
           {sub && (
-            <span className="truncate text-[12px] text-muted-foreground">
+            <span className="truncate text-[length:var(--type-body-sm-size)] text-muted-foreground">
               {sub}
             </span>
           )}
@@ -95,7 +98,7 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-7 rounded-sm bg-[var(--color-bg-control)] pl-7 pr-7 text-[12px]"
+        className="h-8 rounded-sm bg-[var(--color-bg-control)] pl-7 pr-7 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)]"
       />
       {value && onClear && (
         <button

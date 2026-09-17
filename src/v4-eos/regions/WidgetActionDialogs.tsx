@@ -104,38 +104,38 @@ export function PrePublishDialog({
         </DialogHeader>
         <ScrollArea className="max-h-[52vh] min-h-0 px-5">
           <section className="flex flex-col gap-2 py-2">
-            <h4 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            <h4 className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               What customers will see · {scenarios.length} offers
             </h4>
             <ul className="flex flex-col divide-y divide-[var(--color-border-subtle)]">
               {scenarios.slice(0, 8).map((s, i) => (
-                <li key={i} className="flex items-start gap-2 py-1.5 text-[13px]">
+                <li key={i} className="flex items-start gap-2 py-1.5 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)]">
                   <Badge variant={s.live ? "success" : "default"}>
                     {s.live ? "Live" : "Idle"}
                   </Badge>
                   <span className="min-w-0">
                     <span className="font-medium text-foreground">{s.headline}</span>
-                    <span className="block text-[12px] text-muted-foreground">{s.detail}</span>
+                    <span className="block text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-muted-foreground">{s.detail}</span>
                   </span>
                 </li>
               ))}
               {scenarios.length > 8 && (
-                <li className="py-1.5 text-[12px] text-muted-foreground">
+                <li className="py-1.5 text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-muted-foreground">
                   + {scenarios.length - 8} more…
                 </li>
               )}
             </ul>
           </section>
           <section className="flex flex-col gap-1.5 border-t border-[var(--color-border-subtle)] py-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            <h4 className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
               Pre-publish checks
             </h4>
             {totalWarnings === 0 ? (
-              <p className="flex items-center gap-1.5 text-[13px] text-[var(--color-status-success)]">
+              <p className="flex items-center gap-1.5 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-[var(--color-status-success)]">
                 <MSym name="check_circle" size={16} /> No issues detected.
               </p>
             ) : (
-              <ul className="flex flex-col gap-1 text-[13px] text-[var(--color-status-warning)]">
+              <ul className="flex flex-col gap-1 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-[var(--color-status-warning)]">
                 {issueCount > 0 && (
                   <li className="flex items-center gap-1.5">
                     <MSym name="warning" size={16} /> {issueCount} required field
@@ -198,7 +198,7 @@ export function ScheduleDialog({
         <div className="px-5 py-4">
           <label
             htmlFor="schedule-release-at"
-            className="mb-1.5 block text-[12px] font-medium text-muted-foreground"
+            className="mb-1.5 block text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-muted-foreground"
           >
             Release at
           </label>
@@ -207,7 +207,7 @@ export function ScheduleDialog({
             type="datetime-local"
             value={when}
             onChange={(e) => setWhen(e.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-[var(--color-bg-subtle)] px-3 text-[13px] text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="h-10 w-full rounded-md border border-input bg-[var(--color-bg-subtle)] px-3 text-[length:var(--type-body-md-size)] text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           />
         </div>
         <DialogFooter>
@@ -272,10 +272,10 @@ export function HistoryDialog({
               <li key={i} className="flex items-start gap-3 py-2.5">
                 <Badge variant={h.tone ?? "default"}>{h.action}</Badge>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] text-foreground">
+                  <p className="text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
                     {h.note ? `${h.action} ${h.note}` : h.action}
                   </p>
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-muted-foreground">
                     {h.when} · {h.who}
                   </p>
                 </div>

@@ -28,7 +28,7 @@ const PREVIEW_BASE = `${import.meta.env.BASE_URL}layout-previews/`;
 function ExperimentBadge() {
   return (
     <span
-      className="rounded-[3px] px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-white"
+      className="rounded-[3px] px-1.5 py-0.5 text-[length:var(--type-label-badge-size)] leading-[length:var(--type-label-badge-lh)] font-bold uppercase tracking-[0.06em] text-white"
       style={{ backgroundColor: "var(--color-status-experiment)" }}
     >
       Experiment
@@ -41,7 +41,7 @@ function ExperimentBadge() {
 function PreviewImage({ file, caption }: { file: string; caption: string }) {
   return (
     <figure className="flex flex-col items-center gap-1.5">
-      <figcaption className="text-[11px] font-medium text-[var(--color-text-secondary)]">
+      <figcaption className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-[var(--color-text-secondary)]">
         {caption}
       </figcaption>
       <img
@@ -59,7 +59,7 @@ function PreviewImage({ file, caption }: { file: string; caption: string }) {
 function PreviewPane({ layout }: { layout: LayoutDef | null }) {
   if (!layout) {
     return (
-      <div className="grid h-full place-items-center p-6 text-center text-[13px] text-muted-foreground">
+      <div className="grid h-full place-items-center p-6 text-center text-[length:var(--type-body-md-size)] text-muted-foreground">
         Select a layout to preview it.
       </div>
     );
@@ -69,10 +69,10 @@ function PreviewPane({ layout }: { layout: LayoutDef | null }) {
   return (
     <div className="flex h-full flex-col gap-4 p-5">
       <div className="flex items-center gap-2">
-        <h3 className="text-[16px] font-semibold text-foreground">{layout.name}</h3>
+        <h3 className="text-[length:var(--type-title-md-size)] leading-[length:var(--type-title-md-lh)] font-semibold text-foreground">{layout.name}</h3>
         {layout.experiment && <ExperimentBadge />}
       </div>
-      <p className="text-[12px] leading-snug text-muted-foreground">
+      <p className="text-[length:var(--type-body-sm-size)] leading-snug text-muted-foreground">
         {layout.description}
       </p>
       {hasArt ? (
@@ -82,7 +82,7 @@ function PreviewPane({ layout }: { layout: LayoutDef | null }) {
           {p!.desktop && <PreviewImage file={p!.desktop} caption="Desktop" />}
         </div>
       ) : (
-        <div className="grid flex-1 place-items-center rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border-default)] p-8 text-center text-[12px] text-muted-foreground">
+        <div className="grid flex-1 place-items-center rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border-default)] p-8 text-center text-[length:var(--type-body-sm-size)] text-muted-foreground">
           No preview available
         </div>
       )}
@@ -186,13 +186,13 @@ export function LayoutPicker({
             <ScrollArea className="h-[56vh] min-h-0">
               <div className="flex flex-col gap-3 px-2 pb-3">
                 {grouped.length === 0 && (
-                  <p className="px-2 py-4 text-[13px] text-muted-foreground">
+                  <p className="px-2 py-4 text-[length:var(--type-body-md-size)] text-muted-foreground">
                     No layouts match “{query}”.
                   </p>
                 )}
                 {grouped.map(({ group, layouts }) => (
                   <section key={group} className="flex flex-col gap-0.5">
-                    <h4 className="px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-secondary)]">
+                    <h4 className="px-2 py-1 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-[var(--color-text-secondary)]">
                       {group}
                     </h4>
                     {layouts.map((l) => {
@@ -205,7 +205,7 @@ export function LayoutPicker({
                           onClick={() => setSelectedId(l.id)}
                           onDoubleClick={() => confirm(l.id)}
                           className={
-                            "flex items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 " +
+                            "flex items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-left text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 " +
                             (active
                               ? "bg-[var(--color-action-primary)] text-white"
                               : "text-foreground hover:bg-[var(--color-bg-subtle)]")

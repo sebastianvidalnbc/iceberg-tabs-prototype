@@ -68,7 +68,7 @@ export function AppNav({ context, onSelectContext }: AppNavProps) {
             >
               <span className="ui-ws-nav__icon" aria-hidden="true">
                 {icon ? (
-                  <Icon name={icon} size={24} />
+                  <Icon name={icon} size={22} />
                 ) : (
                   <span className="ui-ws-nav__initial">
                     {item.label.charAt(0)}

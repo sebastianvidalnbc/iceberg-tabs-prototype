@@ -14,6 +14,9 @@
 export type IconName =
   | "chevron-right"
   | "chevron-down"
+  | "chevron-left"
+  | "filter"
+  | "filter-off"
   | "grip"
   | "dots"
   | "search"
@@ -70,8 +73,12 @@ const LIGATURES: Record<IconName, string> = {
   // Structure / disclosure
   "chevron-right": "chevron_right",
   "chevron-down": "keyboard_arrow_down",
+  "chevron-left": "chevron_left",
   grip: "drag_indicator",
   dots: "more_vert",
+  // Filters row (Tables / Selection row, Figma 488:8901)
+  filter: "tune",
+  "filter-off": "filter_alt_off",
   // Common actions
   search: "search",
   plus: "add",

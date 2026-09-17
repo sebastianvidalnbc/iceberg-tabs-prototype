@@ -1,9 +1,10 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Button, IconButton } from "../ui-lib/Button";
 import { Badge } from "../ui-lib/Badge";
 import { Icon } from "../ui-lib/Icon";
 import { SearchInput } from "../ui-lib/TextInput";
-import { SegmentedControl } from "../ui-lib/SegmentedControl";
+import { FilterChip } from "../ui-lib/FilterChip";
+import { TableFooter } from "../ui-lib/TableFooter";
 import { EmptyState } from "../ui-lib/EmptyState";
 import {
   buildWidgetRows,
@@ -17,15 +18,18 @@ import {
 } from "../browse";
 
 // Widgets list — a SINGLE list, now organised by widget Type so 20+ mixed
-// widgets stay scannable. A Type filter sits above the table and rows are
-// grouped under collapsible Type section headers (Retention pinned first).
-// Search matches slugs; a widget slug still expands INLINE to reveal the entries
-// it owns under a "Pages:" label. Clicking a child opens the editor. All CTAs
-// are prototype no-ops.
+// widgets stay scannable (Figma 488:8901: CardHeader → Toolbar → Filters →
+// Table → TableFooter). A Type filter chip row sits above the table and rows
+// are grouped under collapsible Type section headers (Retention pinned
+// first). Search matches slugs; a widget slug still expands INLINE to reveal
+// the entries it owns under a "Pages:" label. Clicking a child opens the
+// editor. All CTAs besides search/filters/pagination are prototype no-ops.
 export function WidgetsView() {
   const allRows = useMemo(() => buildWidgetRows(), []);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | WidgetType>("all");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   // Single-open accordion: the id of the currently expanded widget, or null.
   const [openId, setOpenId] = useState<string | null>(null);
   // Per-Type collapse memory for the group section headers.
@@ -38,7 +42,8 @@ export function WidgetsView() {
     ? allRows.filter((r) => r.slug.toLowerCase().includes(q))
     : allRows;
 
-  // Per-Type counts over the current search results — drive the filter labels.
+  // Per-Type counts over the current search results — drive the filter chip
+  // labels and hide chips for types with zero matches.
   const typeCounts = useMemo(() => {
     const acc = {} as Record<WidgetType, number>;
     for (const r of searched) acc[r.type] = (acc[r.type] ?? 0) + 1;
@@ -54,20 +59,17 @@ export function WidgetsView() {
     effectiveFilter === "all"
       ? searched
       : searched.filter((r) => r.type === effectiveFilter);
-  const groups = groupWidgetRows(filtered);
+
+  // Reset to page 1 whenever the visible row set changes shape.
+  useEffect(() => setPage(0), [q, effectiveFilter, pageSize]);
+
+  const pageRows = filtered.slice(page * pageSize, page * pageSize + pageSize);
+  const groups = groupWidgetRows(pageRows);
 
   // Searching, or narrowing to one type, forces every visible group open so
   // matches are never hidden behind a collapsed header.
   const forceOpen = q !== "" || effectiveFilter !== "all";
   const isCollapsed = (t: WidgetType) => !forceOpen && collapsedGroups.has(t);
-
-  const filterOptions = [
-    { label: `All (${searched.length})`, value: "all" },
-    ...WIDGET_TYPE_ORDER.filter((t) => typeCounts[t] > 0).map((t) => ({
-      label: `${t} (${typeCounts[t]})`,
-      value: t,
-    })),
-  ];
 
   const toggleRow = (id: string) => setOpenId((cur) => (cur === id ? null : id));
   const toggleGroup = (t: WidgetType) =>
@@ -82,30 +84,42 @@ export function WidgetsView() {
       <header className="ui-ws-browse__head">
         <div className="ui-ws-browse__title">
           <h1 className="ui-ws-browse__h1">Widgets</h1>
-          <span className="ui-ws-browse__count">({allRows.length} results)</span>
           <IconButton icon="plus" aria-label="Create widget" className="ui-ws-browse__add" />
         </div>
+      </header>
+
+      <div className="ui-ws-browse__toolbar">
+        <SearchInput
+          size="sm"
+          value={query}
+          onChange={setQuery}
+          onClear={() => setQuery("")}
+          placeholder="Search…"
+        />
         <div className="ui-ws-browse__tools">
           <Button variant="secondary" size="sm">
             View Archived Widgets
           </Button>
-          <SearchInput
-            size="sm"
-            value={query}
-            onChange={setQuery}
-            onClear={() => setQuery("")}
-            placeholder="Search…"
-          />
         </div>
-      </header>
+      </div>
 
       <div className="ui-ws-browse__filters">
-        <SegmentedControl
-          aria-label="Filter widgets by type"
-          options={filterOptions}
-          value={effectiveFilter}
-          onChange={(v) => setTypeFilter(v as "all" | WidgetType)}
-        />
+        <Button variant="tertiary" size="sm" leadingIcon="filter">
+          All Filters
+        </Button>
+        {WIDGET_TYPE_ORDER.filter((t) => typeCounts[t] > 0).map((t) => (
+          <FilterChip
+            key={t}
+            label={`${t} (${typeCounts[t]})`}
+            active={effectiveFilter === t}
+            onClick={() => setTypeFilter((f) => (f === t ? "all" : t))}
+          />
+        ))}
+        {effectiveFilter !== "all" && (
+          <Button variant="tertiary" size="sm" leadingIcon="filter-off" onClick={() => setTypeFilter("all")}>
+            Clear Filters
+          </Button>
+        )}
       </div>
 
       <div className="ui-ws-browse__table ui-ws-browse__table--widgets" role="table" aria-label="Widgets">
@@ -146,6 +160,14 @@ export function WidgetsView() {
           })
         )}
       </div>
+
+      <TableFooter
+        page={page}
+        pageSize={pageSize}
+        total={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 }
