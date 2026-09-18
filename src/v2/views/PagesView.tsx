@@ -50,14 +50,6 @@ export function PagesView() {
           <IconButton icon="plus" aria-label="Create page" variant="primary" />
         </div>
         <div className="ui-ws-browse__tools">
-          <Button
-            variant="secondary"
-            size="sm"
-            leadingIcon="blocks"
-            onClick={() => navigate(routes.designSystem())}
-          >
-            Design System
-          </Button>
           <Button variant="secondary" size="sm">
             View Archived Pages
           </Button>
