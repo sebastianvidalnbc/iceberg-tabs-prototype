@@ -82,14 +82,6 @@ export function PagesView() {
           placeholder="Search…"
         />
         <div className="ui-ws-browse__tools">
-          <Button
-            variant="secondary"
-            size="sm"
-            leadingIcon="grid"
-            onClick={() => navigate(routes.designSystem())}
-          >
-            Design System
-          </Button>
           <Button variant="secondary" size="sm">
             View Archived Pages
           </Button>
