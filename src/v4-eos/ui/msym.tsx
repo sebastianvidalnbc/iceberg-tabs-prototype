@@ -19,7 +19,7 @@ export function MSym({
   return (
     <span
       aria-hidden
-      className={cn("eos-icon material-symbols-outlined", className)}
+      className={cn("eos-icon material-symbols-rounded", className)}
       style={{
         fontSize: size,
         fontVariationSettings: `'opsz' ${size}, 'wght' 400, 'FILL' ${filled ? 1 : 0}, 'GRAD' 0`,

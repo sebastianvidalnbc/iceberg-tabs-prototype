@@ -3,7 +3,7 @@
 // Eos's icon set IS Material Symbols (confirmed from the Eos Library Figma:
 // the "Icons" page contains 130+ Material Symbols components — search, add,
 // edit, delete, archive, more_vert, chevron_*, keyboard_arrow_*, etc.). So V4
-// renders icons via the Material Symbols Outlined font (loaded in v4.html)
+// renders icons via the Material Symbols Rounded font (loaded in v4.html)
 // instead of V2's hand-rolled stroke SVGs.
 //
 // The `IconName` union is kept stable (same names V2 used, plus a few
@@ -64,7 +64,9 @@ export type IconName =
   | "preview"
   | "schedule"
   | "history"
-  | "close";
+  | "close"
+  | "first-page"
+  | "last-page";
 
 // IconName → Material Symbols ligature. Documented mapping (Phase 4 audit):
 //   Nav destinations use the closest Material Symbol to each Iceberg concept;
@@ -125,7 +127,9 @@ const LIGATURES: Record<IconName, string> = {
   preview: "open_in_new", // Preview (opens the renderer in a new tab)
   schedule: "calendar_add_on", // Schedule a release
   history: "history", // Publish / release history
-  close: "close", // Dismiss / clear (e.g. cancel a scheduled release)
+  close: "close",
+  "first-page": "first_page",
+  "last-page": "last_page",
 };
 
 export function Icon({
@@ -139,7 +143,7 @@ export function Icon({
 }) {
   return (
     <span
-      className={`eos-icon material-symbols-outlined${className ? ` ${className}` : ""}`}
+      className={`eos-icon material-symbols-rounded${className ? ` ${className}` : ""}`}
       style={{ fontSize: size, width: size, height: size }}
       aria-hidden="true"
     >

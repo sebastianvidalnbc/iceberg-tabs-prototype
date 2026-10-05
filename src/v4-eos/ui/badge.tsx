@@ -21,10 +21,10 @@ const badgeVariants = cva(
         // Iceberg status variants — tinted fill + status foreground, mapped to
         // the semantic tokens (§28). Not shadcn defaults.
         success:
-          "border-transparent bg-[var(--color-status-success-bg)] text-[var(--color-status-success)]",
+          "border-[color-mix(in_srgb,var(--color-status-success)_40%,transparent)] bg-[var(--color-status-success-bg)] text-[var(--color-status-success)]",
         warning:
-          "border-transparent bg-[var(--color-status-warning-bg)] text-[var(--color-status-warning)]",
-        info: "border-transparent bg-[var(--color-status-info-bg)] text-[var(--color-status-info)]",
+          "border-[color-mix(in_srgb,var(--color-status-warning)_40%,transparent)] bg-[var(--color-status-warning-bg)] text-[var(--color-status-warning)]",
+        info: "border-[color-mix(in_srgb,var(--color-status-info)_40%,transparent)] bg-[var(--color-status-info-bg)] text-[var(--color-status-info)]",
       },
     },
     defaultVariants: {

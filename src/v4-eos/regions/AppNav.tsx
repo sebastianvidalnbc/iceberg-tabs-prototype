@@ -2,6 +2,12 @@ import { V2_APP_NAV, type AuthoringContext } from "../data";
 import { Icon, type IconName } from "../ui-lib/Icon";
 import { IcebergLogo } from "../ui-lib/IcebergLogo";
 import { routes, navigate } from "../browse";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 // Distinct icon per nav destination, keyed by the V2 nav label. Any unmapped
 // item falls back to its initial letter (see lookup in the render).
@@ -29,59 +35,64 @@ interface AppNavProps {
   onSelectContext: (context: AuthoringContext) => void;
 }
 
-// Narrow, subordinate left rail rendered as a scrolling column of icon+label
-// tiles. Each item stacks a semantic icon above a compact, centered label so
-// the rail stays identifiable while remaining narrow. The first two items
-// (Pages / Widgets) are actionable and bound to an AuthoringContext; the rest
-// mirror the Iceberg IA but stay inert for now. Inactive items keep the standard
-// nav appearance (they are not disabled — just non-navigating).
-//
-// The rail is persistent global chrome: it is rendered by AppShell across every
-// V2 level (Pages list, Variants list, editor), not only inside the editor.
+// Narrow left rail: icon-only tiles. Names appear in an instant tooltip on
+// hover/focus (DESIGN.md Navigation). Pages / Widgets are actionable; the
+// rest stay inert and keep the same appearance.
 export function AppNav({ context, onSelectContext }: AppNavProps) {
   return (
-    <nav className="ui-ws__region ui-ws-nav" aria-label="Primary">
-      <button
-        type="button"
-        className="ui-ws-nav__brand ui-ws-nav__brand--link"
-        aria-label="Iceberg home"
-        title="Home"
-        onClick={() => navigate(routes.home())}
-      >
-        <IcebergLogo height={26} />
-      </button>
-      <div className="ui-ws-nav__list">
-        {V2_APP_NAV.map((item) => {
-          const actionable = item.context !== undefined;
-          const active = actionable && item.context === context;
-          const icon = NAV_ICONS[item.label];
-          return (
+    <TooltipProvider delayDuration={0}>
+      <nav className="ui-ws__region ui-ws-nav" aria-label="Primary">
+        <Tooltip>
+          <TooltipTrigger asChild>
             <button
-              key={item.id}
               type="button"
-              className={`ui-ws-nav__item${active ? " ui-ws-nav__item--active" : ""}`}
-              aria-current={active ? "page" : undefined}
-              aria-label={item.label}
-              onClick={
-                actionable ? () => onSelectContext(item.context!) : undefined
-              }
+              className="ui-ws-nav__brand ui-ws-nav__brand--link"
+              aria-label="Iceberg home"
+              onClick={() => navigate(routes.home())}
             >
-              <span className="ui-ws-nav__icon" aria-hidden="true">
-                {icon ? (
-                  <Icon name={icon} size={22} />
-                ) : (
-                  <span className="ui-ws-nav__initial">
-                    {item.label.charAt(0)}
-                  </span>
-                )}
-              </span>
-              <span className="ui-ws-nav__label" aria-hidden="true">
-                {item.label}
-              </span>
+              <IcebergLogo height={26} />
             </button>
-          );
-        })}
-      </div>
-    </nav>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={8} className="ui-ws-nav__tip">
+            Home
+          </TooltipContent>
+        </Tooltip>
+        <div className="ui-ws-nav__list">
+          {V2_APP_NAV.map((item) => {
+            const actionable = item.context !== undefined;
+            const active = actionable && item.context === context;
+            const icon = NAV_ICONS[item.label];
+            return (
+              <Tooltip key={item.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className={`ui-ws-nav__item${active ? " ui-ws-nav__item--active" : ""}`}
+                    aria-current={active ? "page" : undefined}
+                    aria-label={item.label}
+                    onClick={
+                      actionable ? () => onSelectContext(item.context!) : undefined
+                    }
+                  >
+                    <span className="ui-ws-nav__icon" aria-hidden="true">
+                      {icon ? (
+                        <Icon name={icon} size={22} />
+                      ) : (
+                        <span className="ui-ws-nav__initial">
+                          {item.label.charAt(0)}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="ui-ws-nav__tip">
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </nav>
+    </TooltipProvider>
   );
 }

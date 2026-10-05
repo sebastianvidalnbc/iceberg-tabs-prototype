@@ -43,6 +43,13 @@ export function TableFooter({
       </span>
       <div className="ui-table-footer__nav">
         <IconButton
+          icon="first-page"
+          aria-label="First page"
+          size="sm"
+          disabled={!canPrev}
+          onClick={() => onPageChange(0)}
+        />
+        <IconButton
           icon="chevron-left"
           aria-label="Previous page"
           size="sm"
@@ -55,6 +62,13 @@ export function TableFooter({
           size="sm"
           disabled={!canNext}
           onClick={() => onPageChange(clampedPage + 1)}
+        />
+        <IconButton
+          icon="last-page"
+          aria-label="Last page"
+          size="sm"
+          disabled={!canNext}
+          onClick={() => onPageChange(pageCount - 1)}
         />
       </div>
     </div>

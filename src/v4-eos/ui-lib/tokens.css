@@ -60,10 +60,11 @@
      the prior Iceberg-blue (#01699b) application-system override; #01699b
      remains only in the literal Iceberg logo mark (IcebergLogo.tsx, hardcoded
      SVG fills), which is a brand asset, not the foundational action role. */
-  --color-action-primary: #1a73e8;         /* Eos --brand / --brand-accent */
-  --color-action-primary-hover: #1662c5;   /* computed: accent × 0.85 (mechanical darken; no Eos hover token published) */
-  --color-action-primary-bg: #e8f0fe;      /* Eos --selected-bg (ghost/selected fills) */
-  --color-action-primary-border: var(--color-action-primary); /* Eos --selected-border == --brand-accent */
+  --color-action-primary: #1a73e8;         /* Eos --brand-primary */
+  --color-action-primary-hover: #186ad5;   /* Eos --brand-hover (Primary + 8% black) */
+  --color-action-primary-pressed: #1661c3; /* Eos --brand-pressed (Primary + 16% black) */
+  --color-action-primary-bg: #e8f0fe;      /* Eos --brand-container / --selected-bg */
+  --color-action-primary-border: var(--color-action-primary); /* Eos --selected-border */
   /* Status — Eos exposes danger + success (§2.1); warning/info have no Eos
      role yet (documented gap) and keep their prior accessible tones pending
      Eos guidance. */
@@ -88,9 +89,10 @@
      (§3.1). Active state is a plain neutral fill, NOT a blue tint. */
   --color-nav-chrome-bg: #f0f0f0;          /* Eos --sidebar */
   --color-nav-chrome-fg: #757575;          /* Eos --text-soft (idle) */
-  --color-nav-chrome-fg-strong: #131416;   /* Eos --text (active) */
-  --color-nav-chrome-hover-bg: rgba(0, 0, 0, 0.05); /* Eos hover: rgba(0,0,0,.05) */
-  --color-nav-chrome-active-bg: #e8e8e8;   /* Eos --sidebar-active */
+  --color-nav-chrome-fg-strong: #131416;   /* Eos --text */
+  --color-nav-chrome-hover-bg: color-mix(in srgb, var(--color-action-primary-bg) 45%, transparent);
+  --color-nav-chrome-active-bg: var(--color-action-primary-bg);
+  --color-nav-chrome-active-fg: var(--color-action-primary);
   --color-nav-chrome-border: var(--color-border-subtle);
   /* Focus — Eos uses the brand accent for the focus indicator (§3.3). */
   --color-focus-ring: var(--color-action-primary);
@@ -127,6 +129,10 @@
   /* Backdrop behind the floating workspace surfaces (deeper than Surface so the
      rail + workspace read as inset sheets). Eos --sidebar neutral. */
   --color-bg-app: #f0f0f0;
+  /* Eos Library Opshub bar (Overlay): white 48px chrome, black lockup. */
+  --color-opshub: #ffffff;
+  --color-opshub-fg: #000000;
+  --color-opshub-env-intnft: #275996;
   /* Hairline for quiet in-surface separation (lighter than border-default).
      UNKNOWN / PENDING EOS VERIFICATION — Eos (§2.1) defines only two border
      tiers (--border / --border-strong), no separate subtle/hairline role;
@@ -172,7 +178,7 @@
      does not affect any consumer in this phase. These roles are NEW — no
      component consumes them yet; component-level adoption is a later phase.
      --------------------------------------------------------------------- */
-  --type-display-lg-size: 57px; --type-display-lg-lh: 64px;
+  --type-display-lg-size: 57px; --type-display-lg-lh: 67px;
   --type-display-md-size: 45px; --type-display-md-lh: 52px;
   --type-display-sm-size: 36px; --type-display-sm-lh: 44px;
   --type-headline-lg-size: 32px; --type-headline-lg-lh: 40px;
@@ -188,6 +194,7 @@
   --type-label-md-size: 12px; --type-label-md-lh: 16px;
   --type-label-xs-size: 10px; --type-label-xs-lh: 16px;
   --type-label-badge-size: 9px; --type-label-badge-lh: 16px;
+  --type-label-env-size: 8px;   /* Eos Opshub env-chip wordmark (Figma 449:15743) */
   /* Motion */
   --motion-fast: 120ms;
   --motion-normal: 160ms;

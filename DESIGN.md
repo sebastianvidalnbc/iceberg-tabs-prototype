@@ -2,6 +2,7 @@
 name: Iceberg Authoring Chrome
 description: The Eos-based design system for the Iceberg CMS editor UI (authoring chrome only; the Peacock customer preview is a separate, isolated world).
 colors:
+  opshub: "#ffffff"
   iceberg-blue: "#01699b"
   iceberg-blue-hover: "#004b73"
   iceberg-blue-bg: "#e2eff5"
@@ -64,7 +65,7 @@ typography:
     lineHeight: 1.15
     letterSpacing: "0.06em"
   icon:
-    fontFamily: "Material Symbols Outlined"
+    fontFamily: "Material Symbols Rounded"
     fontSize: "18px"
     fontWeight: 400
     lineHeight: 1

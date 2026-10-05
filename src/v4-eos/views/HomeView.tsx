@@ -267,7 +267,7 @@ export function HomeView() {
           <div className="min-w-0">
             <span className={EYEBROW}>Iceberg · Commerce CMS</span>
             {/* Eos §1.11 "Detail H1" -> Headline Small (24/32). */}
-            <h1 className="mt-1 text-[length:var(--type-headline-sm-size)] font-bold leading-tight tracking-[-0.01em] text-[var(--color-text-primary)]">
+            <h1 className="mt-1 text-[length:var(--type-headline-lg-size)] font-bold leading-[length:var(--type-headline-lg-lh)] tracking-[-0.01em] text-[var(--color-text-primary)]">
               Dashboard
             </h1>
             <p className="mt-1 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-[var(--color-text-secondary)]">

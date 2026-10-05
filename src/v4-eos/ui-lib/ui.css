@@ -25,6 +25,7 @@
 .ui-btn--sm { height: var(--control-height-sm); font-size: var(--type-label-md-size); line-height: var(--type-label-md-lh); }
 .ui-btn--primary { background: var(--color-action-primary); color: var(--color-text-inverse); }
 .ui-btn--primary:hover { background: var(--color-action-primary-hover); }
+.ui-btn--primary:active { background: var(--color-action-primary-pressed); }
 .ui-btn--secondary {
   background: var(--color-bg-surface); color: var(--color-text-primary);
   border-color: var(--color-border-strong);
@@ -60,8 +61,7 @@
 .ui-control {
   height: var(--control-height-md); padding: 0 var(--control-pad-x);
   border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-field);
-  /* Eos §1.6 Body Medium (14/20): field/search input text reads as content. */
-  font: var(--fw-regular) var(--type-body-md-size) / var(--type-body-md-lh) var(--font-sans);
+  font: var(--fw-regular) 13px / 20px var(--font-sans);
   color: var(--color-text-primary); background: var(--color-bg-control); outline: none;
   transition: border-color var(--motion-fast) var(--ease-standard),
     box-shadow var(--motion-fast) var(--ease-standard);
@@ -76,7 +76,7 @@
 .ui-input { width: 100%; }
 .ui-select { width: 100%; cursor: pointer; }
 .ui-textarea {
-  width: 100%; height: auto; min-height: calc(var(--control-height-md) * 2);
+  width: 100%; height: auto; min-height: 88px;
   padding: var(--space-2) var(--control-pad-x); resize: vertical; line-height: var(--lh-normal);
 }
 
@@ -243,7 +243,17 @@
 .ui-callout--warning { background: var(--color-status-warning-bg); color: var(--color-status-warning); }
 .ui-callout--danger { background: var(--color-status-danger-bg); color: var(--color-status-danger); }
 
-.ui-toast-host { position: fixed; right: 20px; bottom: 20px; z-index: var(--z-overlay); display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-end; }
+.ui-toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-6);
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  transform: translateX(-50%);
+}
 .ui-toast {
   text-align: left; font-size: var(--type-body-md-size); line-height: var(--type-body-md-lh); font-weight: var(--fw-medium); color: var(--color-text-inverse);
   background: var(--color-toast-bg); border: var(--border-width) solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md);
@@ -260,10 +270,26 @@
   padding: 3px 10px; border-radius: var(--radius-pill); background: var(--color-bg-subtle);
   border: var(--border-width) solid var(--color-border-default); color: var(--color-text-secondary);
 }
-.ui-badge--success { background: var(--color-status-success-bg); color: var(--color-status-success); border-color: transparent; }
-.ui-badge--warning { background: var(--color-status-warning-bg); color: var(--color-status-warning); border-color: transparent; }
-.ui-badge--danger { background: var(--color-status-danger-bg); color: var(--color-status-danger); border-color: transparent; }
-.ui-badge--info { background: var(--color-status-info-bg); color: var(--color-status-info); border-color: transparent; }
+.ui-badge--success {
+  background: var(--color-status-success-bg);
+  color: var(--color-status-success);
+  border-color: color-mix(in srgb, var(--color-status-success) 40%, transparent);
+}
+.ui-badge--warning {
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning);
+  border-color: color-mix(in srgb, var(--color-status-warning) 40%, transparent);
+}
+.ui-badge--danger {
+  background: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+  border-color: color-mix(in srgb, var(--color-status-danger) 40%, transparent);
+}
+.ui-badge--info {
+  background: var(--color-status-info-bg);
+  color: var(--color-status-info);
+  border-color: color-mix(in srgb, var(--color-status-info) 40%, transparent);
+}
 
 .ui-status-dot { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); color: var(--color-text-secondary); }
 .ui-status-dot__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--color-text-muted); }
@@ -791,7 +817,7 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
    width table views mirroring real Iceberg's browse screens. Token-driven,
    scoped under .ui-ws-browse so V1 is unaffected.
    ============================================================================ */
-.ui-ws-browse { flex: 1; min-height: 0; overflow-y: auto; background: var(--color-bg-panel); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
+.ui-ws-browse { flex: 1; min-height: 0; overflow-y: auto; background: var(--color-bg-panel); color: var(--color-text-primary); font-family: var(--font-sans); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
 .ui-ws-browse .ui-breadcrumb { margin-bottom: var(--space-1); }
 .ui-ws-browse__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
 .ui-ws-browse__title { display: flex; align-items: center; gap: var(--space-3); }
@@ -839,7 +865,7 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 .ui-filter-chip {
   display: inline-flex; align-items: center; gap: var(--space-1);
   height: var(--control-height-sm); padding: 0 var(--space-3);
-  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-field);
   background: var(--color-bg-surface); color: var(--color-text-secondary);
   /* Eos §1.11: interactive filter chip -> Label Large (14/20), like other chips/tabs. */
   font: var(--fw-medium) var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-sans);
@@ -852,7 +878,17 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 
 /* TableFooter (Figma 488:8901, node 453:29053): rows-per-page select, range
    readout, prev/next navigation — right-aligned under the table. */
-.ui-table-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-5); padding: var(--space-2) 0; font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); color: var(--color-text-secondary); }
+.ui-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  min-height: 44px;
+  padding: 0;
+  font-size: var(--type-label-md-size);
+  line-height: var(--type-label-md-lh);
+  color: var(--color-text-secondary);
+}
 .ui-table-footer__size { display: flex; align-items: center; gap: var(--space-2); }
 .ui-table-footer__label { white-space: nowrap; }
 .ui-table-footer__size .ui-select { width: auto; }

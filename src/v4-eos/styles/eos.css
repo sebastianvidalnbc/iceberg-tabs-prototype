@@ -17,7 +17,7 @@
 
 /* ---------- Material Symbols (Eos icon set) ------------------------------- */
 .eos-icon {
-  font-family: "Material Symbols Outlined";
+  font-family: "Material Symbols Rounded";
   font-weight: normal;
   font-style: normal;
   line-height: 1;
@@ -79,28 +79,47 @@
 }
 
 /* ---------- Eos vertical Navigation rail (design.md §3.1) ------------------
-   Phase 3 — replaces the prior "floating tool rail" pill/tooltip pattern
-   (60px width, white rounded floating panel, 44×32 pill icon capsule, labels
-   as hover/focus tooltips) with the shipping Eos rail: 80px width, flush
-   --sidebar (#f0f0f0) background, 64px items centered in the rail, bare 22px
-   icons (no pill/capsule — the size comes from the Icon usage in AppNav.tsx),
-   Label XSmall (10px/16px) captions always visible under the icon. Base
-   ui.css already supplies the correct structure and idle/hover/active
-   semantics via the --nav-* custom properties set on .ui-ws-nav (idle =
-   --text-soft, hover = full-item rgba(0,0,0,.05) + primary text, active =
-   --sidebar-active fill + weight 600 on the label) — this block only
-   supplies the Eos-exact sizing/typography deltas. */
+   80px rail, compact icon-only items. Names live in an instant hover/focus
+   tooltip so the rail stays scannable. */
 .ui-ws-nav {
   width: 80px;
 }
+.ui-ws-nav__list {
+  gap: var(--space-0);
+  padding: var(--space-1);
+}
 .ui-ws-nav__item {
-  width: 64px;
+  width: var(--control-height-lg);
+  min-height: var(--control-height-lg);
   margin: 0 auto;
+  gap: 0;
+  padding: 0;
   border-radius: var(--radius-sm);
 }
-.ui-ws-nav__label {
-  font-size: var(--type-label-xs-size);
-  line-height: var(--type-label-xs-lh);
+.ui-ws-nav__item:hover {
+  color: var(--color-action-primary);
+}
+.ui-ws-nav__item--active {
+  color: var(--color-nav-chrome-active-fg);
+}
+.ui-ws-nav__item--active .eos-icon,
+.ui-ws-nav__item:hover .eos-icon {
+  color: var(--color-action-primary);
+}
+[data-slot="tooltip-content"].ui-ws-nav__tip {
+  background: var(--color-toast-bg);
+  color: var(--color-text-inverse);
+  font-size: var(--type-label-md-size);
+  line-height: var(--type-label-md-lh);
+  font-weight: var(--fw-medium);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--elevation-1);
+  white-space: nowrap;
+  max-width: none;
+}
+[data-slot="tooltip-content"].ui-ws-nav__tip > :last-child {
+  display: none;
 }
 
 /* ---------- Browse tables — integrated (modernization) -------------------
@@ -113,28 +132,32 @@
   border-radius: 0;
   overflow: visible;
 }
-/* Comfortable body rows (~52px) with lighter separators. */
+/* Eos §3.7 table anatomy: header 56 / body 46 / footer 44. */
 .ui-ws-browse__row:not(.ui-ws-browse__row--head) {
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-3);
+  min-height: 46px;
+  padding-top: 0;
+  padding-bottom: 0;
   border-bottom-color: var(--color-border-subtle);
 }
 .ui-ws-browse__row:not(.ui-ws-browse__row--head):hover {
   background: var(--color-bg-hover);
 }
 .ui-ws-browse__row--head {
+  min-height: 56px;
   text-transform: none;
   letter-spacing: 0;
-  /* Eos §1.10: column headers are UI labels, not table content -> Label Medium (12/16). */
-  font-size: var(--type-label-md-size);
-  line-height: var(--type-label-md-lh);
+  font-size: var(--type-label-lg-size);
+  line-height: var(--type-label-lg-lh);
   font-weight: var(--fw-medium);
   color: var(--color-text-secondary);
-  /* sticky header sits on the workspace surface so scrolled rows don't bleed */
   background: var(--color-bg-surface);
   border-bottom-color: var(--color-border-default);
 }
-.ui-ws-browse__h1 { font-weight: var(--fw-semibold); }
+.ui-ws-browse__h1 {
+  font-size: var(--type-headline-lg-size);
+  line-height: var(--type-headline-lg-lh);
+  font-weight: var(--fw-bold);
+}
 
 /* Quiet, compact add button for list headers. Tonal treatment (light Iceberg
    blue fill + blue glyph) so it is discoverable without competing with the
@@ -203,38 +226,38 @@
   background: var(--color-bg-app);   /* deeper backdrop so surfaces float */
 }
 
-/* ---------- Global platform top bar (Eos "Opshub bar" 449:14209) ----------
-   48px white bar: brand lockup (left), platform nav tabs (centre), utility
-   cluster (environment pill, app menu, account) on the right. EXACT EOS
-   dimensions/typography; generic glyphs use the established Material Symbols
-   set (grid = "apps", account = "account_circle"). */
+/* ---------- Global platform top bar (Eos Overlay Opshub bar 449:15626) ----------
+   48px white bar: brand lockup left; env pill + app menu + account right.
+   Default env = outline; Active (pressed / expanded) = filled INT-NFT. */
 .ui-topbar {
   flex: none;
   height: 48px;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
   padding: 0 18px;
-  background: var(--color-bg-surface);
+  background: var(--color-opshub);
   border-bottom: var(--border-width) solid var(--color-border-default);
+  color: var(--color-opshub-fg);
 }
-.ui-topbar__brand { display: flex; align-items: center; gap: 12px; flex: none; }
+.ui-topbar__brand { display: flex; align-items: center; gap: var(--space-3); flex: none; }
 .ui-topbar__brand-name {
-  font-size: 16px;
+  font-size: var(--type-title-md-size);
+  line-height: var(--type-title-md-lh);
   font-weight: var(--fw-medium);
-  letter-spacing: 0.15px;            /* Eos Title Medium */
-  color: var(--color-text-primary);
+  letter-spacing: 0.15px;
+  color: var(--color-opshub-fg);
   white-space: nowrap;
 }
 .ui-topbar__utils { display: flex; align-items: center; gap: var(--space-2); flex: none; margin-left: auto; }
-/* Environment selector pill — Eos environment accent (INT-NFT = #275996). */
 .ui-topbar__env {
-  --env-color: #275996;
+  --env-color: var(--color-opshub-env-intnft);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 10px 0 8px;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-height-sm);
+  padding: 0 var(--space-2);
   border: var(--border-width) solid var(--env-color);
   border-radius: var(--radius-pill);
   background: transparent;
@@ -242,33 +265,70 @@
   font: inherit;
   cursor: pointer;
 }
-.ui-topbar__env:hover { background: color-mix(in srgb, var(--color-action-primary) 6%, transparent); }
+.ui-topbar__env:hover { background: color-mix(in srgb, var(--env-color) 8%, transparent); }
+.ui-topbar__env:active,
+.ui-topbar__env[aria-expanded="true"] {
+  background: var(--env-color);
+  color: var(--color-text-inverse);
+}
 .ui-topbar__env:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ui-topbar__env-label {
   font-size: var(--type-label-md-size);
   line-height: var(--type-label-md-lh);
   font-weight: var(--fw-medium);
-  letter-spacing: 0.5px;             /* Eos Label Medium */
+  letter-spacing: 0.5px;
   white-space: nowrap;
+  color: inherit;
 }
-.ui-topbar__env .eos-icon { color: var(--env-color); }
-/* Utility icon buttons (app menu, account). */
+.ui-topbar__env .eos-icon { color: inherit; }
+.ui-topbar__env-chip {
+  position: relative;
+  display: inline-block;
+  width: 35px;
+  height: 22.543px;
+  flex: none;
+  color: inherit;
+}
+.ui-topbar__env-globe {
+  position: absolute !important;
+  left: 6.21px;
+  top: 0;
+}
+.ui-topbar__env-wordmark {
+  position: absolute;
+  left: 0;
+  top: 6.27px;
+  width: 35px;
+  height: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--color-opshub);
+  color: var(--env-color);
+  font-size: var(--type-label-env-size);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  letter-spacing: 0;
+}
+.ui-topbar__env:active .ui-topbar__env-wordmark,
+.ui-topbar__env[aria-expanded="true"] .ui-topbar__env-wordmark {
+  background: var(--env-color);
+  color: var(--color-text-inverse);
+}
 .ui-topbar__icon-btn {
   display: inline-grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
   border: 0;
   background: none;
   border-radius: var(--radius-pill);
-  color: var(--color-text-secondary);
+  color: var(--color-opshub-fg);
   cursor: pointer;
-  transition: background var(--motion-fast) var(--ease-standard),
-    color var(--motion-fast) var(--ease-standard);
+  transition: background var(--motion-fast) var(--ease-standard);
 }
-.ui-topbar__icon-btn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+.ui-topbar__icon-btn:hover { background: var(--color-bg-hover); }
 .ui-topbar__icon-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.ui-topbar__account { color: var(--color-text-muted); }
+.ui-topbar__account { color: var(--color-opshub-fg); }
 @media (max-width: 720px) {
   .ui-topbar__env-label { display: none; }
 }
@@ -323,7 +383,7 @@
   background: var(--color-bg-selected);
   color: var(--color-text-primary);
   font-weight: var(--fw-semibold);
-  box-shadow: inset 2px 0 0 var(--color-action-primary);
+  box-shadow: inset 3px 0 0 var(--color-action-primary);
 }
 
 /* ==========================================================================
