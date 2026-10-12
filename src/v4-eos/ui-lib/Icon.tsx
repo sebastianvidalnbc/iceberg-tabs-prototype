@@ -66,7 +66,8 @@ export type IconName =
   | "history"
   | "close"
   | "first-page"
-  | "last-page";
+  | "last-page"
+  | "protect";
 
 // IconName → Material Symbols ligature. Documented mapping (Phase 4 audit):
 //   Nav destinations use the closest Material Symbol to each Iceberg concept;
@@ -130,6 +131,7 @@ const LIGATURES: Record<IconName, string> = {
   close: "close",
   "first-page": "first_page",
   "last-page": "last_page",
+  protect: "shield", // Pages list Protect column (production shield)
 };
 
 export function Icon({

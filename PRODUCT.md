@@ -74,6 +74,9 @@ rather than an editor mock.
 
 ## Evidence on Hand
 
+- CMS author efficiency pain points from the 7 Apr 2026 workshop, recorded in
+  `AUTHOR-EFFICIENCY.md` (FigJam Iceberg Efficiency). Future authoring work
+  should be contrasted against that file, not treated as an unsolicited backlog.
 - Real Iceberg schema and layout definitions extracted from the source app
   (`iceberg-commerce-main`), driving structure + properties.
 - Figma sources of visual truth: the **Eos Library** (authoring UI) and the

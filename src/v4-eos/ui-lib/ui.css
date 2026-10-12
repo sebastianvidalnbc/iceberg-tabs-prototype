@@ -832,30 +832,101 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 
 /* Table: a CSS grid with a shared column template on head + body rows. */
 .ui-ws-browse__table { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border-default); border-radius: var(--radius-md); overflow: hidden; }
-/* Eos §1.11 "Table cells -> Body Medium (14/20)". */
-.ui-ws-browse__row { display: grid; grid-template-columns: minmax(0, 2.4fr) 1fr 1fr 1fr 1fr auto; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); font-size: var(--type-body-md-size); line-height: var(--type-body-md-lh); }
-.ui-ws-browse__table--variants .ui-ws-browse__row { grid-template-columns: minmax(0, 2.4fr) 0.9fr 1fr 1fr 1fr 1.2fr auto; }
-/* Widgets: a single inline-expandable list — Slug, Created, Modified, Actions. */
+/* Desktop-tool density: one table type role — Eos Body Small (12/16), the
+   same size as Visible — with hierarchy from weight and color, not extra
+   sizes or a second family. */
+/* Pages: Slug (protect + hue sit in the slug cell) · Search Visibility · Un-Publish · Created · Modified · Actions */
+.ui-ws-browse__row { display: grid; grid-template-columns: minmax(0, 2.4fr) 1fr 1fr 1fr 1fr auto; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-bottom: var(--border-width) solid var(--color-border-default); font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); }
+.ui-ws-browse__table--pages .ui-ws-browse__row { grid-template-columns: minmax(0, 2.4fr) 1fr 1fr 1fr 1fr auto; }
+/* Variants: Name · QA · Optimizely · Publish · Scheduled · Un-Published · Created · Modified · By · Actions */
+.ui-ws-browse__table--variants { overflow-x: auto; }
+.ui-ws-browse__table--variants .ui-ws-browse__row {
+  grid-template-columns:
+    minmax(9rem, 1.5fr)
+    minmax(5.5rem, 0.7fr)
+    minmax(5.75rem, 0.7fr)
+    minmax(5.5rem, 0.8fr)
+    minmax(7rem, 0.95fr)
+    minmax(8rem, 1fr)
+    minmax(5rem, 0.75fr)
+    minmax(6.5rem, 0.9fr)
+    minmax(7rem, 1fr)
+    auto;
+}
+/* Widgets: Slug (format sits in the slug cell) · Name · Created · Modified · Actions */
 .ui-ws-browse__table--widgets .ui-ws-browse__row--widgets,
-.ui-ws-browse__table--widgets .ui-ws-browse__row--head { grid-template-columns: minmax(0, 3fr) 1fr 1fr auto; }
+.ui-ws-browse__table--widgets .ui-ws-browse__row--head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.6fr) 1fr 1fr auto; }
 .ui-ws-browse__row:last-child { border-bottom: 0; }
 /* Inline-expanded children: a nested "Pages:" list under the open widget row. */
-.ui-ws-browse__widget-children { padding: var(--space-2) var(--space-3) var(--space-3) calc(var(--space-3) + 28px); background: var(--color-bg-subtle); border-bottom: var(--border-width) solid var(--color-border-default); }
-.ui-ws-browse__widget-children-label { font-size: var(--type-label-md-size); line-height: var(--type-label-md-lh); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); color: var(--color-text-muted); margin-bottom: var(--space-2); }
-.ui-ws-browse__widget-child { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; min-width: 0; }
+.ui-ws-browse__widget-children { padding: var(--space-2) var(--space-3) var(--space-3) calc(var(--space-3) + var(--control-height-sm)); background: var(--color-bg-subtle); border-bottom: var(--border-width) solid var(--color-border-default); font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); }
+.ui-ws-browse__widget-children-label { font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); font-weight: var(--fw-semibold); color: var(--color-text-muted); margin-bottom: var(--space-2); }
+.ui-ws-browse__widget-child { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; min-width: 0; }
 .ui-ws-browse__widget-empty { font-size: var(--type-body-sm-size); color: var(--color-text-muted); font-style: italic; }
 /* Column headers are UI labels, not table content -> Label Medium (12/16). */
-.ui-ws-browse__row--head { position: sticky; top: 0; background: var(--color-bg-subtle); font-size: var(--type-label-md-size); line-height: var(--type-label-md-lh); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); color: var(--color-text-muted); }
+.ui-ws-browse__row--head { position: sticky; top: 0; background: var(--color-bg-subtle); font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); font-weight: var(--fw-medium); color: var(--color-text-muted); }
+.ui-ws-browse__row--head > * { white-space: nowrap; }
 .ui-ws-browse__row:not(.ui-ws-browse__row--head):hover { background: var(--color-bg-hover); }
 .ui-ws-browse__slug { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.ui-ws-browse__chevron-spacer { width: 28px; flex: none; }
-.ui-ws-browse__slug-link { display: inline-flex; align-items: baseline; gap: var(--space-2); border: 0; background: none; padding: 0; font: inherit; color: var(--color-action-primary); font-weight: var(--fw-semibold); cursor: pointer; text-align: left; min-width: 0; }
+.ui-ws-browse__chevron-spacer { width: var(--control-height-sm); flex: none; }
+.ui-ws-browse__slug-link { display: inline-flex; align-items: baseline; gap: var(--space-2); border: 0; background: none; padding: 0; font: inherit; color: var(--color-action-primary); font-weight: var(--fw-semibold); cursor: pointer; text-align: left; min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .ui-ws-browse__slug-link:hover { text-decoration: underline; }
 .ui-ws-browse__slug-link:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
-.ui-ws-browse__slug-text { font-family: var(--font-mono); font-size: var(--type-body-sm-size); color: var(--color-text-secondary); }
-.ui-ws-browse__slug-count { font-size: var(--type-label-badge-size); line-height: var(--type-label-badge-lh); color: var(--color-text-muted); font-weight: 400; }
-.ui-ws-browse__muted { color: var(--color-text-muted); }
-.ui-ws-browse__actions { display: flex; align-items: center; gap: 2px; justify-content: flex-end; }
+.ui-ws-browse__slug-text { font-family: inherit; font-size: inherit; line-height: inherit; font-weight: var(--fw-medium); color: var(--color-text-primary); }
+.ui-ws-browse__slug-count { font-size: inherit; line-height: inherit; color: var(--color-text-muted); font-weight: 400; }
+.ui-ws-browse__muted { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.ui-ws-browse__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text-primary); }
+.ui-ws-browse__markers {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+}
+.ui-ws-browse__format {
+  display: inline-flex;
+  align-items: center;
+  height: var(--space-5);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+}
+.ui-ws-browse__protect,
+.ui-ws-browse__optimizely {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+.ui-ws-browse__protect.is-on {
+  color: var(--color-action-primary);
+}
+.ui-ws-browse__protect.is-on .eos-icon {
+  font-variation-settings: "opsz" 20, "wght" 400, "FILL" 1, "GRAD" 0;
+}
+.ui-ws-browse__optimizely.is-on {
+  color: var(--color-status-experiment);
+}
+.ui-ws-browse__optimizely.is-on .eos-icon {
+  font-variation-settings: "opsz" 20, "wght" 400, "FILL" 1, "GRAD" 0;
+}
+.ui-ws-browse__actions { display: flex; align-items: center; gap: var(--space-1); justify-content: flex-end; }
+/* Desktop hit target: Eos compact control (32px), not the 24px mobile floor. */
+.ui-ws-browse__row .ui-btn--icon-only {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  min-width: var(--control-height-sm);
+}
+/* Status chips in browse rows: Label Medium, not the 9px mobile badge. */
+.ui-ws-browse .ui-badge {
+  font-size: var(--type-label-md-size);
+  line-height: var(--type-label-md-lh);
+  font-weight: var(--fw-medium);
+  padding: var(--space-1) var(--space-2);
+}
 
 /* Filters row (Figma 488:8901, "Tables/sub-components/Filters"): an "All
    Filters" entry point, one Input-chip per filterable facet, and a trailing
@@ -865,10 +936,9 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 .ui-filter-chip {
   display: inline-flex; align-items: center; gap: var(--space-1);
   height: var(--control-height-sm); padding: 0 var(--space-3);
-  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-field);
+  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-pill);
   background: var(--color-bg-surface); color: var(--color-text-secondary);
-  /* Eos §1.11: interactive filter chip -> Label Large (14/20), like other chips/tabs. */
-  font: var(--fw-medium) var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-sans);
+  font: var(--fw-medium) var(--type-label-md-size) / var(--type-label-md-lh) var(--font-sans);
   cursor: pointer; white-space: nowrap;
   transition: background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
 }
@@ -882,11 +952,11 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-4);
-  min-height: 44px;
-  padding: 0;
-  font-size: var(--type-label-md-size);
-  line-height: var(--type-label-md-lh);
+  gap: var(--space-3);
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
   color: var(--color-text-secondary);
 }
 .ui-table-footer__size { display: flex; align-items: center; gap: var(--space-2); }
@@ -895,38 +965,135 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 .ui-table-footer__range { color: var(--color-text-primary); white-space: nowrap; }
 .ui-table-footer__nav { display: flex; align-items: center; gap: 2px; }
 
-/* Collapsible Type section header spanning the full table width. Quiet subtle
-   surface so it reads as a grouping band, not a data row. */
-.ui-ws-browse__group { position: relative; display: flex; align-items: center; gap: var(--space-2); width: 100%; padding: var(--space-2) var(--space-3); border: 0; border-bottom: var(--border-width) solid var(--color-border-default); background: var(--color-bg-subtle); color: var(--color-text-secondary); font: inherit; font-size: var(--type-label-md-size); line-height: var(--type-label-md-lh); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-semibold); cursor: pointer; text-align: left; }
+/* Collapsible group header spanning the full table width. Quiet subtle
+   surface so it reads as a grouping band, not a data row. Used on Pages and
+   Widgets. Wayfinding hue is set via --fam / --fam-tint / --fam-ink. */
+.ui-ws-browse__group {
+  --fam: var(--color-text-muted);
+  --fam-tint: var(--color-bg-panel);
+  --fam-ink: var(--color-text-muted);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--color-border-default);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-semibold);
+  text-align: left;
+}
+.ui-ws-browse__group::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--fam);
+}
 .ui-ws-browse__group:hover { background: var(--color-bg-hover); }
-.ui-ws-browse__group:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-ws-browse__group-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.ui-ws-browse__group-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
 .ui-ws-browse__group-chevron { color: var(--color-text-muted); flex: none; }
 .ui-ws-browse__group-name { flex: 1; min-width: 0; }
-.ui-ws-browse__group-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--color-bg-panel); color: var(--color-text-muted); font-size: var(--type-label-badge-size); line-height: var(--type-label-badge-lh); font-weight: var(--fw-semibold); letter-spacing: 0; }
-
-/* Type-family wayfinding color — scoped to the widgets list only. Each of the 8
-   families carries a restrained hue used three ways: a group-header accent bar,
-   a tinted count pill, and a per-row dot, so a family stays recognisable while
-   scrolling. Color only reinforces the named group + the row's position under
-   it; it never carries meaning alone. Retention keeps Iceberg Blue (the brand
-   action hue) as the pinned primary family. Global system stays untouched. */
-.ui-ws-browse__table--widgets [data-fam] { --fam: var(--color-text-muted); --fam-tint: var(--color-bg-panel); --fam-ink: var(--color-text-muted); }
-.ui-ws-browse__table--widgets [data-fam="Retention"] { --fam: #2563eb; --fam-tint: #eff4ff; --fam-ink: #1e40af; }
-.ui-ws-browse__table--widgets [data-fam="Plan Picker"] { --fam: #7c3aed; --fam-tint: #f4effe; --fam-ink: #5b21b6; }
-.ui-ws-browse__table--widgets [data-fam="Promotions"] { --fam: #e11d64; --fam-tint: #fdeff4; --fam-ink: #9f1244; }
-.ui-ws-browse__table--widgets [data-fam="Banner"] { --fam: #d97706; --fam-tint: #fdf4e7; --fam-ink: #92500e; }
-.ui-ws-browse__table--widgets [data-fam="Media"] { --fam: #0d9488; --fam-tint: #e7f6f4; --fam-ink: #0f766e; }
-.ui-ws-browse__table--widgets [data-fam="SEO"] { --fam: #0891b2; --fam-tint: #e6f6fb; --fam-ink: #155e75; }
-.ui-ws-browse__table--widgets [data-fam="Legal"] { --fam: #475569; --fam-tint: #eef1f5; --fam-ink: #334155; }
-.ui-ws-browse__table--widgets [data-fam="Other"] { --fam: #94a3b8; --fam-tint: #f1f3f5; --fam-ink: #52555c; }
-/* 3px accent bar as a pseudo-element so it never fights the focus ring. */
-.ui-ws-browse__table--widgets .ui-ws-browse__group::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--fam); }
-.ui-ws-browse__table--widgets .ui-ws-browse__group .ui-ws-browse__group-count { background: var(--fam-tint); color: var(--fam-ink); }
-.ui-ws-browse__widget-fam-dot { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--fam); flex: none; }
+.ui-ws-browse__group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-6);
+  height: var(--space-6);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--fam-tint);
+  color: var(--fam-ink);
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0;
+}
+.ui-ws-browse__group-color { position: relative; flex: none; }
+.ui-ws-browse__group-swatch {
+  display: inline-grid;
+  place-items: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  padding: 0;
+  border: var(--border-width) solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  flex: none;
+}
+.ui-ws-browse__group-swatch:hover { border-color: var(--color-border-strong); }
+.ui-ws-browse__group-swatch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-ws-browse__group-swatch-chip {
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--fam);
+}
+.ui-ws-browse__hue-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: var(--z-dropdown);
+  display: grid;
+  grid-template-columns: repeat(8, var(--space-6));
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-1);
+}
+.ui-ws-browse__hue-opt {
+  width: var(--space-6);
+  height: var(--space-6);
+  padding: 0;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.ui-ws-browse__hue-opt:hover { transform: scale(1.08); }
+.ui-ws-browse__hue-opt:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-ws-browse__hue-opt.is-selected { box-shadow: 0 0 0 2px var(--color-bg-elevated), 0 0 0 4px var(--color-action-primary); }
+.ui-ws-browse__fam-dot,
+.ui-ws-browse__widget-fam-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--fam);
+  flex: none;
+}
 
 @media (max-width: 900px) {
   .ui-ws-browse { padding: var(--space-4) var(--space-3); }
-  .ui-ws-browse__row { grid-template-columns: minmax(0, 1fr) auto; }
-  .ui-ws-browse__row > *:nth-child(n+2):not(.ui-ws-browse__actions) { display: none; }
+  .ui-ws-browse__row,
+  .ui-ws-browse__table--pages .ui-ws-browse__row,
+  .ui-ws-browse__table--variants .ui-ws-browse__row,
+  .ui-ws-browse__table--widgets .ui-ws-browse__row--widgets,
+  .ui-ws-browse__table--widgets .ui-ws-browse__row--head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-width: 0;
+  }
+  .ui-ws-browse__row > *:not(.ui-ws-browse__primary):not(.ui-ws-browse__actions) { display: none; }
   .ui-ws-browse__row--head { display: none; }
 }

@@ -1,11 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, IconButton } from "../ui-lib/Button";
+import { Icon } from "../ui-lib/Icon";
 import { Badge, StatusDot } from "../ui-lib/Badge";
 import { SearchInput } from "../ui-lib/TextInput";
 import { EmptyState } from "../ui-lib/EmptyState";
 import { FilterChip } from "../ui-lib/FilterChip";
 import { TableFooter } from "../ui-lib/TableFooter";
-import { buildSlugRows, routes, navigate, type SlugRow } from "../browse";
+import {
+  buildSlugRows,
+  GROUP_SWATCHES,
+  groupHueVars,
+  routes,
+  navigate,
+  type GroupSwatch,
+  type GroupSwatchId,
+  type SlugRow,
+} from "../browse";
+import { BrowseGroupHeader, useGroupHues } from "../ui-lib/BrowseGroupHeader";
 
 type VisibilityFilter = "all" | "Visible" | "Hidden";
 
@@ -16,6 +27,15 @@ type VisibilityFilter = "all" | "Visible" | "Hidden";
 // pagination are prototype no-ops.
 export function PagesView() {
   const allRows = useMemo(() => buildSlugRows(), []);
+  const { swatchFor, setGroupHue } = useGroupHues();
+  const pageHueDefaults = useMemo(() => {
+    const ids = [...new Set(allRows.filter((r) => r.depth === 0 && r.hasChildren).map((r) => r.groupId))];
+    const map: Record<string, GroupSwatchId> = {};
+    ids.forEach((id, i) => {
+      map[id] = GROUP_SWATCHES[i % GROUP_SWATCHES.length].id;
+    });
+    return map;
+  }, [allRows]);
   const [query, setQuery] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>("all");
   const [page, setPage] = useState(0);
@@ -109,7 +129,7 @@ export function PagesView() {
         )}
       </div>
 
-      <div className="ui-ws-browse__table" role="table" aria-label="Pages">
+      <div className="ui-ws-browse__table ui-ws-browse__table--pages" role="table" aria-label="Pages">
         <div className="ui-ws-browse__row ui-ws-browse__row--head" role="row">
           <span role="columnheader">Slug</span>
           <span role="columnheader">Search Visibility</span>
@@ -125,7 +145,32 @@ export function PagesView() {
             description="Try a different slug or clear the search/filters."
           />
         ) : (
-          pageRows.map((r) => <PageRow key={r.id} row={r} expanded={expanded.has(r.id)} onToggle={() => toggle(r.id)} />)
+          pageRows.map((r) => {
+            const fallback = pageHueDefaults[r.groupId] ?? "gray";
+            const swatch = swatchFor(r.groupId, fallback);
+            if (r.depth === 0 && r.hasChildren) {
+              return (
+                <BrowseGroupHeader
+                  key={r.id}
+                  name={r.slug}
+                  count={r.childCount}
+                  collapsed={!expanded.has(r.id)}
+                  swatch={swatch}
+                  onToggle={() => toggle(r.id)}
+                  onSwatchChange={(id) => setGroupHue(r.groupId, id)}
+                />
+              );
+            }
+            return (
+              <PageRow
+                key={r.id}
+                row={r}
+                expanded={expanded.has(r.id)}
+                swatch={r.depth > 0 ? swatch : undefined}
+                onToggle={() => toggle(r.id)}
+              />
+            );
+          })
         )}
       </div>
 
@@ -140,7 +185,17 @@ export function PagesView() {
   );
 }
 
-function PageRow({ row, expanded, onToggle }: { row: SlugRow; expanded: boolean; onToggle: () => void }) {
+function PageRow({
+  row,
+  expanded,
+  swatch,
+  onToggle,
+}: {
+  row: SlugRow;
+  expanded: boolean;
+  swatch?: GroupSwatch;
+  onToggle: () => void;
+}) {
   // A slug is clickable when it is an editable experience: either it owns
   // Variants (→ Variants list) or it is a leaf route with no sub-pages
   // (→ straight to the editor). Parent slugs that own sub-pages stay
@@ -153,9 +208,10 @@ function PageRow({ row, expanded, onToggle }: { row: SlugRow; expanded: boolean;
     if (!clickable) return;
     navigate(ownsVariants ? routes.variants(row.id) : routes.editor("page", row.id));
   };
+  const nest = Math.max(0, row.depth - (swatch ? 1 : 0));
   return (
-    <div className="ui-ws-browse__row" role="row">
-      <span className="ui-ws-browse__slug" role="cell" style={{ paddingLeft: `calc(${row.depth} * var(--space-5))` }}>
+    <div className="ui-ws-browse__row" role="row" style={swatch ? groupHueVars(swatch) : undefined}>
+      <span className="ui-ws-browse__slug ui-ws-browse__primary" role="cell" style={{ paddingLeft: `calc(${nest} * var(--space-5))` }}>
         {row.hasChildren ? (
           <IconButton
             icon={expanded ? "chevron-down" : "chevron-right"}
@@ -166,6 +222,16 @@ function PageRow({ row, expanded, onToggle }: { row: SlugRow; expanded: boolean;
         ) : (
           <span className="ui-ws-browse__chevron-spacer" aria-hidden="true" />
         )}
+        <span className="ui-ws-browse__markers">
+          {swatch && <span className="ui-ws-browse__fam-dot" aria-hidden="true" />}
+          <span
+            className={`ui-ws-browse__protect${row.protect ? " is-on" : ""}`}
+            title={row.protect ? "This page is protected" : "This page is not protected"}
+            aria-label={row.protect ? "Protected" : "Not protected"}
+          >
+            <Icon name="protect" size={14} />
+          </span>
+        </span>
         <Badge variant={row.status === "Published" ? "success" : "default"}>{row.status}</Badge>
         {clickable ? (
           <button type="button" className="ui-ws-browse__slug-link" onClick={open}>

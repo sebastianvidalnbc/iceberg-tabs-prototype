@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, IconButton } from "../ui-lib/Button";
+import { Icon } from "../ui-lib/Icon";
 import { Badge, StatusDot } from "../ui-lib/Badge";
 import { SearchInput } from "../ui-lib/TextInput";
 import { Breadcrumb } from "../ui-lib/Breadcrumb";
@@ -100,8 +101,11 @@ export function VariantsView({ pageId }: { pageId: string }) {
       <div className="ui-ws-browse__table ui-ws-browse__table--variants" role="table" aria-label={`Variants for ${slug}`}>
         <div className="ui-ws-browse__row ui-ws-browse__row--head" role="row">
           <span role="columnheader">Variant Name</span>
-          <span role="columnheader">QA</span>
+          <span role="columnheader">QA Status</span>
+          <span role="columnheader">Optimizely</span>
           <span role="columnheader">Publish</span>
+          <span role="columnheader">Scheduled time</span>
+          <span role="columnheader">Un-Published time</span>
           <span role="columnheader">Created</span>
           <span role="columnheader">Last modified</span>
           <span role="columnheader">Last modified by</span>
@@ -139,18 +143,28 @@ function VariantRowItem({ row }: { row: VariantRow }) {
   const open = () => navigate(routes.editor("page", row.id));
   return (
     <div className="ui-ws-browse__row" role="row">
-      <span role="cell">
+      <span className="ui-ws-browse__primary" role="cell">
         <button type="button" className="ui-ws-browse__slug-link" onClick={open}>
           {row.name}
         </button>
       </span>
       <span role="cell">{qaBadge(row.qaStatus)}</span>
+      <span
+        className={`ui-ws-browse__optimizely${row.optimizely ? " is-on" : ""}`}
+        role="cell"
+        title={row.optimizely ? "Optimizely is on" : "Optimizely is off"}
+        aria-label={row.optimizely ? "Optimizely on" : "Optimizely off"}
+      >
+        <Icon name="flask" size={16} />
+      </span>
       <span role="cell">
         {/* Prototype: publish toggle is a no-op reflecting the sampled state. */}
         <StatusDot status={row.published ? "success" : "default"}>
           {row.published ? "Published" : "Unpublished"}
         </StatusDot>
       </span>
+      <span role="cell" className="ui-ws-browse__muted">{row.scheduled}</span>
+      <span role="cell" className="ui-ws-browse__muted">{row.unpublished}</span>
       <span role="cell" className="ui-ws-browse__muted">{row.created}</span>
       <span role="cell" className="ui-ws-browse__muted">{row.lastModified}</span>
       <span role="cell" className="ui-ws-browse__muted">{row.lastModifiedBy}</span>

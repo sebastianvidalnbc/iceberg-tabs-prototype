@@ -125,29 +125,37 @@
 /* ---------- Browse tables — integrated (modernization) -------------------
    The table no longer reads as a big outlined card. It sits directly on the
    workspace surface: no outer border/radius, a quiet transparent header, and
-   lighter row separators. Density and columns are unchanged. */
+   lighter row separators. Cell density is compact via Eos spacing tokens. */
 .ui-ws-browse__table {
   background: transparent;
   border: 0;
   border-radius: 0;
   overflow: visible;
 }
-/* Eos §3.7 table anatomy: header 56 / body 46 / footer 44. */
+.ui-ws-browse__table--variants {
+  overflow-x: auto;
+}
+/* Desktop-tool tables: Eos tokens, dashboard density. Vertical pad is
+   space-2 (8px). Table copy is one role — Body Small (12/16) — matching
+   Visible; hierarchy is weight and color, not extra sizes. */
 .ui-ws-browse__row:not(.ui-ws-browse__row--head) {
-  min-height: 46px;
-  padding-top: 0;
-  padding-bottom: 0;
+  min-height: 0;
+  padding: var(--space-2) var(--space-3);
+  gap: var(--space-3);
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
   border-bottom-color: var(--color-border-subtle);
 }
 .ui-ws-browse__row:not(.ui-ws-browse__row--head):hover {
   background: var(--color-bg-hover);
 }
 .ui-ws-browse__row--head {
-  min-height: 56px;
+  min-height: 0;
+  padding: var(--space-2) var(--space-3);
   text-transform: none;
   letter-spacing: 0;
-  font-size: var(--type-label-lg-size);
-  line-height: var(--type-label-lg-lh);
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
   font-weight: var(--fw-medium);
   color: var(--color-text-secondary);
   background: var(--color-bg-surface);
@@ -181,11 +189,22 @@
 }
 
 /* Row actions recede until row hover / keyboard focus (kept in DOM + focusable
-   so discoverability + keyboard access are preserved). EOS-DERIVED icon-button
-   behaviour. */
+   so discoverability + keyboard access are preserved). Desktop compact control. */
 .ui-ws-browse__actions {
   opacity: 0;
+  gap: var(--space-1);
   transition: opacity var(--motion-fast) var(--ease-standard);
+}
+.ui-ws-browse__row .ui-btn--icon-only {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  min-width: var(--control-height-sm);
+}
+.ui-ws-browse .ui-badge {
+  font-size: var(--type-label-md-size);
+  line-height: var(--type-label-md-lh);
+  font-weight: var(--fw-medium);
+  padding: var(--space-1) var(--space-2);
 }
 .ui-ws-browse__row:hover .ui-ws-browse__actions,
 .ui-ws-browse__row:focus-within .ui-ws-browse__actions {

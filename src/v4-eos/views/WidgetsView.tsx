@@ -1,21 +1,24 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Button, IconButton } from "../ui-lib/Button";
 import { Badge } from "../ui-lib/Badge";
-import { Icon } from "../ui-lib/Icon";
 import { SearchInput } from "../ui-lib/TextInput";
 import { FilterChip } from "../ui-lib/FilterChip";
 import { TableFooter } from "../ui-lib/TableFooter";
 import { EmptyState } from "../ui-lib/EmptyState";
 import {
   buildWidgetRows,
+  groupHueVars,
   groupWidgetRows,
   WIDGET_TYPE_ORDER,
+  WIDGET_TYPE_SWATCH,
   routes,
   navigate,
   type WidgetRow,
   type WidgetChildRow,
   type WidgetType,
+  type GroupSwatch,
 } from "../browse";
+import { BrowseGroupHeader, useGroupHues } from "../ui-lib/BrowseGroupHeader";
 
 // Widgets list — a SINGLE list, now organised by widget Type so 20+ mixed
 // widgets stay scannable (Figma 488:8901: CardHeader → Toolbar → Filters →
@@ -26,6 +29,7 @@ import {
 // editor. All CTAs besides search/filters/pagination are prototype no-ops.
 export function WidgetsView() {
   const allRows = useMemo(() => buildWidgetRows(), []);
+  const { swatchFor, setGroupHue } = useGroupHues();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | WidgetType>("all");
   const [page, setPage] = useState(0);
@@ -39,7 +43,10 @@ export function WidgetsView() {
 
   const q = query.trim().toLowerCase();
   const searched = q
-    ? allRows.filter((r) => r.slug.toLowerCase().includes(q))
+    ? allRows.filter(
+        (r) =>
+          r.slug.toLowerCase().includes(q) || r.widgetName.toLowerCase().includes(q)
+      )
     : allRows;
 
   // Per-Type counts over the current search results — drive the filter chip
@@ -125,6 +132,7 @@ export function WidgetsView() {
       <div className="ui-ws-browse__table ui-ws-browse__table--widgets" role="table" aria-label="Widgets">
         <div className="ui-ws-browse__row ui-ws-browse__row--head" role="row">
           <span role="columnheader">Slug</span>
+          <span role="columnheader">Name</span>
           <span role="columnheader">Created</span>
           <span role="columnheader">Modified</span>
           <span role="columnheader" aria-label="Actions" />
@@ -138,19 +146,23 @@ export function WidgetsView() {
         ) : (
           groups.map((g) => {
             const collapsed = isCollapsed(g.type);
+            const swatch = swatchFor(g.type, WIDGET_TYPE_SWATCH[g.type]);
             return (
               <Fragment key={g.type}>
-                <WidgetGroupHeader
-                  type={g.type}
+                <BrowseGroupHeader
+                  name={g.type}
                   count={g.rows.length}
                   collapsed={collapsed}
+                  swatch={swatch}
                   onToggle={() => toggleGroup(g.type)}
+                  onSwatchChange={(id) => setGroupHue(g.type, id)}
                 />
                 {!collapsed &&
                   g.rows.map((r) => (
                     <WidgetRowItem
                       key={r.id}
                       row={r}
+                      swatch={swatch}
                       expanded={openId === r.id}
                       onToggle={() => toggleRow(r.id)}
                     />
@@ -172,43 +184,14 @@ export function WidgetsView() {
   );
 }
 
-// Collapsible Type section header spanning the full table width. Groups the
-// widget rows beneath it (Retention, Plan Picker, …) so the list is scannable.
-function WidgetGroupHeader({
-  type,
-  count,
-  collapsed,
-  onToggle,
-}: {
-  type: WidgetType;
-  count: number;
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="ui-ws-browse__group"
-      data-fam={type}
-      aria-expanded={!collapsed}
-      onClick={onToggle}
-    >
-      <Icon
-        name={collapsed ? "chevron-right" : "chevron-down"}
-        className="ui-ws-browse__group-chevron"
-      />
-      <span className="ui-ws-browse__group-name">{type}</span>
-      <span className="ui-ws-browse__group-count">{count}</span>
-    </button>
-  );
-}
-
 function WidgetRowItem({
   row,
+  swatch,
   expanded,
   onToggle,
 }: {
   row: WidgetRow;
+  swatch: GroupSwatch;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -221,8 +204,8 @@ function WidgetRowItem({
     !hasChildren && navigate(routes.editor("widget", row.id));
   return (
     <>
-      <div className="ui-ws-browse__row ui-ws-browse__row--widgets" data-fam={row.type} role="row">
-        <span className="ui-ws-browse__slug" role="cell">
+      <div className="ui-ws-browse__row ui-ws-browse__row--widgets" role="row" style={groupHueVars(swatch)}>
+        <span className="ui-ws-browse__slug ui-ws-browse__primary" role="cell">
           {hasChildren ? (
             <IconButton
               icon={expanded ? "chevron-down" : "chevron-right"}
@@ -234,7 +217,10 @@ function WidgetRowItem({
           ) : (
             <span className="ui-ws-browse__chevron-spacer" aria-hidden="true" />
           )}
-          <span className="ui-ws-browse__widget-fam-dot" aria-hidden="true" />
+          <span className="ui-ws-browse__markers">
+            <span className="ui-ws-browse__widget-fam-dot" aria-hidden="true" />
+            <span className="ui-ws-browse__format">{row.format}</span>
+          </span>
           <Badge variant={row.status === "Published" ? "success" : "default"}>{row.status}</Badge>
           <button
             type="button"
@@ -244,6 +230,7 @@ function WidgetRowItem({
             {row.slug}
           </button>
         </span>
+        <span role="cell" className="ui-ws-browse__name">{row.widgetName}</span>
         <span role="cell" className="ui-ws-browse__muted">{row.created}</span>
         <span role="cell" className="ui-ws-browse__muted">{row.modified}</span>
         <span role="cell" className="ui-ws-browse__actions">

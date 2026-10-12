@@ -1,0 +1,15 @@
+---
+description: Contrast Iceberg authoring work against CMS efficiency workshop pain points
+alwaysApply: true
+---
+
+# Author efficiency pain points
+
+Durable record: `AUTHOR-EFFICIENCY.md` (FigJam Iceberg Efficiency, CMS Author Efficiency session 7 Apr 2026).
+
+When changing Iceberg authoring UX, workflows, IA, or prototype scope:
+
+- Read `AUTHOR-EFFICIENCY.md` and name which pain point(s) the change helps, ignores, or risks worsening.
+- Prefer reducing time, repetition, or error on a **named** task over chrome that does not move those tasks.
+- Keep NOW (multi-page, set QA, widgets) and Peacock (assets, homepage experiments, partnerships) distinct when a change only serves one.
+- Do not implement from this list unasked. Do not invent Channel Manager, HITL, or AI patterns that are not in that file.

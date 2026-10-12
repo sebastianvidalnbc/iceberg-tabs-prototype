@@ -61,10 +61,14 @@ export interface SlugRow {
   id: string;
   slug: string;
   depth: number;
+  /** Depth-0 ancestor id — shared by a folder and the rows grouped under it. */
+  groupId: string;
   hasChildren: boolean;
   childCount: number;
   variantCount: number;
   status: PageStatus;
+  /** Production `protect` — QA-locked pages that cannot be unpublished freely. */
+  protect: boolean;
   visibility: Visibility;
   unpublishDate: string | null;
   created: string;
@@ -79,17 +83,19 @@ function pageChildCount(node: TreeNode): number {
   return (node.children ?? []).filter((c) => c.type !== "variant").length;
 }
 
-function toSlugRow(node: TreeNode, depth: number): SlugRow {
+function toSlugRow(node: TreeNode, depth: number, groupId: string): SlugRow {
   const variantCount = variantChildCount(node);
   const h = hash(node.id);
   return {
     id: node.id,
     slug: node.label,
     depth,
+    groupId,
     hasChildren: pageChildCount(node) > 0,
     childCount: pageChildCount(node),
     variantCount,
     status: variantCount > 0 || h % 3 === 0 ? "Published" : "Draft",
+    protect: h % 3 === 0,
     visibility: h % 4 === 0 ? "Hidden" : "Visible",
     unpublishDate: h % 5 === 0 ? sampleDate(node.id, 7) : null,
     created: variantCount > 0 || h % 2 === 0 ? sampleDate(node.id, 1) : "—",
@@ -102,14 +108,15 @@ function toSlugRow(node: TreeNode, depth: number): SlugRow {
 // Defaults to the Pages tree so existing callers are unaffected.
 export function buildSlugRows(context: BrowseContext = "page"): SlugRow[] {
   const rows: SlugRow[] = [];
-  const walk = (nodes: TreeNode[], depth: number) => {
+  const walk = (nodes: TreeNode[], depth: number, groupId: string) => {
     for (const node of nodes) {
       if (node.type === "variant") continue;
-      rows.push(toSlugRow(node, depth));
-      if (node.children) walk(node.children, depth + 1);
+      const gid = depth === 0 ? node.id : groupId;
+      rows.push(toSlugRow(node, depth, gid));
+      if (node.children) walk(node.children, depth + 1, gid);
     }
   };
-  walk(treeFor(context), 0);
+  walk(treeFor(context), 0, "");
   return rows;
 }
 
@@ -152,8 +159,8 @@ function toVariantRow(node: TreeNode): VariantRow {
     qaStatus: h % 3 === 0 ? "Approved" : h % 3 === 1 ? "In review" : "—",
     optimizely: h % 2 === 0,
     published: h % 4 === 0,
-    scheduled: "not scheduled",
-    unpublished: "not scheduled",
+    scheduled: h % 6 === 0 ? sampleDate(node.id, 11) : "not scheduled",
+    unpublished: h % 8 === 0 ? sampleDate(node.id, 13) : "not scheduled",
     created: sampleDate(node.id, 2),
     lastModified: known ? sampleModified(node.id) : sampleDate(node.id, 3),
     lastModifiedBy: EDITORS[h % EDITORS.length],
@@ -232,12 +239,12 @@ export function classifyWidget(slug: string): WidgetType {
   return "Other";
 }
 
-// Type-family wayfinding hue — the single source of truth shared by the Widgets
-// list (group-header accent bar + count pill + row dot) and the widget editor
-// (offer-tree groups + Segmentation offer-type rows), so a family reads the same
-// everywhere. `fam` is the solid marker hue; `tint`/`ink` are the AA-safe pill
-// pairing. Retention keeps Iceberg Blue as the pinned primary family. These stay
-// scoped to widget surfaces and never touch the global single-accent chrome.
+// Type-family wayfinding hue — the single source of truth shared by browse
+// group headers (Pages + Widgets: accent bar + count pill + row dot) and the
+// widget editor (offer-tree groups + Segmentation offer-type rows). `fam` is
+// the solid marker hue; `tint`/`ink` are the AA-safe pill pairing. Retention
+// keeps Iceberg Blue as the pinned primary family. These stay scoped to browse
+// grouping and never become a second chrome accent.
 export const WIDGET_FAMILY_HUE: Record<
   WidgetType,
   { fam: string; tint: string; ink: string }
@@ -252,14 +259,92 @@ export const WIDGET_FAMILY_HUE: Record<
   Other: { fam: "#94a3b8", tint: "#f1f3f5", ink: "#52555c" },
 };
 
+export type GroupSwatchId =
+  | "blue"
+  | "violet"
+  | "magenta"
+  | "amber"
+  | "teal"
+  | "cyan"
+  | "slate"
+  | "gray";
+
+export interface GroupSwatch {
+  id: GroupSwatchId;
+  label: string;
+  fam: string;
+  tint: string;
+  ink: string;
+}
+
+/** Author-pickable wayfinding palette — same hues as widget families. */
+export const GROUP_SWATCHES: GroupSwatch[] = [
+  { id: "blue", label: "Blue", ...WIDGET_FAMILY_HUE.Retention },
+  { id: "violet", label: "Violet", ...WIDGET_FAMILY_HUE["Plan Picker"] },
+  { id: "magenta", label: "Magenta", ...WIDGET_FAMILY_HUE.Promotions },
+  { id: "amber", label: "Amber", ...WIDGET_FAMILY_HUE.Banner },
+  { id: "teal", label: "Teal", ...WIDGET_FAMILY_HUE.Media },
+  { id: "cyan", label: "Cyan", ...WIDGET_FAMILY_HUE.SEO },
+  { id: "slate", label: "Slate", ...WIDGET_FAMILY_HUE.Legal },
+  { id: "gray", label: "Gray", ...WIDGET_FAMILY_HUE.Other },
+];
+
+export const WIDGET_TYPE_SWATCH: Record<WidgetType, GroupSwatchId> = {
+  Retention: "blue",
+  "Plan Picker": "violet",
+  Promotions: "magenta",
+  Banner: "amber",
+  Media: "teal",
+  SEO: "cyan",
+  Legal: "slate",
+  Other: "gray",
+};
+
+export function groupSwatch(id: string): GroupSwatch {
+  return GROUP_SWATCHES.find((s) => s.id === id) ?? GROUP_SWATCHES[0];
+}
+
+export function groupHueVars(swatch: GroupSwatch): Record<string, string> {
+  return {
+    "--fam": swatch.fam,
+    "--fam-tint": swatch.tint,
+    "--fam-ink": swatch.ink,
+  };
+}
+
+export type WidgetFormat = "HTML" | "JSON";
+
 export interface WidgetRow {
   id: string;
   slug: string;
   type: WidgetType;
   status: PageStatus;
+  /** Production `format` — HTML widgets vs JSON (plan picker / retention / SEO). */
+  format: WidgetFormat;
+  /** Production `widgetName` — human label shown beside the slug. */
+  widgetName: string;
   created: string;
   modified: string;
   children: WidgetChildRow[];
+}
+
+const WIDGET_NAME_ACRONYMS = new Set(["seo", "qa", "css", "html", "json", "bff", "tv", "us"]);
+
+function widgetDisplayName(slug: string): string {
+  const words = slug
+    .replace(/^\//, "")
+    .split("-")
+    .filter(Boolean)
+    .map((w) =>
+      WIDGET_NAME_ACRONYMS.has(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)
+    )
+    .join(" ");
+  return `Web : ${words}`;
+}
+
+function sampleWidgetFormat(slug: string, type: WidgetType): WidgetFormat {
+  if (type === "Retention" || type === "Plan Picker" || type === "SEO") return "JSON";
+  return hash(slug) % 4 === 0 ? "JSON" : "HTML";
 }
 
 // Top-level widget slugs with their inline-expandable children. Only top-level
@@ -275,11 +360,14 @@ export function buildWidgetRows(): WidgetRow[] {
         name: c.label,
         status: hash(c.id) % 4 === 0 ? "Published" : "Draft",
       }));
+    const type = classifyWidget(node.label);
     return {
       id: node.id,
       slug: node.label,
-      type: classifyWidget(node.label),
+      type,
       status: h % 3 === 0 ? "Draft" : "Published",
+      format: sampleWidgetFormat(node.label, type),
+      widgetName: widgetDisplayName(node.label),
       created: sampleDate(node.id, 1),
       modified: sampleModified(node.id),
       children,
