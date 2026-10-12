@@ -27,6 +27,7 @@ import {
   WIDGETS_TREE,
   findNode,
   type AuthoringContext,
+  type NavDestination,
 } from "./data";
 import { findPageForVariant, routes, navigate } from "./browse";
 import {
@@ -256,7 +257,11 @@ export function WorkspaceShell({
 
   // Switch the major authoring context. Each context preserves its own prior
   // selection because we never touch the other context's state here.
-  const handleSelectContext = useCallback((next: AuthoringContext) => {
+  const handleSelectContext = useCallback((next: NavDestination) => {
+    if (next === "contentPage") {
+      navigate(routes.contentPages());
+      return;
+    }
     setContext(next);
   }, []);
 

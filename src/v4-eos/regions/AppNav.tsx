@@ -1,4 +1,4 @@
-import { V2_APP_NAV, type AuthoringContext } from "../data";
+import { V2_APP_NAV, type AuthoringContext, type NavDestination } from "../data";
 import { Icon, type IconName } from "../ui-lib/Icon";
 import { IcebergLogo } from "../ui-lib/IcebergLogo";
 import { routes, navigate } from "../browse";
@@ -28,16 +28,16 @@ const NAV_ICONS: Record<string, IconName> = {
 interface AppNavProps {
   // The active authoring context; the bound nav item is shown as current. "home"
   // marks the dashboard landing, where no product-nav item is current.
-  context: AuthoringContext | "home";
+  context: AuthoringContext | "home" | "contentPage";
   // Invoked when an actionable (context-bound) nav item is clicked. The shell
   // decides what this means: in the editor it swaps the in-editor dataset; in
   // the browse levels it navigates to that context's list via a hash route.
-  onSelectContext: (context: AuthoringContext) => void;
+  onSelectContext: (context: NavDestination) => void;
 }
 
 // Narrow left rail: icon-only tiles. Names appear in an instant tooltip on
-// hover/focus (DESIGN.md Navigation). Pages / Widgets are actionable; the
-// rest stay inert and keep the same appearance.
+// hover/focus (DESIGN.md Navigation). Pages / Widgets / Content Pages are
+// actionable; the rest stay inert and keep the same appearance.
 export function AppNav({ context, onSelectContext }: AppNavProps) {
   return (
     <TooltipProvider delayDuration={0}>

@@ -856,6 +856,7 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
 /* Widgets: Slug (format sits in the slug cell) · Name · Created · Modified · Actions */
 .ui-ws-browse__table--widgets .ui-ws-browse__row--widgets,
 .ui-ws-browse__table--widgets .ui-ws-browse__row--head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.6fr) 1fr 1fr auto; }
+.ui-ws-browse__table--content-pages .ui-ws-browse__row { grid-template-columns: minmax(0, 2.2fr) 1.2fr 0.7fr 1fr 1.2fr auto; }
 .ui-ws-browse__row:last-child { border-bottom: 0; }
 /* Inline-expanded children: a nested "Pages:" list under the open widget row. */
 .ui-ws-browse__widget-children { padding: var(--space-2) var(--space-3) var(--space-3) calc(var(--space-3) + var(--control-height-sm)); background: var(--color-bg-subtle); border-bottom: var(--border-width) solid var(--color-border-default); font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-lh); }
@@ -1090,7 +1091,8 @@ button.ui-ws-nav__brand--link:focus-visible { outline: none; box-shadow: var(--f
   .ui-ws-browse__table--pages .ui-ws-browse__row,
   .ui-ws-browse__table--variants .ui-ws-browse__row,
   .ui-ws-browse__table--widgets .ui-ws-browse__row--widgets,
-  .ui-ws-browse__table--widgets .ui-ws-browse__row--head {
+  .ui-ws-browse__table--widgets .ui-ws-browse__row--head,
+  .ui-ws-browse__table--content-pages .ui-ws-browse__row {
     grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
   }

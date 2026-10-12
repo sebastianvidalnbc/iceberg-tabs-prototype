@@ -416,6 +416,8 @@ export function findPageForVariant(
 //   #/pages                    → Pages list (default)
 //   #/pages/:pageId             → Variants list for that page
 //   #/widgets                   → Widgets list (rows expand inline; no sub-route)
+//   #/content-pages             → Content Pages list (territory templates)
+//   #/content-pages/:id         → Content Page editor for that template
 //   #/editor/:context/:id       → the editor workspace, opened in a specific
 //                                 authoring context ("page" | "widget") so the
 //                                 breadcrumb + Structure tree reflect where the
@@ -426,6 +428,8 @@ export type V2Route =
   | { view: "pages" }
   | { view: "variants"; pageId: string }
   | { view: "widgets" }
+  | { view: "content-pages" }
+  | { view: "content-page-editor"; pageId: string }
   | { view: "editor"; context: BrowseContext; variantId: string }
   | { view: "design-system" };
 
@@ -434,6 +438,8 @@ export const routes = {
   pages: () => "#/pages",
   variants: (pageId: string) => `#/pages/${pageId}`,
   widgets: () => "#/widgets",
+  contentPages: () => "#/content-pages",
+  contentPage: (pageId: string) => `#/content-pages/${pageId}`,
   editor: (context: BrowseContext, variantId: string) =>
     `#/editor/${context}/${variantId}`,
   designSystem: () => "#/design-system",
@@ -455,6 +461,10 @@ export function parseRoute(hash: string): V2Route {
     return { view: "editor", context: "page", variantId: seg1 };
   }
   if (head === "widgets") return { view: "widgets" };
+  if (head === "content-pages" && seg1) {
+    return { view: "content-page-editor", pageId: seg1 };
+  }
+  if (head === "content-pages") return { view: "content-pages" };
   if (head === "pages" && seg1) return { view: "variants", pageId: seg1 };
   if (head === "pages") return { view: "pages" };
   return { view: "home" };

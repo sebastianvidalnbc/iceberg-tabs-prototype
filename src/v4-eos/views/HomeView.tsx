@@ -99,6 +99,7 @@ interface Action {
 const ACTIONS: Action[] = [
   { icon: "description", label: "Page List", hint: "Browse & edit pages", onClick: () => navigate(routes.pages()) },
   { icon: "widgets", label: "Widget List", hint: "Reusable widgets", onClick: () => navigate(routes.widgets()) },
+  { icon: "description", label: "Content Pages", hint: "Territory templates", onClick: () => navigate(routes.contentPages()) },
   { icon: "deployed_code", label: "Central Management", hint: "Shared modules & layouts", disabled: true },
   { icon: "dns", label: "Services CMS", hint: "Service & system pages", disabled: true },
 ];

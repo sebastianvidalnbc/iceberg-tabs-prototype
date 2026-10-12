@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AppNav } from "./regions/AppNav";
 import { TopBar } from "./regions/TopBar";
 import { routes, navigate } from "./browse";
-import type { AuthoringContext } from "./data";
+import type { AuthoringContext, NavDestination } from "./data";
 
 // Persistent global chrome for V2. The left navigation rail (AppNav) is the same
 // on every level — Pages list, Variants list, and the editor — so authors keep a
@@ -17,10 +17,10 @@ import type { AuthoringContext } from "./data";
 interface AppShellProps {
   // Which major area the rail should show as current. "home" marks the dashboard
   // landing, where no product-nav item is current.
-  activeContext: AuthoringContext | "home";
+  activeContext: AuthoringContext | "home" | "contentPage";
   // Optional override for rail clicks. The editor passes its in-place context
   // switcher here; browse levels omit it and fall back to route navigation.
-  onSelectContext?: (context: AuthoringContext) => void;
+  onSelectContext?: (context: NavDestination) => void;
   children: ReactNode;
 }
 
@@ -30,8 +30,9 @@ export function AppShell({ activeContext, onSelectContext, children }: AppShellP
   // two top levels (list → variants), so each rail item lands somewhere real.
   const handleSelectContext =
     onSelectContext ??
-    ((next: AuthoringContext) => {
-      navigate(next === "widget" ? routes.widgets() : routes.pages());
+    ((next: NavDestination) => {
+      if (next === "contentPage") navigate(routes.contentPages());
+      else navigate(next === "widget" ? routes.widgets() : routes.pages());
     });
 
   // V4's visual system is Eos — a light, warm-neutral Material 3 scheme (see
