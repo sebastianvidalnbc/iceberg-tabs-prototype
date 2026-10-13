@@ -56,25 +56,39 @@ export function TextAreaField(
 }
 
 export function CheckboxField({
+  id,
   checked,
   onCheckedChange,
 }: {
+  id?: string;
   checked: boolean;
   onCheckedChange?: (v: boolean) => void;
 }) {
   return (
-    <ShadCheckbox checked={checked} onCheckedChange={(v) => onCheckedChange?.(!!v)} />
+    <ShadCheckbox id={id} checked={checked} onCheckedChange={(v) => onCheckedChange?.(!!v)} />
   );
 }
 
 export function SwitchField({
+  id,
   checked,
   onCheckedChange,
+  "aria-describedby": describedBy,
 }: {
+  id?: string;
   checked: boolean;
   onCheckedChange?: (v: boolean) => void;
+  "aria-describedby"?: string;
 }) {
-  return <ShadSwitch checked={checked} onCheckedChange={onCheckedChange} />;
+  return (
+    <ShadSwitch
+      id={id}
+      size="lg"
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      aria-describedby={describedBy}
+    />
+  );
 }
 
 type SelectFieldOption = string | { label: string; value: string };

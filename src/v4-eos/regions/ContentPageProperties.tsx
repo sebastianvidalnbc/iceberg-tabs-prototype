@@ -1,5 +1,11 @@
 import { Panel, PanelHeader } from "@/v4-eos/ui/panel";
-import { ObjectHeader, PropertyRow, PropertyRows } from "@/v4-eos/ui/property";
+import {
+  ListAccessory,
+  ListItem,
+  ObjectHeader,
+  PropertyRow,
+  PropertyRows,
+} from "@/v4-eos/ui/property";
 import {
   TextField,
   TextAreaField,
@@ -35,7 +41,7 @@ function Field({
 }) {
   const invalid = Boolean(required && !value.trim());
   return (
-    <PropertyRow label={label} htmlFor={id} required={required} stacked={stacked} help={help}>
+    <PropertyRow label={label} htmlFor={id} required={required} help={help}>
       {stacked ? (
         <TextAreaField
           id={id}
@@ -68,10 +74,19 @@ function Toggle({
   onChange: (v: boolean) => void;
   help?: string;
 }) {
+  const helpId = help ? `${id}-help` : undefined;
   return (
-    <PropertyRow label={label} htmlFor={id} help={help}>
-      <SwitchField checked={checked} onCheckedChange={onChange} />
-    </PropertyRow>
+    <ListItem
+      primary={label}
+      labelFor={id}
+      secondary={help}
+      secondaryId={helpId}
+      trailing={
+        <ListAccessory type="switch">
+          <SwitchField id={id} checked={checked} onCheckedChange={onChange} aria-describedby={helpId} />
+        </ListAccessory>
+      }
+    />
   );
 }
 
@@ -106,8 +121,8 @@ export function ContentPageProperties({
           name={outlineLabel(group)}
           bleed
         />
-        <div className="mt-4">
-          <PropertyRows>
+        <div className="mt-2">
+          <PropertyRows className="-mx-3">
             {group === "overview" && (
               <>
                 <Toggle
@@ -117,25 +132,20 @@ export function ContentPageProperties({
                   onChange={(v) => onPatch({ enabled: v })}
                   help="When off, ATOM titles do not render this template."
                 />
-                <PropertyRow label="Territory">
-                  <span className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)]">
-                    {territory}
-                  </span>
-                </PropertyRow>
-                <PropertyRow label="Last modified">
-                  <span className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)]">
-                    {formatEditDate(history.editDate)} · {editedBy}
-                  </span>
-                </PropertyRow>
+                <ListItem primary="Territory" secondary={territory} />
+                <ListItem
+                  primary="Last modified"
+                  secondary={`${formatEditDate(history.editDate)} · ${editedBy}`}
+                />
               </>
             )}
 
             {group === "memberships" && (
-              <PropertyRow label="Passes" stacked help="Select a pass in the outline to edit it.">
-                <span className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] text-[var(--color-text-secondary)]">
+              <PropertyRow label="Passes" help="Select a pass in the outline to edit it.">
+                <p className="text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
                   Select, Premium / Premium Plus, STARZ, and Free. Free is
                   feature-flagged in production.
-                </span>
+                </p>
               </PropertyRow>
             )}
 

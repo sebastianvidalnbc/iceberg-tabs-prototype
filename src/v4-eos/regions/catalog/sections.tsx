@@ -11,7 +11,13 @@ import {
   SelectField,
   RadioField,
 } from "@/v4-eos/ui/form-controls";
-import { ObjectHeader, PropertyRow, PropertyRows } from "@/v4-eos/ui/property";
+import {
+  ListAccessory,
+  ListItem,
+  ObjectHeader,
+  PropertyRow,
+  PropertyRows,
+} from "@/v4-eos/ui/property";
 import { Panel, PanelHeader } from "@/v4-eos/ui/panel";
 import { Section, Specimen, Swatch } from "./layout";
 
@@ -191,21 +197,26 @@ export function PatternsSection() {
       </Specimen>
       <Specimen label="Property rows" className="flex-col items-stretch">
         <div className="w-full max-w-md rounded-md border border-border bg-[var(--color-bg-panel)] p-4">
-          <PropertyRows>
+          <PropertyRows className="-mx-3">
             <PropertyRow label="Title">
               <TextField defaultValue="What is Peacock" />
             </PropertyRow>
             <PropertyRow label="Layout">
               <SelectField value="Grid" options={["Grid", "Carousel", "List"]} />
             </PropertyRow>
-            <PropertyRow label="Enabled">
-              <SwitchField checked onCheckedChange={() => {}} />
-            </PropertyRow>
-            <PropertyRow label="Section ID">
-              <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[length:var(--type-body-sm-size)] text-muted-foreground">
-                sec-hero-01
-              </code>
-            </PropertyRow>
+            <ListItem
+              primary="Enabled"
+              labelFor="catalog-enabled"
+              trailing={
+                <ListAccessory type="switch">
+                  <SwitchField id="catalog-enabled" checked onCheckedChange={() => {}} />
+                </ListAccessory>
+              }
+            />
+            <ListItem
+              primary="Section ID"
+              secondary={<code className="font-mono">sec-hero-01</code>}
+            />
           </PropertyRows>
           <Separator className="my-4" />
           <div className="flex gap-2">
@@ -252,9 +263,10 @@ export function ContributionsSection() {
       </Specimen>
       <Specimen label="PropertyRow / PropertyRows" className="flex-col items-stretch gap-1">
         <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">
-          A generic label-left/control-right row that auto-stacks to
-          label-above-control on narrow viewports \u2014 shown live in Patterns
-          above, implemented in <code className="font-mono">ui/property.tsx</code>.
+          Field rows (label above control) on the Eos List item inset, plus
+          List item, accessory, subheader and divider compositions for
+          switches and read-only values \u2014 shown live in Patterns above,
+          implemented in <code className="font-mono">ui/property.tsx</code>.
         </p>
       </Specimen>
       <Specimen label="FilterChip + TableFooter" className="flex-col items-stretch gap-1">

@@ -15,6 +15,8 @@ import {
   RadioField,
 } from "@/v4-eos/ui/form-controls";
 import {
+  ListAccessory,
+  ListItem,
   ObjectHeader,
   PropertyRow as PropRow,
   PropertyRows,
@@ -357,25 +359,67 @@ function PropertyFieldRow({
   const id = useId();
   const errId = invalid ? `${id}-err` : undefined;
   const helpId = field.helper ? `${id}-help` : undefined;
+  const label = <FieldLabel label={field.label} tooltip={field.tooltip} />;
   // §item4 A field can present a read-only status badge in place of an editable
   // control (e.g. an offer's "Expired" pill in STATUS) — no input, no id wiring.
   if (field.badge) {
     return (
-      <PropRow label={<FieldLabel label={field.label} tooltip={field.tooltip} />}>
-        <Badge variant={field.badgeTone ?? "secondary"}>{field.badge}</Badge>
-      </PropRow>
+      <ListItem
+        primary={label}
+        trailing={
+          <ListAccessory type="label">
+            <Badge variant={field.badgeTone ?? "secondary"}>{field.badge}</Badge>
+          </ListAccessory>
+        }
+      />
     );
   }
-  const stacked =
-    field.kind === "textarea" ||
-    field.kind === "radio" ||
-    field.kind === "asset";
+  // Eos List / Switches: the switch is a separate trailing action.
+  if (field.kind === "switch") {
+    return (
+      <ListItem
+        primary={label}
+        labelFor={id}
+        secondary={field.helper}
+        secondaryId={helpId}
+        trailing={
+          <ListAccessory type="switch">
+            <SwitchField
+              id={id}
+              checked={value === "true"}
+              onCheckedChange={(v) => onEdit(v ? "true" : "false")}
+              aria-describedby={helpId}
+            />
+          </ListAccessory>
+        }
+      />
+    );
+  }
+  // Eos List / Selection: the leading checkbox is the row's primary action.
+  if (field.kind === "checkbox") {
+    return (
+      <ListItem
+        primary={label}
+        rowFor={id}
+        secondary={field.helper}
+        secondaryId={helpId}
+        leading={
+          <ListAccessory>
+            <CheckboxField
+              id={id}
+              checked={value === "true"}
+              onCheckedChange={(v) => onEdit(v ? "true" : "false")}
+            />
+          </ListAccessory>
+        }
+      />
+    );
+  }
   return (
     <PropRow
-      label={<FieldLabel label={field.label} tooltip={field.tooltip} />}
+      label={label}
       htmlFor={id}
       required={field.required}
-      stacked={stacked}
       help={
         invalid ? (
           <span id={errId} className="text-[var(--color-status-danger)]">
@@ -697,7 +741,7 @@ function InlineFeatureCollections({
             expanded={open}
             onToggle={() => onToggleList(list.id)}
           >
-            <div className="flex flex-col">
+            <div className="flex flex-col px-3 py-2">
               {items.map((item, i) => {
                 const resolved = resolve(item.id);
                 return (
@@ -999,7 +1043,7 @@ function FieldsBody({
       {/* Sections bleed to the p-4 panel edges so each divider anchors the eye
           across the full width (Figma section rhythm); px-4 on each section
           re-insets the content. */}
-      <div className="-mx-4 flex flex-col divide-y divide-[var(--color-border-subtle)]">
+      <div className="-mx-4 -mt-2 flex flex-col divide-y divide-[var(--color-border-default)]">
         {groups.map((group, i) => (
           <GroupSection
             // Index-qualified: a schema may repeat a subheading (e.g. the offer
@@ -1061,23 +1105,24 @@ function CollectionBody({
       </ObjectHeader>
 
       {count > 0 && (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="flex flex-col overflow-hidden rounded-sm border border-[var(--color-border-default)] bg-[var(--color-bg-surface)]">
           {items.map((item, i) => (
             <li
               key={item.id}
-              className="group/item flex items-center gap-1 rounded-sm border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] py-1 pl-2.5 pr-1"
+              className="group/item flex min-h-11 items-center gap-3 rounded-sm px-3 transition-colors hover:bg-[var(--color-bg-hover)] focus-within:bg-[var(--color-bg-hover)]"
             >
               {showFam && (
-                <span
-                  aria-hidden
-                  className="size-2 shrink-0 rounded-full"
-                  style={{ background: WIDGET_FAMILY_HUE[classifyWidget(item.label)].fam }}
-                />
+                <span aria-hidden className="flex h-8 w-6 shrink-0 items-center justify-center">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ background: WIDGET_FAMILY_HUE[classifyWidget(item.label)].fam }}
+                  />
+                </span>
               )}
               <span className="min-w-0 flex-1 truncate text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
                 {item.label}
               </span>
-              <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100">
+              <div className="-mr-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100">
                 <Button
                   variant="ghost"
                   size="icon-xs"
@@ -1144,19 +1189,23 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
         {status && <Badge variant={badgeVariant}>{status}</Badge>}
       </ObjectHeader>
       <div className="flex flex-col gap-4">
-        <PropertyRows>
+        <PropertyRows className="-mx-3">
           {role && (
-            <PropRow label="Type / Role">
-              <Badge variant="info">{role}</Badge>
-            </PropRow>
+            <ListItem
+              primary="Type / Role"
+              trailing={
+                <ListAccessory type="label">
+                  <Badge variant="info">{role}</Badge>
+                </ListAccessory>
+              }
+            />
           )}
-          <PropRow label="Section ID">
-            <code className="rounded-sm bg-[var(--color-bg-subtle)] px-1.5 py-0.5 font-mono text-[length:var(--type-body-sm-size)] text-muted-foreground">
-              {sectionId}
-            </code>
-          </PropRow>
+          <ListItem
+            primary="Section ID"
+            secondary={<code className="font-mono">{sectionId}</code>}
+          />
           {designOptions && (
-            <PropRow label="Design" stacked>
+            <PropRow label="Design">
               <RadioField
                 name={`design-${sectionId}`}
                 value={design ?? designOptions[0]}
