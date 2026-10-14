@@ -14,7 +14,6 @@ import { ContentPageOutline } from "../regions/ContentPageOutline";
 import { ContentPageProperties } from "../regions/ContentPageProperties";
 import { ContentPagePreview } from "../regions/ContentPagePreview";
 import {
-  CONTENT_PAGE_HISTORY,
   DEFAULT_ATOM_ID,
   atomById,
   getContentPage,
@@ -109,11 +108,6 @@ export function ContentPagesWorkspace({ pageId }: { pageId: string }) {
 
   if (!record || !config) return null;
 
-  const history = {
-    editedBy: record.editedBy,
-    editDate: CONTENT_PAGE_HISTORY.editDate,
-  };
-
   return (
     <AppShell activeContext="contentPage">
       <div className="ui-ws-editor">
@@ -138,8 +132,6 @@ export function ContentPagesWorkspace({ pageId }: { pageId: string }) {
           <ContentPageOutline
             selected={group}
             onSelect={onSelectGroup}
-            title={record.name}
-            history={history}
           />
           <div
             role="separator"
@@ -173,8 +165,8 @@ export function ContentPagesWorkspace({ pageId }: { pageId: string }) {
           <ContentPageProperties
             group={group}
             config={config}
-            slug={record.slug}
-            territory={`${record.territory} · ${record.locale}`}
+            created={record.created}
+            modified={record.modified}
             editedBy={record.editedBy}
             onPatch={onPatch}
             onPatchPass={onPatchPass}

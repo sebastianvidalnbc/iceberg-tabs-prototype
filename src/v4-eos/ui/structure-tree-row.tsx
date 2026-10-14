@@ -26,6 +26,8 @@ export interface StructureTreeRowProps {
   boxed?: boolean;
   noTrailingFade?: boolean;
   famType?: WidgetType;
+  /** Content Pages outline: reads as a fill-out section that opens Properties. */
+  sectionEntry?: boolean;
   onSelect: () => void;
   onToggle: () => void;
 }
@@ -48,6 +50,7 @@ export function StructureTreeRow({
   boxed,
   noTrailingFade,
   famType,
+  sectionEntry,
   onSelect,
   onToggle,
 }: StructureTreeRowProps) {
@@ -67,15 +70,35 @@ export function StructureTreeRow({
       data-drag-row
       onClick={onSelect}
       {...dropHandlers}
-      style={{ paddingLeft: `calc(var(--structure-tree-pad-x) + ${depth} * ${INDENT_PX}px)` }}
+      style={
+        sectionEntry
+          ? {
+              marginLeft: `calc(var(--space-1) + ${depth} * 32px)`,
+              marginRight: "var(--space-1)",
+              paddingLeft: "var(--space-3)",
+              paddingRight: "var(--space-2)",
+            }
+          : { paddingLeft: `calc(var(--structure-tree-pad-x) + ${depth} * ${INDENT_PX}px)` }
+      }
       className={cn(
         ROW_CLASS,
-        "min-h-[var(--structure-tree-row-h)]",
+        sectionEntry
+          ? "min-h-[36px] text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)]"
+          : "min-h-[var(--structure-tree-row-h)]",
         fluid && "w-max min-w-full",
-        !selected && !boxed && "hover:bg-[var(--color-bg-hover)] [--row-bg:var(--color-bg-panel)] hover:[--row-bg:var(--color-bg-hover)]",
+        sectionEntry &&
+          !selected &&
+          "bg-[var(--color-bg-elevated)] shadow-[inset_0_0_0_1px_var(--color-border-subtle)] hover:shadow-[inset_0_0_0_1px_var(--color-border-default)]",
+        !selected &&
+          !boxed &&
+          !sectionEntry &&
+          "hover:bg-[var(--color-bg-hover)] [--row-bg:var(--structure-tree-canvas,var(--color-bg-panel))] hover:[--row-bg:var(--color-bg-hover)]",
+        sectionEntry &&
+          !selected &&
+          "hover:bg-[var(--color-bg-hover)] [--row-bg:var(--color-bg-hover)]",
         selected &&
           !boxed &&
-          "bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground shadow-[inset_2px_0_0_0_var(--color-action-primary)]",
+          "bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground shadow-[inset_3px_0_0_0_var(--color-action-primary)]",
         selected && boxed && "text-foreground",
         isDragging && "opacity-40",
         isOver &&
@@ -83,7 +106,9 @@ export function StructureTreeRow({
         disabled && "opacity-55",
       )}
     >
-      <span className="flex w-4 shrink-0 items-center justify-center">{grip}</span>
+      {!sectionEntry && (
+        <span className="flex w-4 shrink-0 items-center justify-center">{grip}</span>
+      )}
       {hasChildren ? (
         <button
           type="button"
@@ -100,7 +125,7 @@ export function StructureTreeRow({
             className={cn("transition-transform duration-150", isOpen && "rotate-90")}
           />
         </button>
-      ) : (
+      ) : sectionEntry ? null : (
         <span aria-hidden className="size-5 shrink-0" />
       )}
       {famType ? (
@@ -117,18 +142,33 @@ export function StructureTreeRow({
         >
           <MSym name={icon} size={16} />
         </span>
-      ) : (
+      ) : sectionEntry ? null : (
         <span aria-hidden className="size-5 shrink-0" />
       )}
       <span
         className={cn(
-          "min-w-0 flex-1 truncate",
-          labelWeight === "medium" ? "font-medium text-foreground" : "font-normal text-foreground/90",
+          sectionEntry
+            ? "min-w-0 flex-1 whitespace-normal py-2"
+            : "min-w-0 flex-1 truncate",
+          labelWeight === "medium"
+            ? "font-medium text-foreground"
+            : "font-normal text-foreground/90",
           disabled && "line-through",
         )}
       >
         {label}
       </span>
+      {sectionEntry && !hasChildren && !trailing && (
+        <span
+          aria-hidden
+          className={cn(
+            "ml-1 shrink-0 text-[var(--color-text-muted)] transition-colors",
+            selected && "text-[var(--color-action-primary)]",
+          )}
+        >
+          <MSym name="chevron_right" size={18} />
+        </span>
+      )}
       {trailing != null && (
         <span
           className={cn(

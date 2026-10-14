@@ -431,12 +431,28 @@
 }
 .structure-tree-root--collection {
   padding-top: var(--space-1);
+  --structure-tree-canvas: var(--color-bg-subtle);
+}
+.structure-tree-root--outline-sections {
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+  gap: var(--space-1);
+}
+.structure-tree-root:not(.structure-tree-root--collection) {
+  --structure-tree-canvas: var(--color-bg-panel);
 }
 .structure-tree-break {
   height: var(--space-2);
   margin-top: var(--space-1);
 }
 .ui-ws-explorer__pane--pages {
+  background: var(--color-bg-subtle);
+}
+/* Content Pages outline: one column, full height — scroll viewport matches pane tone. */
+.ui-ws-explorer--content-outline {
+  background: var(--color-bg-subtle);
+}
+.ui-ws-explorer--content-outline [data-slot="scroll-area-viewport"] {
   background: var(--color-bg-subtle);
 }
 .ui-ws-explorer__pane--pages [data-chrome="panel-header"] {

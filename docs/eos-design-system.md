@@ -599,10 +599,13 @@ fieldLabel / value / help / meta).
 Tokens: `--structure-tree-size` (13px), `--structure-tree-lh`, `--structure-tree-row-h`
 (32px), `--structure-tree-pad-x`. Components: `structure-tree-row.tsx`,
 `structure-tree-visual.ts` (type → icon + label weight + section breaks;
-`getContentPageOutlineVisual` for Content Pages template outline). Pages /
-Widgets collection and Content Pages outline use tonal `--color-bg-subtle`;
-Structure pane uses `--color-bg-panel`. Widget collection configs use the
-`extension` icon; page variants use `description`.
+`getContentPageOutlineVisual`). Content Pages uses `sectionEntry` rows matching
+the production form hierarchy. Memberships, Texts, and Translation Copy are
+expandable group labels only; their children are selectable. Parent disclosure points right
+when closed and down when open; child rows are inset 32px. Long section labels
+wrap instead of truncating. Pages / Widgets collection and Content Pages outline
+use tonal `--color-bg-subtle` (`--structure-tree-canvas`); Structure pane uses
+`--color-bg-panel`. Selection uses a 3px left accent.
 
 ### 7.12 V4 authoring-shell typography (`chromeType`)
 

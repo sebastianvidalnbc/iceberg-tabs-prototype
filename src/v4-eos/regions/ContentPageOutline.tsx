@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Panel, PanelHeader } from "@/v4-eos/ui/panel";
+import { Panel } from "@/v4-eos/ui/panel";
 import { ScrollArea } from "@/v4-eos/ui/scroll-area";
 import { StructureTreeRow } from "@/v4-eos/ui/structure-tree-row";
 import { getContentPageOutlineVisual } from "@/v4-eos/ui/structure-tree-visual";
 import {
   CONTENT_PAGE_OUTLINE,
-  formatEditDate,
-  type ContentPageHistory,
+  CONTENT_PAGE_OUTLINE_DEFAULT_OPEN,
   type OutlineGroupId,
   type OutlineNode,
 } from "../contentPages";
@@ -14,16 +13,13 @@ import {
 export function ContentPageOutline({
   selected,
   onSelect,
-  title,
-  history,
 }: {
   selected: OutlineGroupId;
   onSelect: (id: OutlineGroupId) => void;
-  title: string;
-  history: ContentPageHistory;
 }) {
-  const [open, setOpen] = useState<Set<string>>(() => new Set(["memberships"]));
-
+  const [open, setOpen] = useState<Set<string>>(() =>
+    new Set(CONTENT_PAGE_OUTLINE_DEFAULT_OPEN),
+  );
   const toggle = (id: string) => {
     setOpen((prev) => {
       const next = new Set(prev);
@@ -33,24 +29,24 @@ export function ContentPageOutline({
   };
 
   const render = (nodes: OutlineNode[], depth: number) =>
-    nodes.map((node, index) => {
+    nodes.map((node) => {
       const hasChildren = Boolean(node.children?.length);
       const isOpen = open.has(node.id);
-      const visual = getContentPageOutlineVisual(node.id, { depth, index });
+      const visual = getContentPageOutlineVisual(node.id, { depth });
+      const selectable = node.selectable !== false;
       return (
         <div key={node.id}>
-          {visual.sectionBreak && (
-            <div className="structure-tree-break" aria-hidden role="presentation" />
-          )}
           <StructureTreeRow
             depth={depth}
+            sectionEntry
             hasChildren={hasChildren}
             isOpen={isOpen}
-            selected={selected === node.id}
+            selected={selectable && selected === node.id}
             label={node.label}
             labelWeight={visual.labelWeight}
-            icon={visual.icon}
-            onSelect={() => onSelect(node.id)}
+            onSelect={() =>
+              selectable ? onSelect(node.id) : toggle(node.id)
+            }
             onToggle={() => toggle(node.id)}
           />
           {hasChildren && isOpen && render(node.children!, depth + 1)}
@@ -59,26 +55,19 @@ export function ContentPageOutline({
     });
 
   return (
-    <Panel className="ui-ws__region ui-ws-explorer" aria-label="Template">
-      <div className="ui-ws-explorer__pane--pages flex min-h-0 flex-1 flex-col">
-        <PanelHeader eyebrow="Content Pages" title={title} />
-        <ScrollArea className="min-h-0 flex-1">
-          <div
-            className="structure-tree-root structure-tree-root--collection"
-            role="tree"
-            aria-label="Template outline"
-          >
-            {render(CONTENT_PAGE_OUTLINE, 0)}
-          </div>
-        </ScrollArea>
-      </div>
-      <div className="shrink-0 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2">
-        <p className="text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-[var(--color-text-muted)]">
-          Last modified {formatEditDate(history.editDate)}
-          {" "}
-          by {history.editedBy}
-        </p>
-      </div>
+    <Panel
+      className="ui-ws__region ui-ws-explorer ui-ws-explorer--content-outline bg-[var(--color-bg-subtle)]"
+      aria-label="Template"
+    >
+      <ScrollArea className="min-h-0 flex-1 basis-0">
+        <div
+          className="structure-tree-root structure-tree-root--collection structure-tree-root--outline-sections flex flex-col gap-1"
+          role="tree"
+          aria-label="Template outline"
+        >
+          {render(CONTENT_PAGE_OUTLINE, 0)}
+        </div>
+      </ScrollArea>
     </Panel>
   );
 }

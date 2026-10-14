@@ -14,23 +14,95 @@ export interface PassConfig {
   breadcrumbLabel: string;
   breadcrumbUrl: string;
   termsModule: string;
-  filterRecommended: boolean;
-  enableCustomFaq: boolean;
+  optionalWidget1: string;
+  optionalWidget2: string;
+  optionalWidget3: string;
   customFaqTitle: string;
+}
+
+export interface ContentPageFaqAnswer {
+  textBeginning: string;
+  afterTitleText: string;
+  urlText: string;
+  textEnd: string;
 }
 
 export interface ContentPageI18n {
   watch: string;
   details: string;
   aboutSeries: string;
+  aboutEpisode: string;
   aboutMovie: string;
+  ratings: string;
+  cast: string;
+  crew: string;
+  director: string;
+  producer: string;
+  genre: string;
+  studio: string;
+  releaseDate: string;
+  runtime: string;
+  streaming: string;
+  comingSoon: string;
+  unavailable: string;
+  comingSoonLabel: string;
+  streamingUntil: string;
+  season: string;
+  seasons: string;
+  episode: string;
+  episodes: string;
+  seasonSymbol: string;
+  episodeSymbol: string;
+  minuteSymbol: string;
+  series: string;
+  movies: string;
+  getPremium: string;
+  mins: string;
+  viewAll: string;
+  audioDescribedAltText: string;
+  closedCaptionedAltText: string;
+  dolbyVisionAltText: string;
+  showMoreText: string;
+  showFewerText: string;
+  selectSeasonLabel: string;
+  heroButtonAria: string;
+  heroCriticsAria: string;
+  heroFanAria: string;
+  heroDescriptionReadMore: string;
+  heroDescriptionReadLess: string;
+  recommendationsTitle: string;
   faqTitle: string;
+  faqHowWatchTitle: string;
+  faqHowWatchShowAnswer: ContentPageFaqAnswer;
+  faqHowWatchMovieAnswer: ContentPageFaqAnswer;
+  faqWhereWatchTitle: string;
+  faqWhereWatchShowAnswer: ContentPageFaqAnswer;
+  faqWhereWatchMovieAnswer: ContentPageFaqAnswer;
+  faqHowLongTitle: string;
+  faqHowLongAnswer: ContentPageFaqAnswer;
+  faqSeasonsTitle: string;
+  faqSeasonsSingleAnswer: ContentPageFaqAnswer;
+  faqSeasonsPluralAnswer: ContentPageFaqAnswer;
   showSubheading: string;
   movieSubheading: string;
+  seriesMetadataTitle: string;
+  seriesMetadataTitleFallback: string;
+  seasonMetadataTitle: string;
+  seasonMetadataTitleFallback: string;
+  programmeMetadataTitle: string;
+  programmeMetadataTitleFallback: string;
+  episodeMetadataTitle: string;
+  episodeMetadataTitleFallback: string;
+  episodeMetadataDescription: string;
+  episodeMetadataDescriptionFallback: string;
+  episodeMetadataKeywords: string;
+  episodeMetadataOgTitle: string;
 }
 
 export interface ContentPageConfig {
   enabled: boolean;
+  filterRecommendedCarousel: boolean;
+  enableCustomFaq: boolean;
   legal: string;
   skipLinkMain: string;
   skipLinkFooter: string;
@@ -66,11 +138,6 @@ export interface ContentPageConfig {
   optimizely: boolean;
   i18n: ContentPageI18n;
   passes: PassConfig[];
-}
-
-export interface ContentPageHistory {
-  editedBy: string;
-  editDate: string;
 }
 
 export type AtomKind = "series" | "movie" | "episode";
@@ -114,31 +181,35 @@ export interface ContentPageRecord {
 
 export type OutlineGroupId =
   | "overview"
+  | "widgets"
   | "memberships"
   | `pass-${PassType}`
-  | "widgets"
-  | "footer"
-  | "sticky"
-  | "legal"
+  | "filter-recommended"
+  | "faq-override"
+  | "territory-pages"
+  | "accessibility"
   | "urls"
+  | "texts"
   | "episodes"
+  | "button-text"
+  | "email-capture"
   | "carousels"
-  | "video-end"
-  | "video-pause"
+  | "video"
+  | "translation-copy"
   | "i18n"
-  | "experiment";
+  | "i18n-hero"
+  | "i18n-recommended"
+  | "i18n-faq"
+  | "i18n-subheadings"
+  | "i18n-meta";
 
 export interface OutlineNode {
   id: OutlineGroupId;
   label: string;
   hint?: string;
+  selectable?: boolean;
   children?: OutlineNode[];
 }
-
-export const CONTENT_PAGE_HISTORY: ContentPageHistory = {
-  editedBy: "Sebastian Vidal",
-  editDate: "2026-10-06T14:22:00.000Z",
-};
 
 export const ATOM_TITLES: AtomTitle[] = [
   {
@@ -218,13 +289,16 @@ const pass = (
   breadcrumbLabel: "Plans",
   breadcrumbUrl: "/plans",
   termsModule: "content-page-terms",
-  filterRecommended: false,
-  enableCustomFaq: false,
+  optionalWidget1: "",
+  optionalWidget2: "",
+  optionalWidget3: "",
   customFaqTitle: "",
 });
 
 export const DEFAULT_CONTENT_PAGE: ContentPageConfig = {
   enabled: true,
+  filterRecommendedCarousel: false,
+  enableCustomFaq: false,
   legal: "Cancel anytime. Restrictions apply. See terms for details.",
   skipLinkMain: "Skip to main content",
   skipLinkFooter: "Skip to footer",
@@ -262,10 +336,114 @@ export const DEFAULT_CONTENT_PAGE: ContentPageConfig = {
     watch: "Watch",
     details: "Details",
     aboutSeries: "About this Series",
+    aboutEpisode: "About this Episode",
     aboutMovie: "About this Movie",
-    faqTitle: "Frequently asked questions",
-    showSubheading: "Watch full episodes of {{title}}",
+    ratings: "Ratings",
+    cast: "Cast",
+    crew: "Crew",
+    director: "Director",
+    producer: "Producer",
+    genre: "Genre",
+    studio: "Studio",
+    releaseDate: "Release Date",
+    runtime: "Runtime",
+    streaming: "Streaming",
+    comingSoon: "Coming Soon",
+    unavailable: "Unavailable",
+    comingSoonLabel: "",
+    streamingUntil: "Streaming until {{date}}",
+    season: "Season",
+    seasons: "Seasons",
+    episode: "Episode",
+    episodes: "Episodes",
+    seasonSymbol: "",
+    episodeSymbol: "",
+    minuteSymbol: "",
+    series: "Series",
+    movies: "Movies",
+    getPremium: "Watch on Peacock",
+    mins: "Mins",
+    viewAll: "View all",
+    audioDescribedAltText: "Audio Described",
+    closedCaptionedAltText: "Closed Captioned",
+    dolbyVisionAltText: "Dolby Vision",
+    showMoreText: "",
+    showFewerText: "",
+    selectSeasonLabel: "",
+    heroButtonAria: "Watch on Peacock",
+    heroCriticsAria: "Rotten Tomatoes critics score",
+    heroFanAria: "Rotten Tomatoes fan score",
+    heroDescriptionReadMore: "Read More",
+    heroDescriptionReadLess: "Read Less",
+    recommendationsTitle: "You May Also Like",
+    faqTitle: "Frequently Asked Questions",
+    faqHowWatchTitle: "How can I watch {{title}}?",
+    faqHowWatchShowAnswer: {
+      textBeginning:
+        "Download the Peacock app and start streaming full episodes of",
+      afterTitleText: ".",
+      urlText: "View the full list of supported devices",
+      textEnd: ".",
+    },
+    faqHowWatchMovieAnswer: {
+      textBeginning: "Download the Peacock app and start streaming",
+      afterTitleText: ".",
+      urlText: "View the full list of supported devices",
+      textEnd: ".",
+    },
+    faqWhereWatchTitle: "Where can I watch {{title}}?",
+    faqWhereWatchShowAnswer: {
+      textBeginning: "You can watch",
+      afterTitleText: "on Peacock. Just",
+      urlText: "sign up",
+      textEnd: "and stream every episode.",
+    },
+    faqWhereWatchMovieAnswer: {
+      textBeginning: "You can watch",
+      afterTitleText: "on Peacock. Just",
+      urlText: "sign up",
+      textEnd: "and stream every episode.",
+    },
+    faqHowLongTitle: "How long is {{title}}?",
+    faqHowLongAnswer: {
+      textBeginning: "has a running time of {{duration}}. Stream it on",
+      afterTitleText: ".",
+      urlText: "",
+      textEnd: "",
+    },
+    faqSeasonsTitle: "How many seasons of {{title}} are there?",
+    faqSeasonsSingleAnswer: {
+      textBeginning: "There is currently {{availableSeasonCount}} season of",
+      afterTitleText: "available for streaming on Peacock.",
+      urlText: "",
+      textEnd: "",
+    },
+    faqSeasonsPluralAnswer: {
+      textBeginning: "Peacock currently has {{availableSeasonCount}} seasons of",
+      afterTitleText: "available for streaming.",
+      urlText: "",
+      textEnd: "",
+    },
+    showSubheading: "Watch Full Episodes of {{title}}",
     movieSubheading: "Watch {{title}}",
+    seriesMetadataTitle: "Watch {{title}} | Peacock",
+    seriesMetadataTitleFallback: "Watch Peacock Streaming Online",
+    seasonMetadataTitle:
+      "Watch {{title}} Season {{season}} Streaming Online | Peacock",
+    seasonMetadataTitleFallback: "Watch Peacock Streaming Online",
+    programmeMetadataTitle: "Watch {{title}} | Peacock",
+    programmeMetadataTitleFallback: "Watch Peacock Streaming Online",
+    episodeMetadataTitle:
+      "Watch {{title}} Season {{seasonNumber}}, Episode {{episodeNumber}}: {{episodeName}} | Peacock",
+    episodeMetadataTitleFallback: "Watch Peacock Streaming Online",
+    episodeMetadataDescription:
+      "Peacock is your go-to streaming service for watching {{title}} Season {{seasonNumber}}, Episode {{episodeNumber}}: {{episodeName}}. Watch now!",
+    episodeMetadataDescriptionFallback:
+      "Peacock is your go-to streaming service for hit movies, TV shows, and live sports. Stream Peacock Originals, NBC and Bravo favorites, blockbuster films, NFL, Premier League, Big Ten Football, and more!",
+    episodeMetadataKeywords:
+      "{{title}} Season {{seasonNumber}}, Episode {{episodeNumber}}, Watch Title Season {{seasonNumber}}, Episode {{episodeNumber}}, Stream {{title}} Season {{seasonNumber}}, Episode {{episodeNumber}}, {{episodeName}}",
+    episodeMetadataOgTitle:
+      "Watch {{title}} Season {{seasonNumber}} Episode {{episodeNumber}}: {{episodeName}} on Peacock",
   },
   passes: [
     pass("select", "Select", "Start Select", "/checkout/select"),
@@ -275,30 +453,61 @@ export const DEFAULT_CONTENT_PAGE: ContentPageConfig = {
   ],
 };
 
+// Production Iceberg Content Page form headings, in source order. Only the
+// tabbed/grouped sections become nested tree nodes.
 export const CONTENT_PAGE_OUTLINE: OutlineNode[] = [
-  { id: "overview", label: "Overview" },
+  { id: "overview", label: "Content Page" },
+  { id: "widgets", label: "Content Page Widgets" },
   {
     id: "memberships",
-    label: "Content Page Memberships",
+    label: "Memberships",
+    selectable: false,
     children: [
       { id: "pass-select", label: "Select" },
       { id: "pass-premium", label: "Premium / Premium Plus" },
       { id: "pass-starz", label: "STARZ" },
-      { id: "pass-free", label: "Free" },
     ],
   },
-  { id: "widgets", label: "Territory-Specific Widget" },
-  { id: "footer", label: "Footer Navigation Widget" },
-  { id: "sticky", label: "Sticky Banner Widget" },
-  { id: "legal", label: "Legal" },
-  { id: "urls", label: "PDP URL" },
-  { id: "episodes", label: "Episode Text" },
-  { id: "carousels", label: "Fallback Carousels" },
-  { id: "video-end", label: "Video End Message" },
-  { id: "video-pause", label: "Video Pause Message" },
-  { id: "i18n", label: "Common words" },
-  { id: "experiment", label: "Optimizely" },
+  {
+    id: "filter-recommended",
+    label: "Filter Recommended Carousel by Content Segment",
+  },
+  { id: "faq-override", label: "FAQ Override" },
+  { id: "territory-pages", label: "Content Pages for Territory" },
+  { id: "accessibility", label: "Accessibility - Skip Links" },
+  { id: "urls", label: "PDP URLs" },
+  {
+    id: "texts",
+    label: "Texts",
+    selectable: false,
+    children: [
+      { id: "episodes", label: "Episode Text" },
+      { id: "button-text", label: "Button Text" },
+      { id: "email-capture", label: "Email Capture" },
+      { id: "video", label: "Video Text" },
+    ],
+  },
+  { id: "carousels", label: "Content Page Carousels" },
+  {
+    id: "translation-copy",
+    label: "Translation Copy",
+    selectable: false,
+    children: [
+      { id: "i18n", label: "Common Words" },
+      { id: "i18n-hero", label: "Hero Copy" },
+      { id: "i18n-recommended", label: "Recommended Copy" },
+      { id: "i18n-faq", label: "FAQ Copy" },
+      { id: "i18n-subheadings", label: "Subheadings" },
+      { id: "i18n-meta", label: "Meta Copy" },
+    ],
+  },
 ];
+
+export const CONTENT_PAGE_OUTLINE_DEFAULT_OPEN = new Set<OutlineGroupId>([
+  "memberships",
+  "texts",
+  "translation-copy",
+]);
 
 export function atomById(id: string): AtomTitle {
   return ATOM_TITLES.find((t) => t.id === id) ?? ATOM_TITLES[0];
@@ -325,21 +534,68 @@ export function outlineLabel(id: OutlineGroupId): string {
   return walk(CONTENT_PAGE_OUTLINE) ?? "Overview";
 }
 
-export function formatEditDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
-}
-
 export function interpolate(template: string, title: string): string {
   return template.replace(/\{\{title\}\}/g, title);
 }
 
 function cloneConfig(base: ContentPageConfig = DEFAULT_CONTENT_PAGE): ContentPageConfig {
   return structuredClone(base);
+}
+
+function usContentPageConfig(): ContentPageConfig {
+  const config = cloneConfig();
+  return {
+    ...config,
+    whatIsWidget: "",
+    extraWidget1: "trailer-rail",
+    extraWidget2: "what-is-peacock",
+    extraWidget3: "",
+    footerNavWidget: "seo-footer",
+    stickyBannerWidget: "sticky-banner-widget-data",
+    optimizely: false,
+    legal: "",
+    skipLinkMain: "",
+    skipLinkFooter: "",
+    faqSuccessRedirect: "",
+    devicesHref: "/devices",
+    allMonthlyPlansHref: "/plans/all-monthly",
+    freeEpisodesHref: "/plans/all-monthly",
+    premiumEpisodesHref: "/plans/all-monthly",
+    mixedEpisodesHref: "/plans/all-monthly",
+    freeEpisodesText: "Sign up for Peacock to watch this episode.",
+    premiumEpisodesText: "Sign up for Peacock to watch this episode.",
+    allPlansBtnText: "Get Started",
+    premiumBtnText: "Get Started",
+    mixedBtnText: "Get Started",
+    freeBtnText: "Get Started",
+    emailPlaceholder: "",
+    videoEnd1: "",
+    videoEnd2: "",
+    videoPause1: "",
+    videoPause2: "",
+    videoPauseCta: "",
+    videoPauseHref: "",
+    carouselTv: "Bloodthirsty",
+    carouselMovies: "Bloodthirsty",
+    carouselKids: "Bloodthirsty",
+    carouselNews: "Bloodthirsty",
+    passes: config.passes.map((membership) =>
+      membership.passType === "select"
+        ? {
+            ...membership,
+            ctaLabel: "Get Started",
+            upcomingCtaLabel: "",
+            ctaUrl: "#ib-section-content-pages-plan-picker-with-select",
+            breadcrumbLabel: "",
+            breadcrumbUrl: "",
+            termsModule: "",
+            optionalWidget1: "content-pages-plan-picker-with-select",
+            optionalWidget2: "",
+            optionalWidget3: "",
+          }
+        : membership,
+    ),
+  };
 }
 
 function slugify(value: string): string {
@@ -359,10 +615,10 @@ const SEED_CONTENT_PAGES: ContentPageRecord[] = [
     territory: "United States",
     locale: "en-US",
     status: "Published",
-    created: "Apr 10 26",
-    modified: "3 hours ago",
+    created: "Mon 12 Oct 26",
+    modified: "Mon 12 Oct 26",
     editedBy: "Vidal, Sebastian",
-    config: cloneConfig(),
+    config: usContentPageConfig(),
   },
   {
     id: "content-page-uk",
@@ -371,8 +627,8 @@ const SEED_CONTENT_PAGES: ContentPageRecord[] = [
     territory: "United Kingdom",
     locale: "en-GB",
     status: "Draft",
-    created: "Sep 22 26",
-    modified: "12 days ago",
+    created: "Tue 22 Sep 26",
+    modified: "Fri 02 Oct 26",
     editedBy: "Bueno, Fernanda",
     config: cloneConfig(),
   },

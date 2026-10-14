@@ -125,7 +125,7 @@ export function SelectField({
     match && match.label !== placeholder ? match.label : value || undefined;
 
   return (
-    <ShadSelect value={value || undefined} onValueChange={onValueChange}>
+    <ShadSelect value={value} onValueChange={onValueChange}>
       <SelectTrigger
         id={id}
         size="sm"

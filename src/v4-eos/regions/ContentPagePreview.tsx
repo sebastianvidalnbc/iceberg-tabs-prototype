@@ -54,7 +54,7 @@ function TitlePage({
     title.kind === "movie"
       ? interpolate(config.i18n.movieSubheading, title.title)
       : interpolate(config.i18n.showSubheading, title.title);
-  const faqTitle = pass.enableCustomFaq && pass.customFaqTitle
+  const faqTitle = config.enableCustomFaq && pass.customFaqTitle
     ? pass.customFaqTitle
     : config.i18n.faqTitle;
   const meta = [
@@ -154,7 +154,9 @@ function TitlePage({
             <summary>How can I watch {title.title}?</summary>
             <p>
               {pass.ctaLabel} on Peacock with a {pass.title} plan.
-              {pass.filterRecommended ? " Recommendations are filtered to this pass." : ""}
+              {config.filterRecommendedCarousel
+                ? " Recommendations are filtered to this pass."
+                : ""}
             </p>
           </details>
           <details>
