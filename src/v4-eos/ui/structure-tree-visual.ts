@@ -80,3 +80,48 @@ export function getStructureNodeVisual(
   }
   return { labelWeight: "regular" };
 }
+
+/** Content Pages template outline — same row chrome as Explorer structure trees. */
+export function getContentPageOutlineVisual(
+  id: string,
+  ctx: { depth: number; index: number },
+): StructureNodeVisual {
+  const sectionBreak = ctx.depth === 0 && ctx.index > 0;
+  if (id === "overview") {
+    return { labelWeight: "medium", icon: "article", sectionBreak };
+  }
+  if (id === "memberships") {
+    return { labelWeight: "medium", icon: "folder", sectionBreak };
+  }
+  if (id.startsWith("pass-")) {
+    return { labelWeight: "regular", icon: "crop_square" };
+  }
+  if (id === "widgets" || id === "footer" || id === "sticky") {
+    return { labelWeight: "regular", icon: "extension", sectionBreak };
+  }
+  if (id === "legal") {
+    return { labelWeight: "regular", icon: "gavel", sectionBreak };
+  }
+  if (id === "urls") {
+    return { labelWeight: "regular", icon: "link", sectionBreak };
+  }
+  if (id === "episodes") {
+    return { labelWeight: "regular", icon: "movie", sectionBreak };
+  }
+  if (id === "carousels") {
+    return { labelWeight: "regular", icon: "view_carousel", sectionBreak };
+  }
+  if (id === "video-end" || id === "video-pause") {
+    return { labelWeight: "regular", icon: "videocam", sectionBreak };
+  }
+  if (id === "i18n") {
+    return { labelWeight: "regular", icon: "translate", sectionBreak };
+  }
+  if (id === "experiment") {
+    return { labelWeight: "regular", icon: "science", sectionBreak };
+  }
+  return {
+    labelWeight: ctx.depth === 0 ? "medium" : "regular",
+    sectionBreak,
+  };
+}

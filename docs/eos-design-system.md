@@ -598,8 +598,11 @@ fieldLabel / value / help / meta).
 
 Tokens: `--structure-tree-size` (13px), `--structure-tree-lh`, `--structure-tree-row-h`
 (32px), `--structure-tree-pad-x`. Components: `structure-tree-row.tsx`,
-`structure-tree-visual.ts` (type → icon + label weight + section breaks). Pages
-pane uses tonal `--color-bg-subtle`; Structure pane uses `--color-bg-panel`.
+`structure-tree-visual.ts` (type → icon + label weight + section breaks;
+`getContentPageOutlineVisual` for Content Pages template outline). Pages /
+Widgets collection and Content Pages outline use tonal `--color-bg-subtle`;
+Structure pane uses `--color-bg-panel`. Widget collection configs use the
+`extension` icon; page variants use `description`.
 
 ### 7.12 V4 authoring-shell typography (`chromeType`)
 

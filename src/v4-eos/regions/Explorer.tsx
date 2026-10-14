@@ -36,16 +36,19 @@ function famTypeForNode(node: StructureNode): WidgetType | undefined {
 // Remounted per context (via a React key) so its local expansion resets when
 // the dataset changes. Rows use StructureTreeRow (layers-style hierarchy).
 function CollectionTree({
+  context,
   tree,
   selectedId,
   onSelectRoute,
   onSelectExperience,
 }: {
+  context: AuthoringContext;
   tree: TreeNode[];
   selectedId: string | null;
   onSelectRoute: (id: string) => void;
   onSelectExperience: (id: string) => void;
 }) {
+  const experienceIcon = context === "widget" ? "extension" : "description";
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     const acc = new Set<string>();
     const walk = (nodes: TreeNode[]) => {
@@ -84,7 +87,13 @@ function CollectionTree({
               )
             }
             labelWeight={node.type === "variant" ? "medium" : "regular"}
-            icon={node.type === "variant" ? "description" : node.kind === "path" ? "link" : undefined}
+            icon={
+              node.type === "variant"
+                ? experienceIcon
+                : node.kind === "path"
+                  ? "link"
+                  : undefined
+            }
             onSelect={() =>
               node.type === "variant"
                 ? onSelectExperience(node.id)
@@ -734,6 +743,7 @@ export function Explorer({
             <ScrollArea className="min-h-0 flex-1">
               <CollectionTree
                 key={context}
+                context={context}
                 tree={collectionTree}
                 selectedId={collectionSelectedId}
                 onSelectRoute={onSelectRoute}
