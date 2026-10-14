@@ -14,11 +14,12 @@ import {
 import {
   ListAccessory,
   ListItem,
-  ObjectHeader,
+  InspectorHeader,
+  CompactPropertyRow,
   PropertyRow,
   PropertyRows,
 } from "@/v4-eos/ui/property";
-import { Panel, PanelHeader } from "@/v4-eos/ui/panel";
+import { Panel } from "@/v4-eos/ui/panel";
 import { Section, Specimen, Swatch } from "./layout";
 
 // --- Foundations: the Eos M3 color/type/spacing roles this workspace is built
@@ -180,30 +181,28 @@ export function PatternsSection() {
     <Section
       id="patterns"
       title="Patterns"
-      lead="Iceberg authoring compositions built from Eos primitives: panel chrome (eyebrow + title + actions) and the Properties label/control rows."
+      lead="V4 Properties inspector: contextual header, compact rows, and stacked fields on Eos tokens."
     >
-      <Specimen label="Panel header" className="flex-col items-stretch">
-        <Panel className="w-full max-w-md overflow-hidden rounded-md border border-border">
-          <PanelHeader
-            eyebrow="Properties"
-            title="Hero"
-            sub="Page section"
-            actions={<Badge variant="success">Published</Badge>}
-          />
-          <div className="p-4">
-            <ObjectHeader eyebrow="Module" name="Hero" />
+      <Specimen label="Inspector header" className="flex-col items-stretch">
+        <Panel className="w-full max-w-md overflow-hidden rounded-md border border-border bg-[var(--color-bg-panel)]">
+          <div className="p-3">
+            <InspectorHeader
+              title="Section Options"
+              kind="Selected section"
+              actions={<Badge variant="success">Published</Badge>}
+            />
           </div>
         </Panel>
       </Specimen>
       <Specimen label="Property rows" className="flex-col items-stretch">
-        <div className="w-full max-w-md rounded-md border border-border bg-[var(--color-bg-panel)] p-4">
-          <PropertyRows className="-mx-3">
-            <PropertyRow label="Title">
+        <div className="w-full max-w-md rounded-md border border-border bg-[var(--color-bg-panel)] p-3">
+          <PropertyRows>
+            <PropertyRow label="Description">
               <TextField defaultValue="What is Peacock" />
             </PropertyRow>
-            <PropertyRow label="Layout">
+            <CompactPropertyRow label="Layout">
               <SelectField value="Grid" options={["Grid", "Carousel", "List"]} />
-            </PropertyRow>
+            </CompactPropertyRow>
             <ListItem
               primary="Enabled"
               labelFor="catalog-enabled"

@@ -1,6 +1,9 @@
 import { useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Panel, PanelHeader, SearchInput } from "@/v4-eos/ui/panel";
-import { TreeRow } from "@/v4-eos/ui/tree-row";
+import { chromeType } from "@/v4-eos/ui/chrome-type";
+import { cn } from "@/v4-eos/ui/lib/utils";
+import { StructureTreeRow } from "@/v4-eos/ui/structure-tree-row";
+import { getStructureNodeVisual } from "@/v4-eos/ui/structure-tree-visual";
 import { RowActionsMenu } from "@/v4-eos/ui/row-actions";
 import { ScrollArea } from "@/v4-eos/ui/scroll-area";
 import { MSym } from "@/v4-eos/ui/msym";
@@ -31,7 +34,7 @@ function famTypeForNode(node: StructureNode): WidgetType | undefined {
 // context, Widget configs in Widget context). Expansion is local (routes are
 // static). Clicking routes to onSelectRoute/onSelectExperience by node type.
 // Remounted per context (via a React key) so its local expansion resets when
-// the dataset changes. Rows use the V2-local shadcn-based TreeRow (§16).
+// the dataset changes. Rows use StructureTreeRow (layers-style hierarchy).
 function CollectionTree({
   tree,
   selectedId,
@@ -68,13 +71,20 @@ function CollectionTree({
       const isOpen = expanded.has(node.id);
       return (
         <div key={node.id}>
-          <TreeRow
+          <StructureTreeRow
             depth={depth}
             hasChildren={hasChildren}
             isOpen={isOpen}
             selected={node.id === selectedId}
-            muted={node.kind === "path"}
-            label={node.label}
+            label={
+              node.kind === "path" ? (
+                <span className="font-mono text-[var(--color-text-secondary)]">{node.label}</span>
+              ) : (
+                node.label
+              )
+            }
+            labelWeight={node.type === "variant" ? "medium" : "regular"}
+            icon={node.type === "variant" ? "description" : node.kind === "path" ? "link" : undefined}
             onSelect={() =>
               node.type === "variant"
                 ? onSelectExperience(node.id)
@@ -88,7 +98,7 @@ function CollectionTree({
     });
 
   return (
-    <div className="flex flex-col gap-px px-2 py-2" role="tree">
+    <div className="structure-tree-root structure-tree-root--collection" role="tree">
       {render(tree, 0)}
     </div>
   );
@@ -233,19 +243,23 @@ function StructureLevel({
         // Reorder must map to the real structure, so drag is disabled while the
         // Offers list is filtered (indices would not match).
         const childDragDisabled = (isOffers || isOfferGroup) && !!q;
+        const visual = getStructureNodeVisual(node, { depth, index, parentId });
         const grip = dragDisabled ? null : (
           <span
             {...drag.gripProps(index)}
             onClick={(e) => e.stopPropagation()}
-            className="flex size-4 shrink-0 cursor-grab items-center justify-center text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+            className="flex size-4 cursor-grab items-center justify-center text-[var(--color-text-secondary)] opacity-0 transition-opacity group-hover/row:opacity-100 active:cursor-grabbing"
             title="Drag to reorder"
             aria-hidden
           >
-            <MSym name="drag_indicator" size={16} />
+            <MSym name="drag_indicator" size={14} />
           </span>
         );
         return (
           <div key={node.id}>
+            {visual.sectionBreak && (
+              <div className="structure-tree-break" aria-hidden role="presentation" />
+            )}
             {isTopLevel && allowInsert && (
               <InsertLayoutBar
                 onClick={() =>
@@ -253,7 +267,7 @@ function StructureLevel({
                 }
               />
             )}
-            <TreeRow
+            <StructureTreeRow
               depth={depth}
               fluid
               boxed={boxedTop}
@@ -262,8 +276,9 @@ function StructureLevel({
               hasChildren={hasChildren}
               isOpen={isOpen}
               selected={node.id === selectedId}
-              muted={node.kind === "path"}
               disabled={node.disabled}
+              icon={visual.icon}
+              labelWeight={visual.labelWeight}
               grip={grip}
               dropHandlers={dragDisabled ? undefined : drag.dropProps(index)}
               isDragging={drag.isDragging(index)}
@@ -273,7 +288,7 @@ function StructureLevel({
                   <input
                     autoFocus
                     aria-label="Rename"
-                    className="w-full rounded-sm border border-input bg-background px-1 py-0.5 text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    className="w-full rounded-[var(--radius-field)] border border-input bg-background px-1.5 py-0.5 text-[length:var(--structure-tree-size)] leading-[length:var(--structure-tree-lh)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
@@ -321,7 +336,9 @@ function StructureLevel({
             {isOffers && isOpen && (
               <div
                 className="py-1 pr-2"
-                style={{ paddingLeft: 8 + (depth + 1) * 16 }}
+                style={{
+                  paddingLeft: `calc(var(--structure-tree-pad-x) + ${(depth + 1) * 12}px + 20px)`,
+                }}
               >
                 <SearchInput
                   value={offerQuery}
@@ -393,10 +410,10 @@ function StructureTabs({
       role="tab"
       aria-selected={active === id}
       onClick={() => onChange(id)}
-      className={`-mb-px shrink-0 border-b-2 px-3 py-1.5 text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+      className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
         active === id
-          ? "border-[var(--color-action-primary)] text-foreground"
-          : "border-transparent text-muted-foreground hover:text-foreground"
+          ? "border-[var(--color-action-primary)] font-medium text-foreground"
+          : "border-transparent font-normal text-muted-foreground hover:text-foreground"
       }`}
     >
       {label}
@@ -504,13 +521,11 @@ function StructureTree({
   // reads as "this box", not a layer/row inside it.
   const boxClass = (nodeId: string) =>
     nodeId === selectedId
-      ? `w-full rounded-md border p-1 transition-colors border-[var(--color-action-primary)] bg-[var(--color-bg-selected)]`
-      : `w-full rounded-md border p-1 transition-colors border-[var(--color-border-subtle)] hover:border-[var(--color-action-primary)]`;
+      ? "w-full rounded-[var(--radius-sm)] bg-[var(--color-bg-selected)] p-0.5 shadow-[inset_0_0_0_1px_var(--color-action-primary-border)]"
+      : "w-full rounded-[var(--radius-sm)] p-0.5 transition-colors hover:bg-[var(--color-bg-hover)]";
 
   return (
-    // min-w-max lets the tree grow to its widest row so the pane can scroll
-    // horizontally (revealing deep rows + the overflow menu) instead of clipping.
-    <div className="flex min-w-max flex-col gap-px px-2 py-2" role="tree">
+    <div className="structure-tree-root flex min-w-max flex-col" role="tree">
       {grouped ? (
         <>
           <StructureTabs active={activeTab} onChange={setActiveTab} />
@@ -673,13 +688,11 @@ export function Explorer({
           onClick={() => setWidgetPaneCollapsed(false)}
           title="Show widget list"
           aria-label="Show widget list"
-          className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex shrink-0 items-center gap-2 border-b border-[var(--color-border-subtle)] px-3 py-2.5 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <MSym name="chevron_right" size={18} className="shrink-0 text-muted-foreground" />
-          <span className="shrink-0 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-            {collectionHeader}
-          </span>
-          <span className="min-w-0 flex-1 truncate text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-medium text-foreground">
+          <span className={cn("shrink-0", chromeType.panelEyebrow)}>{collectionHeader}</span>
+          <span className={cn("min-w-0 flex-1 truncate", chromeType.panelTitle)}>
             {currentWidgetLabel}
           </span>
         </button>
@@ -687,7 +700,7 @@ export function Explorer({
         <>
           {/* Collection pane (PAGES / WIDGETS) — resizable height. */}
           <div
-            className="flex min-h-0 shrink-0 grow-0 flex-col"
+            className="ui-ws-explorer__pane--pages flex min-h-0 shrink-0 grow-0 flex-col border-b border-[var(--color-border-subtle)]"
             style={{ flexBasis: `${pagesPct}%` }}
           >
             <PanelHeader
@@ -762,12 +775,9 @@ export function Explorer({
         </>
       )}
       {/* Structure pane — fills the remaining height. */}
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="ui-ws-explorer__pane--structure flex min-h-0 flex-1 flex-col bg-[var(--color-bg-panel)]">
         <PanelHeader
           eyebrow="Structure"
-          // Page context names the active experience here; widget context omits
-          // it — the collapsed WIDGETS bar above already names the open widget,
-          // so repeating it is redundant.
           sub={
             context === "widget"
               ? undefined
@@ -775,6 +785,7 @@ export function Explorer({
                 ? activeExperience.name
                 : routeLabel ?? "—"
           }
+          className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-panel)]"
         />
         <ScrollArea className="min-h-0 flex-1" orientation="both">
           {activeExperience ? (

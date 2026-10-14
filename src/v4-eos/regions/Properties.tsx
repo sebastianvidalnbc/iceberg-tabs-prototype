@@ -5,7 +5,6 @@ import { Button } from "@/v4-eos/ui/button";
 import { Badge } from "@/v4-eos/ui/badge";
 import { Separator } from "@/v4-eos/ui/separator";
 import { ScrollArea } from "@/v4-eos/ui/scroll-area";
-import { PanelHeader } from "@/v4-eos/ui/panel";
 import {
   TextField,
   TextAreaField,
@@ -15,12 +14,18 @@ import {
   RadioField,
 } from "@/v4-eos/ui/form-controls";
 import {
+  CompactPropertyRow,
+  InspectorBody,
+  InspectorCallout,
+  InspectorHeader,
+  inspectorKindLabel,
+  inspectorType,
   ListAccessory,
   ListItem,
-  ObjectHeader,
   PropertyRow as PropRow,
   PropertyRows,
   PropertySection as PropSection,
+  sentenceCase,
 } from "@/v4-eos/ui/property";
 import {
   DropdownMenu,
@@ -194,7 +199,7 @@ function AssetPicker({
       <button
         type="button"
         onClick={() => onEdit(DEMO_ASSET)}
-        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-[var(--color-border-subtle)] px-2.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="inline-flex h-[var(--control-height-md)] items-center gap-1.5 rounded-[var(--radius-field)] border border-dashed border-[var(--color-border-default)] px-2.5 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-muted-foreground transition-colors hover:border-[var(--color-action-primary)] hover:text-[var(--color-action-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         <MSym name="add_photo_alternate" size={16} />
         Choose image…
@@ -209,9 +214,7 @@ function AssetPicker({
       >
         <Icon name="image" size={15} />
       </span>
-      <span className="min-w-0 flex-1 truncate text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
-        {value}
-      </span>
+      <span className={cn("min-w-0 flex-1 truncate", inspectorType.value)}>{value}</span>
       <button
         type="button"
         aria-label="Remove asset"
@@ -343,8 +346,14 @@ function FieldLabel({ label, tooltip }: { label: string; tooltip?: string }) {
   );
 }
 
-// One label/control row, delegating to the V2-local PropertyRow composition.
-// Full-width controls (textarea/radio/asset) stack.
+function fieldUsesCompactRow(field: PropertyField): boolean {
+  if (field.badge || field.kind === "switch" || field.kind === "checkbox") return false;
+  if (field.kind === "textarea" || field.kind === "asset" || field.kind === "radio") return false;
+  if (field.helper) return false;
+  return field.kind === "select" || field.kind === "text" || field.kind === undefined;
+}
+
+// Stacked fields, compact rows, or list rows (switch/checkbox/badge).
 function PropertyFieldRow({
   field,
   value,
@@ -415,29 +424,42 @@ function PropertyFieldRow({
       />
     );
   }
+  const help =
+    invalid ? (
+      <span id={errId} className="text-[var(--color-status-danger)]">
+        {field.label} is required.
+      </span>
+    ) : field.helper ? (
+      <span id={helpId}>{field.helper}</span>
+    ) : undefined;
+
+  const control = (
+    <PropertyControl
+      field={field}
+      value={value}
+      onEdit={onEdit}
+      id={id}
+      describedBy={errId ?? helpId}
+      invalid={invalid}
+    />
+  );
+
+  if (fieldUsesCompactRow(field)) {
+    return (
+      <CompactPropertyRow
+        label={label}
+        htmlFor={id}
+        required={field.required}
+        help={help}
+      >
+        {control}
+      </CompactPropertyRow>
+    );
+  }
+
   return (
-    <PropRow
-      label={label}
-      htmlFor={id}
-      required={field.required}
-      help={
-        invalid ? (
-          <span id={errId} className="text-[var(--color-status-danger)]">
-            {field.label} is required.
-          </span>
-        ) : field.helper ? (
-          <span id={helpId}>{field.helper}</span>
-        ) : undefined
-      }
-    >
-      <PropertyControl
-        field={field}
-        value={value}
-        onEdit={onEdit}
-        id={id}
-        describedBy={errId ?? helpId}
-        invalid={invalid}
-      />
+    <PropRow label={label} htmlFor={id} required={field.required} help={help}>
+      {control}
     </PropRow>
   );
 }
@@ -475,6 +497,7 @@ function GroupSection({
   group,
   expanded,
   onToggle,
+  borderedTop,
   overridesForNode,
   invalidFields,
   onEdit,
@@ -482,12 +505,18 @@ function GroupSection({
   group: PropertyGroup;
   expanded: boolean;
   onToggle: () => void;
+  borderedTop?: boolean;
   overridesForNode: Record<string, string>;
   invalidFields: Set<string>;
   onEdit: (label: string, value: string) => void;
 }) {
   return (
-    <PropSection header={group.header} expanded={expanded} onToggle={onToggle}>
+    <PropSection
+      header={group.header}
+      expanded={expanded}
+      onToggle={onToggle}
+      borderedTop={borderedTop}
+    >
       <GroupRows
         group={group}
         overridesForNode={overridesForNode}
@@ -558,7 +587,7 @@ function FeatureIconTile({
         <button
           type="button"
           aria-label={has ? `Feature icon: ${value}. Change icon` : "Choose a feature icon"}
-          className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="grid size-9 shrink-0 place-items-center rounded-[var(--radius-field)] border border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           {has ? (
             <MSym name={value} size={20} />
@@ -749,7 +778,7 @@ function InlineFeatureCollections({
                     key={item.id}
                     className={cn(
                       i > 0 &&
-                        "mt-4 border-t border-[var(--color-border-subtle)] pt-4",
+                        "mt-3 border-t border-[var(--color-border-default)] pt-3",
                     )}
                   >
                     <InlineFeatureItem
@@ -832,12 +861,8 @@ export function Properties({
       aria-label="Properties"
       className="ui-ws__region w-[var(--ws-properties-w)] max-w-full bg-[var(--color-bg-panel)] text-foreground"
     >
-      {/* Peer of the Explorer PAGES / STRUCTURE headers — the shared PanelHeader
-          eyebrow, no longer a bespoke re-implementation. px-4 keeps the eyebrow
-          aligned with the p-4 panel body below. */}
-      <PanelHeader eyebrow="Properties" className="px-4" />
       <ScrollArea className="min-h-0 flex-1">
-        <div className="flex flex-col gap-4 p-4">
+        <InspectorBody>
           {variant && selectedStructureNodeId ? (
             <PropertiesBody
               context={context}
@@ -855,13 +880,13 @@ export function Properties({
               onReorderChild={onReorderChild}
             />
           ) : (
-            <p className="text-[length:var(--type-body-md-size)] leading-relaxed text-muted-foreground">
+            <p className={inspectorType.help}>
               {selectedRouteId
                 ? `Select a ${experienceNoun}, then an object in its structure to edit its properties.`
                 : "Select an object in the structure to edit its properties."}
             </p>
           )}
-        </div>
+        </InspectorBody>
       </ScrollArea>
     </aside>
   );
@@ -1028,30 +1053,32 @@ function FieldsBody({
 
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name} bleed>
-        {headers.length > 1 && (
-          <Button
-            variant="ghost"
-            size="xs"
-            className="ml-auto self-center text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] text-muted-foreground hover:text-foreground"
-            onClick={allCollapsed ? expandAll : collapseAll}
-          >
-            {allCollapsed ? "Expand all" : "Collapse all"}
-          </Button>
-        )}
-      </ObjectHeader>
-      {/* Sections bleed to the p-4 panel edges so each divider anchors the eye
-          across the full width (Figma section rhythm); px-4 on each section
-          re-insets the content. */}
-      <div className="-mx-4 -mt-2 flex flex-col divide-y divide-[var(--color-border-default)]">
+      <InspectorHeader
+        title={name}
+        kind={inspectorKindLabel(eyebrow, name)}
+        actions={
+          headers.length > 1 ? (
+            <Button
+              variant="ghost"
+              size="xs"
+              className={cn(inspectorType.meta, "hover:text-foreground")}
+              onClick={allCollapsed ? expandAll : collapseAll}
+            >
+              {allCollapsed ? "Expand all" : "Collapse all"}
+            </Button>
+          ) : undefined
+        }
+      />
+      <div className="flex min-w-0 flex-col">
         {groups.map((group, i) => (
           <GroupSection
-            // Index-qualified: a schema may repeat a subheading (e.g. the offer
-            // form's two "AND" separators), so header alone isn't a unique key.
             key={`${group.header ?? "group"}-${i}`}
             group={group}
             expanded={group.header ? !collapsed.has(group.header) : true}
             onToggle={group.header ? () => toggle(group.header!) : () => {}}
+            borderedTop={Boolean(
+              group.header && groups.slice(0, i).some((g) => g.header),
+            )}
             overridesForNode={overridesForNode}
             invalidFields={invalidFields}
             onEdit={onEdit}
@@ -1095,17 +1122,22 @@ function CollectionBody({
   // Only the Offer Type collections (Offers / Segmentation) carry family dots.
   const showFam = itemNoun === OFFER_TYPE_NOUN;
 
+  const displayName = name ?? sentenceCase(eyebrow);
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name ?? eyebrow}>
-        <span className="ml-auto self-center text-[length:var(--type-body-sm-size)] text-muted-foreground">
-          {count}
-          {max != null ? ` / ${max}` : ""} {count === 1 ? nounLower : `${nounLower}s`}
-        </span>
-      </ObjectHeader>
+      <InspectorHeader
+        title={displayName}
+        kind={inspectorKindLabel(eyebrow, displayName)}
+        actions={
+          <span className={inspectorType.meta}>
+            {count}
+            {max != null ? ` / ${max}` : ""} {count === 1 ? nounLower : `${nounLower}s`}
+          </span>
+        }
+      />
 
       {count > 0 && (
-        <ul className="flex flex-col overflow-hidden rounded-sm border border-[var(--color-border-default)] bg-[var(--color-bg-surface)]">
+        <ul className="flex flex-col overflow-hidden rounded-[var(--radius-sm)] bg-[var(--color-bg-subtle)]">
           {items.map((item, i) => (
             <li
               key={item.id}
@@ -1119,7 +1151,7 @@ function CollectionBody({
                   />
                 </span>
               )}
-              <span className="min-w-0 flex-1 truncate text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
+              <span className={cn("min-w-0 flex-1 truncate", inspectorType.value)}>
                 {item.label}
               </span>
               <div className="-mr-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100">
@@ -1185,11 +1217,13 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
     status === "published" ? "success" : status === "in-review" ? "warning" : "secondary";
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name}>
-        {status && <Badge variant={badgeVariant}>{status}</Badge>}
-      </ObjectHeader>
-      <div className="flex flex-col gap-4">
-        <PropertyRows className="-mx-3">
+      <InspectorHeader
+        title={name}
+        kind={inspectorKindLabel(eyebrow, name)}
+        actions={status ? <Badge variant={badgeVariant}>{status}</Badge> : undefined}
+      />
+      <div className="flex flex-col gap-2">
+        <PropertyRows>
           {role && (
             <ListItem
               primary="Type / Role"
@@ -1215,19 +1249,14 @@ function MetadataBody({ data }: { data: SectionMetadata }) {
           )}
         </PropertyRows>
         {data.intelligentAffordance && (
-          <section className="rounded-sm border border-border bg-[var(--color-bg-subtle)] p-3">
-            <p className="text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">
-              Intelligent authoring
-            </p>
-            <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-muted-foreground">
-              Variations are generated per audience. Manage variant names in
-              Section Options.
-            </p>
-          </section>
+          <InspectorCallout title="Intelligent authoring">
+            Variations are generated per audience. Manage variant names in Section
+            Options.
+          </InspectorCallout>
         )}
       </div>
       {note && (
-        <p className="text-[length:var(--type-body-sm-size)] leading-relaxed text-muted-foreground">{note}</p>
+        <p className={cn(inspectorType.help, "leading-relaxed")}>{note}</p>
       )}
       <Separator />
       <div className="flex flex-wrap gap-2">
@@ -1250,15 +1279,8 @@ function NoticeBody({ data }: { data: NoticeProperties }) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   return (
     <>
-      <ObjectHeader eyebrow={eyebrow} name={name} />
-      <section className="rounded-sm border border-border bg-[var(--color-bg-subtle)] p-3">
-        <p className="text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">{message}</p>
-        {detail && (
-          <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-snug text-muted-foreground">
-            {detail}
-          </p>
-        )}
-      </section>
+      <InspectorHeader title={name} kind={inspectorKindLabel(eyebrow, name)} />
+      <InspectorCallout title={message}>{detail}</InspectorCallout>
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" size="sm" onClick={() => setGalleryOpen((v) => !v)}>
           <Icon name="plus" size={16} />

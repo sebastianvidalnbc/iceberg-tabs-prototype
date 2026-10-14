@@ -19,22 +19,24 @@ import { cn } from "@/v4-eos/ui/lib/utils";
 // code stays declarative and never imports Radix directly (§10). Compact
 // Iceberg density: 28px controls, restrained radius, subtle dark input fills.
 
-// Compact Iceberg density with a clear field affordance: a recessed subtle fill
-// (M3 Surface Container) reads as an editable well against the lighter panel,
-// the outline comes from border-input (the strong outline role), and focus
-// lifts the fill to plain surface plus the blue ring.
+// Inspector fields: Eos standard control height (36px) with body-sized values.
 const FIELD =
-  "h-7 rounded-sm bg-[var(--color-bg-subtle)] text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] focus-visible:bg-[var(--color-bg-surface)]";
+  "h-[var(--control-height-md)] rounded-[var(--radius-field)] bg-[var(--color-bg-subtle)] text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] focus-visible:bg-[var(--color-bg-surface)]";
 
 export function TextField(
   props: React.ComponentProps<typeof Input> & { invalid?: boolean },
 ) {
-  const { invalid, className, ...rest } = props;
+  const { invalid, className, title, value, ...rest } = props;
+  const tip =
+    title ??
+    (typeof value === "string" && value.length > 28 ? value : undefined);
   return (
     <Input
       {...rest}
+      value={value}
+      title={tip}
       aria-invalid={invalid || undefined}
-      className={cn(FIELD, className)}
+      className={cn(FIELD, "min-w-0 max-w-full", className)}
     />
   );
 }
@@ -48,7 +50,7 @@ export function TextAreaField(
       {...rest}
       aria-invalid={invalid || undefined}
       className={cn(
-        "min-h-16 rounded-sm bg-[var(--color-bg-subtle)] text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] focus-visible:bg-[var(--color-bg-surface)]",
+        "min-h-16 rounded-[var(--radius-field)] bg-[var(--color-bg-subtle)] text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] focus-visible:bg-[var(--color-bg-surface)]",
         className,
       )}
     />
@@ -118,14 +120,23 @@ export function SelectField({
   triggerClassName?: string;
   "aria-label"?: string;
 }) {
+  const match = options.map(normalizeOption).find((o) => o.value === value);
+  const triggerTitle =
+    match && match.label !== placeholder ? match.label : value || undefined;
+
   return (
     <ShadSelect value={value || undefined} onValueChange={onValueChange}>
       <SelectTrigger
         id={id}
         size="sm"
+        title={triggerTitle}
         aria-invalid={invalid || undefined}
         aria-label={ariaLabel}
-        className={cn(FIELD, "w-full", triggerClassName)}
+        className={cn(
+          FIELD,
+          "w-full min-w-0 max-w-full [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate",
+          triggerClassName,
+        )}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -133,7 +144,11 @@ export function SelectField({
         {options.map((raw) => {
           const opt = normalizeOption(raw);
           return (
-            <SelectItem key={opt.value} value={opt.value} className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)]">
+            <SelectItem
+              key={opt.value}
+              value={opt.value}
+              className="text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)]"
+            >
               {opt.label}
             </SelectItem>
           );
@@ -166,7 +181,10 @@ export function RadioField({
         return (
           <div key={opt} className="flex items-center gap-2">
             <RadioGroupItem id={optId} value={opt} />
-            <Label htmlFor={optId} className="text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-normal">
+            <Label
+              htmlFor={optId}
+              className="text-[length:var(--type-body-md-size)] font-normal leading-[length:var(--type-body-md-lh)]"
+            >
               {opt}
             </Label>
           </div>

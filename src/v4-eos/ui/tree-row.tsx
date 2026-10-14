@@ -1,6 +1,7 @@
 import * as React from "react";
 import { MSym } from "@/v4-eos/ui/msym";
 import { cn } from "@/v4-eos/ui/lib/utils";
+import { chromeType } from "@/v4-eos/ui/chrome-type";
 import { WIDGET_FAMILY_HUE, type WidgetType } from "@/v4-eos/browse";
 
 // Iceberg-specific TreeRow (§16/§17) — shadcn supplies primitives, but the
@@ -86,8 +87,7 @@ export function TreeRow({
       onClick={onSelect}
       {...dropHandlers}
       className={cn(
-        "group relative flex h-7 cursor-pointer items-center gap-1 rounded-sm pr-1 font-[family-name:var(--font-sans)] text-[length:var(--type-label-lg-size)] font-normal leading-none tracking-normal",
-        "text-foreground/90 transition-colors",
+        "group relative flex h-7 cursor-pointer items-center gap-1 rounded-sm pr-1 font-[family-name:var(--font-sans)] transition-colors",
         // --row-bg tracks the row's current background so the trailing menu's
         // fade mask can blend the label into whatever fill is showing.
         "hover:bg-accent [--row-bg:var(--color-bg-panel)] hover:[--row-bg:var(--color-bg-hover)]",
@@ -97,7 +97,12 @@ export function TreeRow({
         // Selection is a full-bleed band: square corners so it reads as a row
         // highlight spanning the pane, not a rounded chip. Boxed rows skip this
         // — their wrapping box carries the selected treatment instead.
-        selected && !boxed && "rounded-none bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)] text-foreground",
+        selected &&
+          !boxed &&
+          cn(
+            "rounded-none bg-[var(--color-bg-selected)] [--row-bg:var(--color-bg-selected)]",
+            chromeType.treeLabelSelected,
+          ),
         selected && boxed && "text-foreground",
         isDragging && "opacity-40",
         isOver && "before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:content-['']",
@@ -145,9 +150,9 @@ export function TreeRow({
       )}
       <span
         className={cn(
-          "font-[family-name:var(--font-sans)] text-[length:var(--type-label-lg-size)] font-normal leading-none tracking-normal",
+          chromeType.treeLabel,
           fluid ? "whitespace-nowrap" : "min-w-0 flex-1 truncate",
-          muted && "font-mono text-[length:var(--type-body-sm-size)] text-muted-foreground",
+          muted && chromeType.treeLabelMuted,
           disabled && "line-through",
         )}
       >

@@ -476,6 +476,154 @@ All visual and component detail is owned in **Eos Library v1.0**. Do not treat l
 
 ---
 
+## 7. Verified component specs — Eos Workset (list family)
+
+> **Source:** Figma **Eos – Workset**, file key `YgLwZNnExyyvfUVcyyelzh`, page
+> `76:2` "02 Components / Content & navigation". This is a different file from
+> the Library (`N8BwUZPaO2artCvrsarVK2`) above.
+> **Verified** = read via Figma MCP `get_design_context` on 2026-10-12/13.
+> **Implemented** = shipped in V4 commit `cec39cc`. Node map:
+> `docs/FIGMA-COMPONENT-MAP.md`. Reuse these values; don't re-inspect Figma for them.
+
+### 7.1 Type styles (verified, Figma names)
+
+| Eos style | Font | Size / line | Weight | V4 token |
+|---|---|---|---|---|
+| Body/Medium | Inter | 14 / 20 | 400 | `--type-body-md-*` |
+| Body/Small | Inter | 12 / 16 | 400 | `--type-body-sm-*` |
+| Label/Large Emphasised | Inter | 14 / 20 | 600 | `--type-label-lg-*` + `font-semibold` |
+| Label/Medium | Inter | 12 / 16 | 500 | `--type-label-md-*` + `font-medium` |
+| Label/XSmall | Inter | 10 / 16 | 500 | `--type-label-xs-*` |
+
+### 7.2 Figma variables seen → V4 tokens
+
+| Figma var (fallback) | V4 token | Match |
+|---|---|---|
+| `--surface` (#fff) | `--color-bg-surface` | exact |
+| `--surface-high` (#eee) | `--color-bg-hover` | exact |
+| `--surface-hover` (rgba(0,0,0,.08)) | `--color-bg-hover` (#eee) | **approx** (≈ same on white) |
+| `--selected-bg` (#e8f0fe) | `--color-bg-selected` | exact |
+| `--brand-accent` / `--focus-ring` (#1a73e8) | `--color-action-primary` / `--color-focus-ring` | exact |
+| `--text` (#131416) | `--color-text-primary` / `text-foreground` | exact |
+| `--text-sec` (#5f6368) | `--color-text-secondary` | exact |
+| `--text-disabled` (rgba(0,0,0,.38)) | none → `text-foreground/40` | **approx, no token** |
+| `--border` (#e0e0e0) | `--color-border-default` | exact |
+| `--space-3` (12) / `--radius-sm` (8) / `--radius-xs` (4) | same names | exact |
+
+### 7.3 List item (`117:424`) — verified
+
+- Height **44** (one line), **60** (two line), **76** (three line; focus variant 80).
+- `padding-x 12` (`--space-3`), `gap 12`, `radius 8`, background `--surface`.
+- Copy column: primary Body/Medium `--text`, truncate to 1 line; secondary
+  Body/Small `--text-sec`, may wrap to 2 lines.
+- States: **Hover** bg `--surface-hover` · **Focus** 2px solid `--focus-ring`
+  border · **Selected** bg `--selected-bg` + **3px** full-height left bar
+  `--brand-accent` · **Disabled** primary text `--text-disabled`.
+- Rules (Figma description): one primary row action; a trailing
+  Icon/Checkbox/Radio/Switch is a separate target when it does something
+  different; align three-line accessories to the top.
+
+### 7.4 List accessory (`116:201`) — verified
+
+Slot height **32**. Widths: Icon 24 (24px glyph) · Avatar 24 (24px circle,
+`--surface-high`, initials Label/XSmall `--text-sec`) · Image 32 (32px
+thumbnail, radius 4, `--surface-high`, 16px glyph) · Checkbox 24 · Radio 24 ·
+Switch **44** · Label **48** (Label/Medium `--text-sec`, e.g. "Meta").
+Hide the slot when absent.
+
+### 7.5 Switch (`72:168`) — verified
+
+Hit area **48×36** (padding-x 4, radius 18). Track **40×24**, radius 12.
+- Off: fill `#EEEEEE`, 1px stroke `#C4C4C4`, thumb **18px** circle `#5F6368`
+  (centre x 13, so 4px inset).
+- On: brand-blue track, white thumb on the right. Seen in the screenshot only;
+  the exact On SVG was not fetched.
+- V4: `ui/switch.tsx` `size="lg"` (used by `SwitchField`). The thumb travel
+  of 14px is derived from the geometry.
+
+### 7.6 List subheader (`117:6210`) — verified
+
+Height **36**, Label/Large Emphasised, `--text`.
+Inset=Full: `padding-x 12` · Inset=Content: `padding-left 60`, `padding-right 12`.
+Sticky=Off bg `--surface`; Sticky=On bg `--surface-high`, pinned until the next
+subheader. Don't use as a page heading.
+
+### 7.7 List divider (`117:6194`) — verified
+
+1px `--border`. Inset=Full spans the container; Inset=Content `padding-left 48`.
+Decorative only; doesn't split one semantic list.
+
+### 7.8 List (`118:534`) — verified
+
+Container: `--surface` bg, 1px `--border`, radius 8, `overflow: clip`, rows
+full-width. Patterns: Basic · Divided · Grouped (subheaders) · Nested (indent
+once, max 2 levels) · Selection (leading checkbox = primary action) · Switches
+(trailing switch = independent action). Virtualize at about 100+ rows.
+
+### 7.9 V4 adaptations (decisions, not Figma specs)
+
+- Properties rows use **`--inspector-pad-x` (12px)** horizontal inset on all
+  inspector rows (aligned with Eos list item padding).
+- Text/select/textarea/radio fields have **no Eos list equivalent**. V4 uses
+  **Pattern A** (`PropertyRow`, label above control) or **Pattern B**
+  (`CompactPropertyRow`, label + control on one row for short fields).
+- Collapsible group headers use inspector section type (**14px semibold**) with a
+  **20px chevron**; borders separate headed groups only (spacing-first within
+  groups).
+- All-caps data headers are displayed in sentence case (acronyms kept).
+- The panel-level **“Properties”** chrome is removed; **`InspectorHeader`**
+  shows contextual “Selected {kind}” + element title instead of stacked uppercase
+  eyebrows.
+
+### 7.11 V4 inspector tokens (scoped extensions)
+
+Defined in `ui-lib/tokens.css` — not part of the published Eos library. Used
+only by `ui/property.tsx` and the Properties regions.
+
+| Token | Value / maps to | Why |
+|-------|-----------------|-----|
+| `--inspector-title-*` | `--type-title-md` (16/24 semibold) | Element title; Eos Title/Medium fits the inspector primary heading without the old 22px title-lg object header. |
+| `--inspector-kind-*` | `--type-body-sm` (12/16) | Secondary “Selected …” line; no Eos “context label” role at this size. |
+| `--inspector-section-*` | `--type-title-sm` (14/20 semibold) | Section accordions; lighter than list subheader 36px rows for compact density. |
+| `--inspector-row-min-h` | 36px | Aligns with `--control-height-md`; list rows at 44px were too tall for an inspector. |
+| `--inspector-gap-*`, `--inspector-pad-*` | 4–12px on `--space-*` | Consistent vertical rhythm without per-field margins. |
+| `--inspector-label-*` | `--type-label-md` (12/16 medium) | Field captions; shared by stacked, compact, and list rows. |
+| `--inspector-value-*` | `--type-body-md` (14/20 regular) | Control values, collection row titles, callout leads. |
+| `--inspector-help-*` | `--type-body-sm` (12/16 regular) | Helpers, empty copy, metadata slug. |
+
+Apply roles via `inspectorType` in `ui/property.tsx` (kind / title / section /
+fieldLabel / value / help / meta).
+
+### 7.13 V4 Structure tree (Explorer)
+
+Tokens: `--structure-tree-size` (13px), `--structure-tree-lh`, `--structure-tree-row-h`
+(32px), `--structure-tree-pad-x`. Components: `structure-tree-row.tsx`,
+`structure-tree-visual.ts` (type → icon + label weight + section breaks). Pages
+pane uses tonal `--color-bg-subtle`; Structure pane uses `--color-bg-panel`.
+
+### 7.12 V4 authoring-shell typography (`chromeType`)
+
+`ui/chrome-type.ts` — panel eyebrows/titles, structure tree labels (14/20),
+preview toolbar controls, and breadcrumb copy. Keeps Explorer / preview / panel
+headers aligned with Properties inspector roles without sharing component trees.
+
+Components: `InspectorHeader`, `InspectorBody`, `CompactPropertyRow`,
+`InspectorCallout`. Legacy `ObjectHeader` delegates to `InspectorHeader`.
+
+### 7.10 Known inconsistencies
+
+- §2.4 says text fields are 36px. Properties inputs (`ui/form-controls.tsx`
+  `FIELD`) now use **`--control-height-md` (36px)**; checkbox/radio/select
+  visuals are still not verified against Workset.
+- `--color-border-subtle` (rgba(0,0,0,.06)) is still used in parts of the
+  Properties panel (asset picker, feature items) and in other regions; Eos
+  dividers use `--border` (#e0e0e0).
+- Checkbox (`72:122`), Radio, Avatar and Image accessories are **not yet
+  verified** in V4. The checkbox is still the stock shadcn one.
+- Default shadcn `Switch` sizes (`default`/`sm`) are not Eos. Only `lg` is.
+
+---
+
 ## Appendix A — Design evolution & learnings
 
 This appendix records why current Eos density and palette look the way they do. **Normative rules live in §§1–5 and Figma.** Use this section when migrating older experiments or reviewing PRs that reintroduce discarded patterns.

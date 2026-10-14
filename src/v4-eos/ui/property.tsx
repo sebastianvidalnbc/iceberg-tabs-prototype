@@ -7,47 +7,123 @@ import {
 } from "@/v4-eos/ui/collapsible";
 import { cn } from "@/v4-eos/ui/lib/utils";
 
-// Properties compositions built on the Eos Workset list family
-// (Figma YgLwZNnExyyvfUVcyyelzh · 02 Components / Content & navigation):
-// List item 117:424, List accessory 116:201, List subheader 117:6210,
-// List divider 117:6194, List 118:534. Rows sit in a 4px-inset column so the
-// 12px row padding lands their text on the panel's 16px content edge.
+// V4 Properties inspector compositions. Built on Eos tokens and list-family
+// patterns where they fit (switch/checkbox rows, read-only metadata). Compact
+// inspector rows and stacked fields extend Eos when list rows or Workset fields
+// are the wrong shape — documented in docs/eos-design-system.md §7.11.
 
-// Object header: eyebrow + name, with an optional trailing slot (status badge).
+/** Role-based type for the Properties inspector (purpose-named, not raw px). */
+export const inspectorType = {
+  kind: "text-[length:var(--inspector-kind-size)] font-normal leading-[length:var(--inspector-kind-lh)] text-[var(--color-text-secondary)]",
+  title:
+    "text-[length:var(--inspector-title-size)] font-semibold leading-[length:var(--inspector-title-lh)] tracking-[-0.01em] text-balance text-foreground",
+  section:
+    "text-[length:var(--inspector-section-size)] font-semibold leading-[length:var(--inspector-section-lh)] text-foreground",
+  fieldLabel:
+    "text-[length:var(--inspector-label-size)] font-medium leading-[length:var(--inspector-label-lh)] text-[var(--color-text-secondary)]",
+  value:
+    "text-[length:var(--inspector-value-size)] font-normal leading-[length:var(--inspector-value-lh)] text-foreground",
+  help: "text-[length:var(--inspector-help-size)] font-normal leading-[length:var(--inspector-help-lh)] text-[var(--color-text-secondary)]",
+  meta: "text-[length:var(--inspector-help-size)] font-normal leading-[length:var(--inspector-help-lh)] text-muted-foreground",
+} as const;
+
+const ACRONYMS = new Set(["CTA", "FAQ", "URL", "URLS", "ID", "SEO", "T&C", "TV", "AI"]);
+export function sentenceCase(text: string): string {
+  if (text !== text.toUpperCase()) return text;
+  return text
+    .split(" ")
+    .map((word, i) => {
+      if (ACRONYMS.has(word)) return word;
+      const lower = word.toLowerCase();
+      return i === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+    })
+    .join(" ");
+}
+
+/** Context line for the inspector header; omitted when it would repeat the title. */
+export function inspectorKindLabel(eyebrow: string, title: string): string | undefined {
+  const kind = sentenceCase(eyebrow.trim());
+  if (!kind || kind.toLowerCase() === title.trim().toLowerCase()) return undefined;
+  return `Selected ${kind}`;
+}
+
+// --- Inspector header ---------------------------------------------------------
+// One primary title (selected object) + optional kind line. Replaces the old
+// uppercase eyebrow + duplicate panel "Properties" chrome.
+export function InspectorHeader({
+  title,
+  kind,
+  children,
+  actions,
+  className,
+}: {
+  title: React.ReactNode;
+  kind?: string;
+  children?: React.ReactNode;
+  actions?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <header
+      className={cn(
+        "flex flex-wrap items-start gap-x-2 gap-y-1 pb-[var(--inspector-gap-section)]",
+        className,
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        {kind && <p className={inspectorType.kind}>{kind}</p>}
+        <h2 className={cn(inspectorType.title, kind && "mt-0.5")}>{title}</h2>
+      </div>
+      {(actions || children) && (
+        <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2 self-center">
+          {actions}
+          {children}
+        </div>
+      )}
+    </header>
+  );
+}
+
+/** @deprecated Use InspectorHeader — maps legacy eyebrow/name call sites. */
 export function ObjectHeader({
   eyebrow,
   name,
   children,
-  bleed,
+  bleed: _bleed,
 }: {
   eyebrow: string;
   name: string;
   children?: React.ReactNode;
-  // When set, the bottom divider runs edge-to-edge of the p-4 panel (Figma-style
-  // section anchoring). Content stays inset via px-4.
   bleed?: boolean;
+}) {
+  return (
+    <InspectorHeader title={name} kind={inspectorKindLabel(eyebrow, name)}>
+      {children}
+    </InspectorHeader>
+  );
+}
+
+// Scroll body wrapper for the Properties panel (consistent inset + density).
+export function InspectorBody({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-[var(--color-border-default)] pb-3",
-        bleed && "-mx-4 px-4",
+        "flex min-w-0 flex-col gap-[var(--inspector-gap-section)] px-[var(--inspector-pad-x)] py-[var(--inspector-pad-y)]",
+        className,
       )}
     >
-      <span className="basis-full text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-        {eyebrow}
-      </span>
-      <span className="text-[length:var(--type-title-md-size)] font-semibold leading-tight tracking-[-0.01em] text-foreground">
-        {name}
-      </span>
       {children}
     </div>
   );
 }
 
 // --- List accessory (116:201) ------------------------------------------------
-// 32px-tall slot. Width follows the accessory type: 24 for Icon / Avatar /
-// Checkbox / Radio, 44 for Switch, 48 (min) for Label.
 const ACCESSORY_WIDTH = {
   icon: "w-6",
   switch: "w-11",
@@ -66,8 +142,7 @@ export function ListAccessory({
       className={cn(
         "flex h-8 shrink-0 items-center justify-center",
         ACCESSORY_WIDTH[type],
-        type === "label" &&
-          "justify-end whitespace-nowrap text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-[var(--color-text-secondary)]",
+        type === "label" && cn("justify-end whitespace-nowrap", inspectorType.fieldLabel),
       )}
     >
       {children}
@@ -75,11 +150,7 @@ export function ListAccessory({
   );
 }
 
-// --- List item (117:424) ------------------------------------------------------
-// 44px one-line / 60px two-line, 12px padding and gap, 8px radius. Primary is
-// Body/Medium (14/20), secondary is Body/Small (12/16, secondary text) and may
-// wrap to two lines. States: hover (surface hover), focus (2px focus ring),
-// selected (selected fill + 3px brand indicator), disabled (38% text).
+// --- Compact / list rows ------------------------------------------------------
 export function ListItem({
   primary,
   secondary,
@@ -90,6 +161,7 @@ export function ListItem({
   rowFor,
   selected,
   disabled,
+  density = "compact",
   className,
 }: {
   primary: React.ReactNode;
@@ -97,25 +169,31 @@ export function ListItem({
   secondaryId?: string;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
-  // Associates the primary text with a trailing control (switch rows): the
-  // control stays the only target, per Eos "Switch is a separate action".
   labelFor?: string;
-  // Makes the whole row the label of its control (checkbox rows): the row is
-  // the primary action, so it takes the hover state.
   rowFor?: string;
   selected?: boolean;
   disabled?: boolean;
+  density?: "compact" | "comfortable";
   className?: string;
 }) {
   const Row = rowFor ? "label" : "div";
   const Primary = labelFor ? "label" : "span";
+  const secondaryIsValue = Boolean(secondary && !labelFor && !rowFor);
+  const minH =
+    density === "comfortable"
+      ? secondary
+        ? "min-h-[60px]"
+        : "min-h-11"
+      : secondary
+        ? "min-h-[52px]"
+        : "min-h-[var(--inspector-row-min-h)]";
   return (
     <Row
       htmlFor={rowFor}
       aria-disabled={disabled || undefined}
       className={cn(
-        "relative flex w-full items-center gap-3 rounded-sm px-3 py-1 text-left",
-        secondary ? "min-h-[60px]" : "min-h-11",
+        "relative flex w-full items-center gap-2 rounded-sm px-[var(--inspector-pad-x)] py-1 text-left",
+        minH,
         rowFor &&
           "cursor-pointer transition-colors hover:bg-[var(--color-bg-hover)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-[var(--color-focus-ring)]",
         selected && "bg-[var(--color-bg-selected)] hover:bg-[var(--color-bg-selected)]",
@@ -127,13 +205,15 @@ export function ListItem({
         <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[var(--color-action-primary)]" />
       )}
       {leading}
-      <span className="flex min-w-0 flex-1 flex-col">
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <Primary
           htmlFor={labelFor}
           className={cn(
-            "truncate text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] font-normal",
-            disabled ? "text-foreground/40" : "text-foreground",
-            labelFor && "cursor-pointer",
+            inspectorType.fieldLabel,
+            disabled && "text-foreground/40",
+            (labelFor || rowFor) && "cursor-pointer",
+            !secondary && "break-words",
+            !secondary && density === "compact" && "line-clamp-2",
           )}
         >
           {primary}
@@ -141,7 +221,10 @@ export function ListItem({
         {secondary && (
           <span
             id={secondaryId}
-            className="line-clamp-2 text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-[var(--color-text-secondary)]"
+            className={cn(
+              "line-clamp-2 break-words",
+              secondaryIsValue ? inspectorType.value : inspectorType.help,
+            )}
           >
             {secondary}
           </span>
@@ -152,9 +235,7 @@ export function ListItem({
   );
 }
 
-// --- Field row ----------------------------------------------------------------
-// Text, select, textarea and radio controls don't fit a list row, so they stack
-// under a Label/Medium caption on the same 12px row inset as List item.
+// Pattern A — label above control (textarea, assets, long copy, helpers).
 export function PropertyRow({
   label,
   htmlFor,
@@ -169,28 +250,52 @@ export function PropertyRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1 px-3 py-2">
-      <label
-        htmlFor={htmlFor}
-        className="min-w-0 break-words text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-medium text-[var(--color-text-secondary)]"
-      >
+    <div className="flex flex-col gap-[var(--inspector-gap-field)] px-[var(--inspector-pad-x)] py-1.5">
+      <label htmlFor={htmlFor} className={cn("min-w-0 break-words", inspectorType.fieldLabel)}>
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
       </label>
       <div className="min-w-0">
         {children}
-        {help && (
-          <p className="mt-1 text-[length:var(--type-body-sm-size)] leading-[length:var(--type-body-sm-lh)] text-[var(--color-text-secondary)]">
-            {help}
-          </p>
-        )}
+        {help && <p className={cn("mt-1", inspectorType.help)}>{help}</p>}
       </div>
     </div>
   );
 }
 
-// Rows container (one semantic list). Pass `-mx-3` when it sits directly in a
-// p-4 panel body so rows land on the 4px inset column.
+// Pattern B — label and control on one row (toggles, selects, short text).
+export function CompactPropertyRow({
+  label,
+  htmlFor,
+  required,
+  help,
+  children,
+}: {
+  label: React.ReactNode;
+  htmlFor?: string;
+  required?: boolean;
+  help?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const helpId = help ? `${htmlFor ?? "field"}-help` : undefined;
+  return (
+    <div className="px-[var(--inspector-pad-x)] py-1">
+      <div className="grid min-h-[var(--inspector-row-min-h)] grid-cols-1 items-center gap-x-3 gap-y-1 min-[360px]:grid-cols-[minmax(0,1fr)_minmax(7.5rem,42%)]">
+        <label htmlFor={htmlFor} className={cn("min-w-0 break-words", inspectorType.fieldLabel)}>
+          {label}
+          {required && <span className="ml-0.5 text-destructive">*</span>}
+        </label>
+        <div className="min-w-0 min-[360px]:justify-self-end min-[360px]:w-full">{children}</div>
+      </div>
+      {help && (
+        <p id={helpId} className={cn("mt-0.5 px-0", inspectorType.help)}>
+          {help}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function PropertyRows({
   children,
   className,
@@ -198,10 +303,11 @@ export function PropertyRows({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("flex flex-col", className)}>{children}</div>;
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-0.5", className)}>{children}</div>
+  );
 }
 
-// --- List divider (117:6194) ---------------------------------------------------
 export function ListDivider({ inset = "full" }: { inset?: "full" | "content" }) {
   return (
     <div aria-hidden className={cn("h-px shrink-0", inset === "content" && "pl-12")}>
@@ -210,53 +316,68 @@ export function ListDivider({ inset = "full" }: { inset?: "full" | "content" }) 
   );
 }
 
-// Data stores group headers in caps ("COMMERCE / CONFIGURATION"); the Eos
-// subheader is sentence case. Acronyms keep their caps.
-const ACRONYMS = new Set(["CTA", "FAQ", "URL", "URLS", "ID", "SEO", "T&C", "TV", "AI"]);
-function sentenceCase(text: string): string {
-  if (text !== text.toUpperCase()) return text;
-  return text
-    .split(" ")
-    .map((word, i) => {
-      if (ACRONYMS.has(word)) return word;
-      const lower = word.toLowerCase();
-      return i === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
-    })
-    .join(" ");
-}
-
-// --- List subheader (117:6210), Inset=Full, Sticky=Off -------------------------
-// 36px, 12px padding, Label/Large Emphasised (14/20 semibold). Headed groups
-// collapse, so the subheader carries a trailing 24px chevron accessory. An
-// optional `action` renders as a SIBLING of the trigger, never nested inside it.
+// Section groups — spacing-first; top border only between headed sections.
 export function PropertySection({
   header,
   expanded,
   onToggle,
   action,
+  borderedTop,
   children,
 }: {
   header?: string;
   expanded?: boolean;
   onToggle?: () => void;
   action?: React.ReactNode;
+  borderedTop?: boolean;
   children: React.ReactNode;
 }) {
   if (!header) {
-    return <section className="px-1 py-2">{children}</section>;
+    return <section className="min-w-0 py-1">{children}</section>;
   }
   return (
-    <Collapsible open={expanded} onOpenChange={onToggle} className="px-1 py-2">
+    <Collapsible
+      open={expanded}
+      onOpenChange={onToggle}
+      className={cn("min-w-0 py-1", borderedTop && "border-t border-[var(--color-border-default)] pt-2")}
+    >
       <div className="flex items-center gap-1">
-        <CollapsibleTrigger className="group flex h-9 min-w-0 flex-1 items-center gap-3 rounded-sm px-3 text-left text-[length:var(--type-label-lg-size)] leading-[length:var(--type-label-lg-lh)] font-semibold text-foreground transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-focus-ring)]">
-          <span className="min-w-0 flex-1 truncate">{sentenceCase(header)}</span>
-          <span aria-hidden className="flex h-8 w-6 shrink-0 items-center justify-center text-[var(--color-text-secondary)]">
-            <MSym name="expand_more" size={24} className="transition-transform group-data-[state=closed]:-rotate-90" />
+        <CollapsibleTrigger className="group flex h-8 min-w-0 flex-1 items-center gap-2 rounded-sm px-[var(--inspector-pad-x)] text-left transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-focus-ring)]">
+          <span className={cn("min-w-0 flex-1 truncate", inspectorType.section)}>
+            {sentenceCase(header)}
+          </span>
+          <span
+            aria-hidden
+            className="flex h-6 w-6 shrink-0 items-center justify-center text-[var(--color-text-secondary)]"
+          >
+            <MSym
+              name="expand_more"
+              size={20}
+              className="transition-transform group-data-[state=closed]:-rotate-90"
+            />
           </span>
         </CollapsibleTrigger>
         {action}
       </div>
-      <CollapsibleContent>{children}</CollapsibleContent>
+      <CollapsibleContent className="pt-0.5">{children}</CollapsibleContent>
     </Collapsible>
+  );
+}
+
+// Callout block for notices / intelligent authoring (inspector card, not form).
+export function InspectorCallout({
+  title,
+  children,
+}: {
+  title?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-sm bg-[var(--color-bg-subtle)] px-[var(--inspector-pad-x)] py-2.5">
+      {title && <p className={cn(inspectorType.value, "font-medium")}>{title}</p>}
+      <div className={cn(inspectorType.help, title && "mt-1")}>
+        {children}
+      </div>
+    </div>
   );
 }

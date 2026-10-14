@@ -2,6 +2,7 @@ import * as React from "react";
 import { MSym } from "@/v4-eos/ui/msym";
 import { cn } from "@/v4-eos/ui/lib/utils";
 import { Input } from "@/v4-eos/ui/input";
+import { chromePanelHeaderClass, chromeType } from "@/v4-eos/ui/chrome-type";
 
 // Panel surfaces + headers shared by Explorer/Properties (§22). Eos ships a
 // dense, light-mode authoring UI (design.md "Principle"), so --color-bg-panel
@@ -42,29 +43,15 @@ export function PanelHeader({
 }) {
   return (
     <div
-      className={cn(
-        "flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2",
-        className,
-      )}
+      data-chrome="panel-header"
+      className={chromePanelHeaderClass(className)}
     >
       <div className="flex min-w-0 items-center gap-1.5">
         {leading}
         <div className="flex min-w-0 flex-col gap-0.5">
-          {eyebrow && (
-            <span className="text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-              {eyebrow}
-            </span>
-          )}
-          {title && (
-            <span className="truncate text-[length:var(--type-title-sm-size)] leading-[length:var(--type-title-sm-lh)] font-semibold text-foreground">
-              {title}
-            </span>
-          )}
-          {sub && (
-            <span className="truncate text-[length:var(--type-body-sm-size)] text-muted-foreground">
-              {sub}
-            </span>
-          )}
+          {eyebrow && <span className={chromeType.panelEyebrow}>{eyebrow}</span>}
+          {title && <span className={chromeType.panelTitle}>{title}</span>}
+          {sub && <span className={chromeType.panelSub}>{sub}</span>}
         </div>
       </div>
       {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
@@ -98,7 +85,7 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-8 rounded-sm bg-[var(--color-bg-control)] pl-7 pr-7 text-[length:var(--type-label-md-size)] leading-[length:var(--type-label-md-lh)]"
+        className="h-[var(--control-height-md)] min-w-0 rounded-[var(--radius-field)] bg-[var(--color-bg-control)] pl-7 pr-7 text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)]"
       />
       {value && onClear && (
         <button

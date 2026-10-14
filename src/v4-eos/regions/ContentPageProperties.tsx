@@ -1,8 +1,11 @@
-import { Panel, PanelHeader } from "@/v4-eos/ui/panel";
+import { Panel } from "@/v4-eos/ui/panel";
 import {
+  CompactPropertyRow,
+  InspectorBody,
+  InspectorHeader,
+  inspectorType,
   ListAccessory,
   ListItem,
-  ObjectHeader,
   PropertyRow,
   PropertyRows,
 } from "@/v4-eos/ui/property";
@@ -11,6 +14,7 @@ import {
   TextAreaField,
   SwitchField,
 } from "@/v4-eos/ui/form-controls";
+import { cn } from "@/v4-eos/ui/lib/utils";
 import {
   formatEditDate,
   outlineLabel,
@@ -40,24 +44,34 @@ function Field({
   help?: string;
 }) {
   const invalid = Boolean(required && !value.trim());
+  const control = stacked ? (
+    <TextAreaField
+      id={id}
+      value={value}
+      invalid={invalid}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ) : (
+    <TextField
+      id={id}
+      value={value}
+      invalid={invalid}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+
+  if (stacked || help) {
+    return (
+      <PropertyRow label={label} htmlFor={id} required={required} help={help}>
+        {control}
+      </PropertyRow>
+    );
+  }
+
   return (
-    <PropertyRow label={label} htmlFor={id} required={required} help={help}>
-      {stacked ? (
-        <TextAreaField
-          id={id}
-          value={value}
-          invalid={invalid}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      ) : (
-        <TextField
-          id={id}
-          value={value}
-          invalid={invalid}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-    </PropertyRow>
+    <CompactPropertyRow label={label} htmlFor={id} required={required}>
+      {control}
+    </CompactPropertyRow>
   );
 }
 
@@ -112,17 +126,20 @@ export function ContentPageProperties({
     group.startsWith("pass-") ? (group.slice(5) as PassType) : null;
   const pass = passType ? passByType(config, passType) : null;
 
+  const title = outlineLabel(group);
   return (
     <Panel className="ui-ws__region ui-ws-props" aria-label="Properties">
-      <PanelHeader eyebrow="Properties" title={outlineLabel(group)} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <ObjectHeader
-          eyebrow={slug}
-          name={outlineLabel(group)}
-          bleed
-        />
-        <div className="mt-2">
-          <PropertyRows className="-mx-3">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <InspectorBody>
+          <InspectorHeader
+            title={title}
+            actions={
+              <span className={cn("font-mono tabular-nums", inspectorType.meta)} title={slug}>
+                /{slug}
+              </span>
+            }
+          />
+          <PropertyRows>
             {group === "overview" && (
               <>
                 <Toggle
@@ -142,7 +159,7 @@ export function ContentPageProperties({
 
             {group === "memberships" && (
               <PropertyRow label="Passes" help="Select a pass in the outline to edit it.">
-                <p className="text-[length:var(--type-body-md-size)] leading-[length:var(--type-body-md-lh)] text-foreground">
+                <p className={inspectorType.value}>
                   Select, Premium / Premium Plus, STARZ, and Free. Free is
                   feature-flagged in production.
                 </p>
@@ -331,7 +348,7 @@ export function ContentPageProperties({
               />
             )}
           </PropertyRows>
-        </div>
+        </InspectorBody>
       </div>
     </Panel>
   );

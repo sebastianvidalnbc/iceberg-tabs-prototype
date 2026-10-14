@@ -119,6 +119,29 @@
   --control-height-md: 36px;   /* Eos --btn-height-std / --control-h (STANDARD DEFAULT) */
   --control-height-lg: 40px;   /* Eos --btn-height-lg (optional large CTA only) */
   --control-pad-x: 12px;       /* Eos field pad-x; Eos button pad-x is 16px (component-phase item) */
+  /* V4 Properties inspector — scoped density on top of Eos tokens (see eos-design-system §7.11). */
+  --inspector-pad-x: 12px;
+  --inspector-pad-y: 12px;
+  --inspector-gap-section: 12px;
+  --inspector-gap-field: 4px;
+  --inspector-row-min-h: 36px;
+  --inspector-title-size: var(--type-title-md-size);
+  --inspector-title-lh: var(--type-title-md-lh);
+  --inspector-kind-size: var(--type-body-sm-size);
+  --inspector-kind-lh: var(--type-body-sm-lh);
+  --inspector-section-size: var(--type-title-sm-size);
+  --inspector-section-lh: var(--type-title-sm-lh);
+  --inspector-label-size: var(--type-label-md-size);
+  --inspector-label-lh: var(--type-label-md-lh);
+  --inspector-value-size: var(--type-body-md-size);
+  --inspector-value-lh: var(--type-body-md-lh);
+  --inspector-help-size: var(--type-body-sm-size);
+  --inspector-help-lh: var(--type-body-sm-lh);
+  /* V4 Structure explorer tree (Figma Layers–inspired density). */
+  --structure-tree-size: 13px;
+  --structure-tree-lh: 18px;
+  --structure-tree-row-h: 32px;
+  --structure-tree-pad-x: 6px;
   /* Border width / radius — Eos §2.3 shape scale. */
   --border-width: 1px;
   --radius-field: 4px;  /* Eos --radius-field / --radius-xs — inputs, chips, small controls */
