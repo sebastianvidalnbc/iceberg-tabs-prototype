@@ -276,7 +276,7 @@ export const DEFAULT_CONTENT_PAGE: ContentPageConfig = {
 };
 
 export const CONTENT_PAGE_OUTLINE: OutlineNode[] = [
-  { id: "overview", label: "Enabled" },
+  { id: "overview", label: "Overview" },
   {
     id: "memberships",
     label: "Content Page Memberships",
